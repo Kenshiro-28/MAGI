@@ -1,2 +1,3 @@
 # MAGI
-AI agent
+
+Work in progress
