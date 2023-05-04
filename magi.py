@@ -39,7 +39,7 @@ def printSystemText(text):
 
 	
 def printMagiText(text):
-	print(MAGI_COLOR + text + END_COLOR)
+	print(END_COLOR + MAGI_COLOR + text + END_COLOR)
 
 	
 def userInput():
@@ -49,7 +49,6 @@ def userInput():
 
 
 # Main logic
-
 context = []
 
 with open(MOD_FILE_PATH) as modFile:
