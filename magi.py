@@ -1,8 +1,10 @@
 import openai
 import os
-import sys
 
 MOD_FILE_PATH = "mod.txt"
+MISSION_FILE_PATH = "mission.txt"
+MISSION_COMMAND = "M"
+TASK_DELIMITER = "."
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 SYSTEM_COLOR = "\033[91m"
@@ -35,7 +37,7 @@ def send_prompt(mod, prompt, context):
 
 
 def printSystemText(text):
-	print(SYSTEM_COLOR + text + END_COLOR)	
+	print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)	
 
 	
 def printMagiText(text):
@@ -48,6 +50,37 @@ def userInput():
 	return prompt		
 
 
+def saveTask(task, taskArray):
+	if task != "":
+		taskArray.append(task.strip())
+	
+
+def executeMission(missionPrompt):
+
+	taskArray = []
+	task = ""
+
+	for char in missionPrompt:
+
+		if char == TASK_DELIMITER:
+			saveTask(task, taskArray)
+			task = ""
+		else:
+			task += char
+
+	# Append the last task
+	saveTask(task, taskArray)
+	
+	printSystemText("\n----- Mission -----\n")
+
+	taskNumber = 1
+
+	for task in taskArray:
+	
+		printSystemText("Task " + str(taskNumber) + ": " + task)
+		taskNumber += 1
+		
+
 # Main logic
 context = []
 
@@ -55,11 +88,19 @@ with open(MOD_FILE_PATH) as modFile:
 	mod = modFile.read().strip()
 	printSystemText("\nMod: " + mod)
 
-printMagiText("\nMAGI: Greetings")
+printSystemText("\nHint: To execute a mission, type the letter 'm' and then the mission tasks. Tasks should be separated by a period, such as 'This is task 1. This is task 2.'")
 
+# Main loop
 while True:
 	prompt = userInput()
-	response = send_prompt(mod, prompt, context)
-	printMagiText("\nMAGI: " + response)	
+	
+	command = prompt.split()[0]
+	
+	if command.upper() == MISSION_COMMAND:
+		missionPrompt = ' '.join(prompt.split()[1:])
+		executeMission(missionPrompt)
+	else:
+		response = send_prompt(mod, prompt, context)
+		printMagiText("\nMAGI: " + response)	
 	
 
