@@ -5,7 +5,7 @@ MODEL = "gpt-3.5-turbo"
 TEMPERATURE = 0.7
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
-PRIME_DIRECTIVES_TEXT = "\n----- Prime Directives -----\n\n"
+PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_FILE_PATH = "mission.txt"
 MISSION_COMMAND = "M"
 MISSION_PROMPT = "Divide this mission in a list of independent tasks to be executed by you, one task per line, without subtasks. Write ONLY the list of tasks. MISSION: "
@@ -61,17 +61,27 @@ def saveTask(task, taskArray):
 def runMission(primeDirectives, prompt, context):
 	mission = send_prompt(primeDirectives, MISSION_PROMPT + prompt, context)
 	
-	printSystemText(NEW_MISSION_TEXT + mission)
-
-	saveMissionData(NEW_MISSION_TEXT + mission)
+	missionTitle = NEW_MISSION_TEXT + mission
+	
+	printSystemText(missionTitle)
+	saveMissionData(missionTitle)
+	
+	# Start new context
+	context = []
+	
+	# Remember user prompt
+	context.append({'role':'user', 'content':f"{prompt}"})	
 
 	# Remove blank lines
 	mission = '\n'.join(line for line in mission.splitlines() if line.strip())	
 
 	for task in mission.split('\n'):
-		response = send_prompt(primeDirectives, task, context)
-		printMagiText("\n" + response)
-		saveMissionData("\n" + response)
+		systemText = "\n" + task 
+		printSystemText(systemText)
+		response = send_prompt(primeDirectives, task, context)		
+		magiText = "\n" + response
+		printMagiText(magiText)
+		saveMissionData(systemText + "\n" + magiText)
 		
 	
 def runPrompt(primeDirectives, prompt, context, missionMode):	
