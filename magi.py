@@ -2,6 +2,7 @@ import openai
 import os
 
 MODEL = "gpt-3.5-turbo"
+CONTEXT_SIZE = 18 # Number of messages to remember
 TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
@@ -35,6 +36,13 @@ def send_prompt(primeDirectives, prompt, context):
 	response = get_completion_from_messages(context) 
 
 	context.append({'role':'assistant', 'content':f"{response}"})
+
+	# Check context size
+	contextSize = len(context)
+	
+	while contextSize > CONTEXT_SIZE:
+		context.pop(0)
+		contextSize = len(context)		
 
 	return response
 
