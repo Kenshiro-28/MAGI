@@ -2,7 +2,7 @@ import openai
 import os
 
 MODEL = "gpt-3.5-turbo"
-TEMPERATURE = 0.7
+TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
