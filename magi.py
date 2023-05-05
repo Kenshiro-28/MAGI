@@ -2,13 +2,13 @@ import openai
 import os
 
 MODEL = "gpt-3.5-turbo"
-TEMPERATURE = 1
+TEMPERATURE = 0.7
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 PRIME_DIRECTIVES_TEXT = "\n----- Prime Directives -----\n\n"
 MISSION_FILE_PATH = "mission.txt"
 MISSION_COMMAND = "M"
-MISSION_PROMPT = "Divide this mission in a list of independent tasks to be executed by you, one task per line, without subtasks. MISSION: "
+MISSION_PROMPT = "Divide this mission in a list of independent tasks to be executed by you, one task per line, without subtasks. Write ONLY the list of tasks. MISSION: "
 NEW_MISSION_TEXT = "\n----- Mission -----\n\n"
 
 SYSTEM_COLOR = "\033[32m"
@@ -64,7 +64,10 @@ def runMission(primeDirectives, prompt, context):
 	printSystemText(NEW_MISSION_TEXT + mission)
 
 	saveMissionData(NEW_MISSION_TEXT + mission)
-	
+
+	# Remove blank lines
+	mission = '\n'.join(line for line in mission.splitlines() if line.strip())	
+
 	for task in mission.split('\n'):
 		response = send_prompt(primeDirectives, task, context)
 		printMagiText("\n" + response)
