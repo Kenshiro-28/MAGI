@@ -1,19 +1,24 @@
 import openai
 import os
 
-MOD_FILE_PATH = "mod.txt"
+MODEL = "gpt-3.5-turbo"
+TEMPERATURE = 1
+SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
+PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
+PRIME_DIRECTIVES_TEXT = "\n----- Prime Directives -----\n\n"
 MISSION_FILE_PATH = "mission.txt"
 MISSION_COMMAND = "M"
-TASK_DELIMITER = "."
-openai.api_key = os.getenv('OPENAI_API_KEY')
+MISSION_PROMPT = "Divide this mission in a list of independent tasks to be executed by you, one task per line, without subtasks. MISSION: "
+NEW_MISSION_TEXT = "\n----- Mission -----\n\n"
 
-SYSTEM_COLOR = "\033[91m"
+SYSTEM_COLOR = "\033[32m"
 MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-def get_completion_from_messages(messages, model="gpt-3.5-turbo", temperature=0):
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
+def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE):
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
@@ -23,11 +28,9 @@ def get_completion_from_messages(messages, model="gpt-3.5-turbo", temperature=0)
     return response.choices[0].message["content"]
 
 
-def send_prompt(mod, prompt, context):
-
-	modPrompt = mod + prompt
-	context.append({'role':'user', 'content':f"{modPrompt}"})
-#	print(f"{modPrompt}")
+def send_prompt(primeDirectives, prompt, context):
+	command = primeDirectives + prompt
+	context.append({'role':'user', 'content':f"{command}"})
 
 	response = get_completion_from_messages(context) 
 
@@ -55,40 +58,51 @@ def saveTask(task, taskArray):
 		taskArray.append(task.strip())
 	
 
-def executeMission(missionPrompt):
-
-	taskArray = []
-	task = ""
-
-	for char in missionPrompt:
-
-		if char == TASK_DELIMITER:
-			saveTask(task, taskArray)
-			task = ""
-		else:
-			task += char
-
-	# Append the last task
-	saveTask(task, taskArray)
+def runMission(primeDirectives, prompt, context):
+	mission = send_prompt(primeDirectives, MISSION_PROMPT + prompt, context)
 	
-	printSystemText("\n----- Mission -----\n")
+	printSystemText(NEW_MISSION_TEXT + mission)
 
-	taskNumber = 1
-
-	for task in taskArray:
+	saveMissionData(NEW_MISSION_TEXT + mission)
 	
-		printSystemText("Task " + str(taskNumber) + ": " + task)
-		taskNumber += 1
+	for task in mission.split('\n'):
+		response = send_prompt(primeDirectives, task, context)
+		printMagiText("\n" + response)
+		saveMissionData("\n" + response)
 		
+	
+def runPrompt(primeDirectives, prompt, context, missionMode):	
+	if missionMode:
+		runMission(primeDirectives, prompt, context)
+	else:
+		response = send_prompt(primeDirectives, prompt, context)
+		printMagiText("\n" + response)	
+
+
+def switchMissionMode(missionMode):
+	missionMode = not missionMode
+
+	if missionMode == True:
+		printSystemText("\nMission mode enabled")
+	else:
+		printSystemText("\nMission mode disabled")
+		
+	return missionMode
+
+
+def saveMissionData(text):
+    with open(MISSION_FILE_PATH, 'a') as missionFile:
+        missionFile.write(text + "\n")
 
 # Main logic
 context = []
+missionMode = False
 
-with open(MOD_FILE_PATH) as modFile:
-	mod = modFile.read().strip()
-	printSystemText("\nMod: " + mod)
+with open(PRIME_DIRECTIVES_FILE_PATH) as primeDirectivesFile:
+	primeDirectives = primeDirectivesFile.read().strip()
+	printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives)
 
-printSystemText("\nHint: To execute a mission, type the letter 'm' and then the mission tasks. Tasks should be separated by a period, such as 'This is task 1. This is task 2.'")
+printSystemText(SYSTEM_HINT_TEXT)
 
 # Main loop
 while True:
@@ -97,10 +111,8 @@ while True:
 	command = prompt.split()[0]
 	
 	if command.upper() == MISSION_COMMAND:
-		missionPrompt = ' '.join(prompt.split()[1:])
-		executeMission(missionPrompt)
+		missionMode = switchMissionMode(missionMode)
 	else:
-		response = send_prompt(mod, prompt, context)
-		printMagiText("\nMAGI: " + response)	
+		runPrompt(primeDirectives, prompt, context, missionMode)
 	
-
+ 
