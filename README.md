@@ -1,6 +1,6 @@
 # MAGI
 
-This program is an autonomous agent that uses the GPT-4 model to respond to user requests. Prime directives allow you to alter the behavior of the model, making it behave in the desired way. MAGI has a Mission mode that allows it to generate a task list based on the user's request to generate a more elaborate response. In the future it will be able to browse the Internet and work continuously.
+This program is an autonomous agent that uses the GPT-4 model to respond to user requests. Prime Directives allow you to alter the behavior of the model, making it behave in the desired way. MAGI has a Mission mode that allows it to generate a task list based on the user's request to generate a more elaborate response. In the future it will be able to browse the Internet and work continuously.
 
 ## Prime Directives
 
