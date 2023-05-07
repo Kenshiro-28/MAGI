@@ -1,3 +1,13 @@
+'''
+=====================================================================================
+Name        : MAGI
+Author      : Kenshiro
+Version     : 2.00
+Copyright   : GNU General Public License (GPLv3)
+Description : Autonomous agent 
+=====================================================================================
+'''
+
 import openai
 import os
 
@@ -14,13 +24,33 @@ NEW_MISSION_TEXT = "\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
 MODEL_TEXT = "\nModel: "
+GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
+BROWSE_INTERNET_QUERY_TEXT = "Tell me if you would need updated information from internet to do this task, write only YES or NO: "
 
 SYSTEM_COLOR = "\033[32m"
 MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
+TEXT_BLOCK_WORDS = 500
+
 openai.api_key = os.getenv('OPENAI_API_KEY')
+
+
+def read_text_in_blocks(text, index):
+	block = ""
+	
+	wordList = text.split()
+
+	start = index * TEXT_BLOCK_WORDS
+	end = (index + 1) * TEXT_BLOCK_WORDS
+
+	if start < len(wordList):
+		block = " ".join(wordList[start:end])
+		index += 1
+
+	return block, index
+
 
 def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE):
     response = openai.ChatCompletion.create(
