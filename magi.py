@@ -37,19 +37,19 @@ TEXT_BLOCK_WORDS = 500
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
-def read_text_in_blocks(text, index):
-	block = ""
+def split_text_in_blocks(text):
+	index = 0
+	blockArray = []
 	
 	wordList = text.split()
 
-	start = index * TEXT_BLOCK_WORDS
-	end = (index + 1) * TEXT_BLOCK_WORDS
+	while index < len(wordList):
+		limit = index + TEXT_BLOCK_WORDS
+		block = " ".join(wordList[index:limit])
+		blockArray.append(block)
+		index += TEXT_BLOCK_WORDS
 
-	if start < len(wordList):
-		block = " ".join(wordList[start:end])
-		index += 1
-
-	return block, index
+	return blockArray
 
 
 def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE):
