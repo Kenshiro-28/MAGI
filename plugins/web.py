@@ -21,7 +21,8 @@ def search(query, maxUrls):
 		options.headless = True
 		options.add_argument("--disable-gpu")
 
-		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options)
+		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path='null', service_args=["--log", "fatal"])
+
 		driver.get(WEB_SEARCH_TEXT + query)
 
 		WebDriverWait(driver, TIMEOUT).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g .yuRUbf a")))
@@ -54,7 +55,8 @@ def scrape(url):
 		options.headless = True
 		options.add_argument("--disable-gpu")
 		
-		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options)
+		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path='null', service_args=["--log", "fatal"])
+
 		driver.get(url)
 
 		WebDriverWait(driver, TIMEOUT).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
