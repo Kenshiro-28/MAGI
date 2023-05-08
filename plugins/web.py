@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 TIMEOUT = 10
 
 WEB_SEARCH_TEXT = "https://www.google.com/search?q="
-WEB_SEARCH_ERROR = "[ERROR] An exception occurred while trying to do a web search."
-WEB_SCRAPE_ERROR = "[ERROR] An exception occurred while trying to scrape a web page."
+WEB_SEARCH_ERROR = "[ERROR] An exception occurred while trying to do a web search: "
+WEB_SCRAPE_ERROR = "[ERROR] An exception occurred while trying to scrape a web page: "
 
 def search(query, maxUrls):
 	try:
@@ -41,8 +41,8 @@ def search(query, maxUrls):
 
 		return urlArray
 		
-	except:
-		print(WEB_SEARCH_ERROR) 		
+	except Exception as e:
+		print("\n" + WEB_SEARCH_ERROR + e) 		
 		return []
     
 
@@ -77,8 +77,8 @@ def scrape(url):
 
 		return text
 		
-	except:
-		print(WEB_SCRAPE_ERROR)
+	except Exception as e:
+		print("\n" + WEB_SCRAPE_ERROR + e)
 		return ""
 		
 		
