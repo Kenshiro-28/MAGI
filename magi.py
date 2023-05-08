@@ -163,10 +163,10 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 	return summary
 	
 
-def isWebBrowsingRequired(primeDirectives, prompt, webSearchContext):
+def isWebBrowsingRequired(primeDirectives, prompt, webContext):
 	answer = False
 
-	response = send_prompt(primeDirectives, BROWSE_INTERNET_QUERY_TEXT + prompt, webSearchContext)
+	response = send_prompt(primeDirectives, BROWSE_INTERNET_QUERY_TEXT + prompt, webContext)
 	
 	# Remove dots and convert to uppercase
 	response = response.replace(".", "").upper()
@@ -178,20 +178,20 @@ def isWebBrowsingRequired(primeDirectives, prompt, webSearchContext):
 	
 	
 def runPrompt(primeDirectives, prompt, context, missionMode):	
-	webSearchContext = copy.deepcopy(context)
+	webContext = copy.deepcopy(context)
 	
 	newPrompt = prompt
 
-	browseWeb = isWebBrowsingRequired(primeDirectives, prompt, webSearchContext)
+	browseWeb = isWebBrowsingRequired(primeDirectives, prompt, webContext)
 	
 	while browseWeb == True:
-		summary = webSearch(primeDirectives, prompt, webSearchContext, missionMode)
+		summary = webSearch(primeDirectives, prompt, webContext, missionMode)
 
 		printSystemText("\n" + summary, missionMode)
 
 		newPrompt = prompt + ". " + summary
 			
-		browseWeb = isWebBrowsingRequired(primeDirectives, newPrompt, webSearchContext)			
+		browseWeb = isWebBrowsingRequired(primeDirectives, newPrompt, webContext)			
 
 	# Send the prompt to the model	
 	response = send_prompt(primeDirectives, newPrompt, context)
