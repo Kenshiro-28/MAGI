@@ -14,7 +14,7 @@ import copy
 from plugins import web
 
 MODEL = "gpt-4"
-CONTEXT_SIZE = 20 # Number of messages to remember
+CONTEXT_SIZE = 10 # Number of messages to remember
 TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
@@ -29,6 +29,7 @@ MODEL_TEXT = "\nModel: "
 GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
 BROWSE_INTERNET_QUERY_TEXT = "Tell me if you would need updated information from internet to do this task, write only YES or NO: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
+WEB_SCRAPING_TEXT = "\n[SCRAPING] "
 WEB_SEARCH_LIMIT = 5 # Number of web pages per search
 WEB_SEARCH_SUMMARIZE_TEXT = "Summarize this text and merge it with previous summaries: "
 
@@ -154,6 +155,7 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 		printSystemText(url, missionMode)	
 
 	for url in urls:
+		printSystemText(WEB_SCRAPING_TEXT + url, missionMode)	
 		scrapedText = web.scrape(url)
 		blockArray = split_text_in_blocks(scrapedText)
 
