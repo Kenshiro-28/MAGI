@@ -1,3 +1,4 @@
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -21,7 +22,7 @@ def search(query, maxUrls):
 		options.headless = True
 		options.add_argument("--disable-gpu")
 
-		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path='null', service_args=["--log", "fatal"])
+		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path=os.devnull, service_args=["--log", "fatal"])
 
 		driver.get(WEB_SEARCH_TEXT + query)
 
@@ -42,8 +43,8 @@ def search(query, maxUrls):
 		return urlArray
 		
 	except Exception as e:
-		print("\n" + WEB_SEARCH_ERROR + e) 		
-		return []
+		print("\n" + WEB_SEARCH_ERROR + str(e)) 		
+		return [""]
     
 
 def scrape(url):
@@ -55,7 +56,7 @@ def scrape(url):
 		options.headless = True
 		options.add_argument("--disable-gpu")
 		
-		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path='null', service_args=["--log", "fatal"])
+		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path=os.devnull, service_args=["--log", "fatal"])
 
 		driver.get(url)
 
@@ -78,7 +79,7 @@ def scrape(url):
 		return text
 		
 	except Exception as e:
-		print("\n" + WEB_SCRAPE_ERROR + e)
+		print("\n" + WEB_SCRAPE_ERROR + str(e))
 		return ""
 		
 		

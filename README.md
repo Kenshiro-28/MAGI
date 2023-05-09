@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent leveraging the GPT-4 model, providing streamlined and professional AI assistance for various tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves. In the future it will be able to browse the Internet and work continuously.
+MAGI is an autonomous agent leveraging the GPT model, providing streamlined and professional AI assistance for various tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves. In the future it will be able to browse the Internet and work continuously.
 
 ## Prime Directives
 
