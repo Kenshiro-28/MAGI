@@ -30,7 +30,7 @@ GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information
 BROWSE_INTERNET_QUERY_TEXT = "Tell me if you would need updated information from internet to do this task, write only YES or NO: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 5 # Number of web pages per search
-SUMMARY_PROMPT_TEXT = "PROMT = "
+SUMMARY_PROMPT_TEXT = "PROMPT = "
 SUMMARIZE_TEXT = "\nSummarize the text below, including only the information that is relevant to PROMPT.\n"
 SUMMARY_MERGE_TEXT = "\nAdd the text above to the text below, and then summarize it.\n"
 
