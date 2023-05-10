@@ -22,7 +22,7 @@ Save your OpenAI API key in an environment variable called **OPENAI_API_KEY**.
 
 - Install Python 3.10 or later.
 
-- Install OpenAI package:
+- Install Python packages:
 
 ```
 $ pip install openai selenium bs4 webdriver_manager

@@ -169,10 +169,10 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 			query = lastSummary + SUMMARY_MERGE_TEXT + summary
 			summary = send_prompt(primeDirectives, query, webContext) 
 
-			lastSummary = summary
-
 			if summary:			
 				printSystemText("\n" + summary, missionMode)
+				
+			lastSummary = summary				
 			
 	return summary
 	
