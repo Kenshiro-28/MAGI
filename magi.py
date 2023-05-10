@@ -32,8 +32,7 @@ WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 5 # Number of web pages per search
 SUMMARY_PROMPT_TEXT = "PROMT = "
 SUMMARIZE_TEXT = "\nSummarize the text below, including only the information that is relevant to PROMPT.\n"
-SUMMARY_DATA_TEXT = "DATA = "
-SUMMARY_MERGE_TEXT = "\nAdd the text below to DATA. Then summarize DATA, including only the information that is relevant to PROMPT. Never mention the DATA or PROMPT variables.\n"
+SUMMARY_MERGE_TEXT = "\nAdd the text above to the text below, and then summarize it.\n"
 
 MODEL_ERROR = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 
@@ -76,7 +75,7 @@ def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERAT
 		
 	except Exception as e:
 		printSystemText(MODEL_ERROR + str(e), False) 		
-		return get_completion_from_messages(messages, model=MODEL, temperature=TEMPERATURE)
+		return get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE)
 
 
 def send_prompt(primeDirectives, prompt, context):
@@ -167,7 +166,7 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 			summary = send_prompt(primeDirectives, query, webContext)
 
 			# Merge the new summary with the old one
-			query = SUMMARY_DATA_TEXT + lastSummary + SUMMARY_MERGE_TEXT + summary
+			query = lastSummary + SUMMARY_MERGE_TEXT + summary
 			summary = send_prompt(primeDirectives, query, webContext) 
 
 			lastSummary = summary
@@ -201,8 +200,6 @@ def runPrompt(primeDirectives, prompt, context, missionMode):
 	
 	while browseWeb == True:
 		summary = webSearch(primeDirectives, newPrompt, webContext, missionMode)
-
-		printSystemText("\n" + summary, missionMode)
 
 		newPrompt = prompt + "\n" + summary
 			
