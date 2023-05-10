@@ -41,7 +41,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 150
+TEXT_BLOCK_WORDS = 500
 
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
@@ -171,8 +171,8 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 
 			lastSummary = summary
 
-		if summary:			
-			printSystemText("\n" + summary, missionMode)
+			if summary:			
+				printSystemText("\n" + summary, missionMode)
 			
 	return summary
 	
