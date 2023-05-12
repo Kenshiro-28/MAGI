@@ -11,9 +11,10 @@ Description : Autonomous agent
 import openai
 import os
 import copy
+import time
 from plugins import web
 
-MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4"
 CONTEXT_SIZE = 10 # Number of messages to remember
 TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
@@ -34,7 +35,8 @@ SUMMARY_PROMPT_TEXT = "PROMPT = "
 SUMMARIZE_TEXT = "\nSummarize the text below, including only the information that is relevant to PROMPT.\n"
 SUMMARY_MERGE_TEXT = "\nAdd the text above to the text below, and then summarize it.\n"
 
-MODEL_ERROR = "\n[ERROR] An exception occurred while trying to get a response from the model: "
+MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
+MODEL_ERROR_SLEEP_TIME = 5
 
 SYSTEM_COLOR = "\033[32m"
 MAGI_COLOR = "\033[99m"
@@ -74,7 +76,9 @@ def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERAT
 		return response.choices[0].message["content"]
 		
 	except Exception as e:
-		printSystemText(MODEL_ERROR + str(e), False) 		
+		printSystemText(MODEL_ERROR_TEXT + str(e), False) 
+		time.sleep(MODEL_ERROR_SLEEP_TIME)				
+
 		return get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE)
 
 

@@ -29,7 +29,7 @@ def search(query, maxUrls):
 		WebDriverWait(driver, TIMEOUT).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g .yuRUbf a")))
 
 		# Extract the search result URLs from the page
-		search_results = driver.find_elements_by_css_selector(".g .yuRUbf a")
+		search_results = driver.find_elements("css selector", ".g .yuRUbf a")
 		
 		for result in search_results:
 			if numUrls < maxUrls:
