@@ -30,7 +30,7 @@ $ pip install openai selenium bs4 webdriver_manager
 
 ## Running
 
-Run this command in the root folder to start the program:
+Run this command in the root folder to start MAGI:
 
 ```
 $ python magi.py
@@ -38,4 +38,35 @@ $ python magi.py
 
 Press Ctrl + C to exit
 
+## Docker
+
+I strongly recommend running MAGI inside a Docker container. This method significantly mitigates potential risks by isolating the application from the host system. Continue with the following steps to set up your Docker environment:
+
+### Installation
+
+You can install Docker from the official repositories of your Linux system:
+
+```
+$ sudo apt install docker.io
+```
+
+Create a Docker image with the OpenAI key:
+
+```
+$ sudo docker build --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} --no-cache -t magi .
+```
+
+### Running
+
+Run this command to start MAGI:
+
+```
+$ sudo docker run -it magi
+```
+
+Print the log of the last run:
+
+```
+$ sudo docker logs $(sudo docker ps -l -q)
+```
 
