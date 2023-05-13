@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.00
+Version     : 2.02
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -17,11 +17,10 @@ from plugins import web
 MODEL = "gpt-4"
 CONTEXT_SIZE = 10 # Number of messages to remember
 TEMPERATURE = 1
-SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. The mission data will be saved in mission.txt\n"
+SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_FILE_PATH = "mission.txt"
-MISSION_COMMAND = "M"
 MISSION_PROMPT = "Divide this mission in a list of independent tasks to be executed by you, one task per line, without subtasks. Write ONLY the list of tasks. MISSION: "
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
@@ -46,6 +45,9 @@ END_COLOR = "\x1b[0m"
 TEXT_BLOCK_WORDS = 500
 
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
+
+MISSION_COMMAND = "M"
+EXIT_COMMAND = "EXIT"
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
@@ -251,9 +253,13 @@ while True:
 	
 	command = prompt.split()[0]
 	
+	if command.upper() == EXIT_COMMAND:
+		break
+	
 	if command.upper() == MISSION_COMMAND:
 		missionMode = switchMissionMode(missionMode)
 	else:
 		checkPrompt(primeDirectives, prompt, context, missionMode)
 	
- 
+printSystemText("\n", missionMode)
+
