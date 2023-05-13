@@ -36,7 +36,7 @@ Run this command in the root folder to start MAGI:
 $ python magi.py
 ```
 
-Press Ctrl + C to exit
+To exit MAGI, type the command **exit** or press Ctrl + C.
 
 ## Docker
 
