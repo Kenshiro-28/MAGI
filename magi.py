@@ -250,6 +250,9 @@ printSystemText(SYSTEM_HINT_TEXT, missionMode)
 # Main loop
 while True:
 	prompt = userInput(missionMode)
+
+	if prompt == "":
+		continue
 	
 	command = prompt.split()[0]
 	
