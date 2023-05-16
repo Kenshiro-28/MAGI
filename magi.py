@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.03
+Version     : 2.04
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -10,11 +10,12 @@ Description : Autonomous agent
 
 import openai
 import os
+import sys
 import copy
 import time
 from plugins import web
 
-MODEL = "gpt-4"
+MODEL = "gpt-3.5-turbo"
 CONTEXT_SIZE = 10 # Number of messages to remember
 TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
@@ -27,12 +28,13 @@ MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
 MODEL_TEXT = "\nModel: "
 GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
-BROWSE_INTERNET_QUERY_TEXT = "Tell me if you would need updated information from internet to do this task, write only YES or NO: "
+BROWSE_INTERNET_QUERY_TEXT = "Tell me if you need updated information from the internet to do this task, write only YES or NO: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 5 # Number of web pages per search
 SUMMARY_PROMPT_TEXT = "PROMPT = "
 SUMMARIZE_TEXT = "\nSummarize the text below, including only the information that is relevant to PROMPT.\n"
-SUMMARY_MERGE_TEXT = "\nAdd the text above to the text below, and then summarize it.\n"
+SUMMARY_MERGE_TEXT = "\nSummarize the text above and the text below into a single summary, including only the information that is relevant to PROMPT.\n"
+TASK_COMPLETED_TEXT = "Tell me if this task has been completed, write only YES or NO: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_ERROR_SLEEP_TIME = 5
@@ -42,7 +44,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 500
+TEXT_BLOCK_WORDS = 250
 
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
@@ -122,6 +124,8 @@ def saveMissionData(text):
 
 	
 def userInput(missionMode):
+	sys.stdin.flush()
+
 	prompt = input(USER_COLOR + "\n$ ")
 	
 	if missionMode == True:
@@ -141,8 +145,16 @@ def runMission(primeDirectives, prompt, context):
 	mission = [line for line in mission.splitlines() if line.strip()]
 
 	for task in mission:
+		taskCompleted = False
+
 		printSystemText("\n" + task, True)
-		runPrompt(primeDirectives, task, context, True)		
+		
+		while taskCompleted == False:
+			runPrompt(primeDirectives, task, context, True)		
+			
+			auxContext = copy.deepcopy(context)
+						
+			taskCompleted = isTaskCompleted(primeDirectives, task, auxContext)
 		
 
 def webSearch(primeDirectives, prompt, webContext, missionMode):
@@ -172,7 +184,7 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 			summary = send_prompt(primeDirectives, query, webContext)
 
 			# Merge the new summary with the old one
-			query = lastSummary + SUMMARY_MERGE_TEXT + summary
+			query = SUMMARY_PROMPT_TEXT + prompt + "\n" + lastSummary + SUMMARY_MERGE_TEXT + summary
 			summary = send_prompt(primeDirectives, query, webContext) 
 
 			if summary:			
@@ -195,6 +207,20 @@ def isWebBrowsingRequired(primeDirectives, prompt, webContext):
 		answer = True
 		
 	return answer
+
+
+def isTaskCompleted(primeDirectives, task, context):
+	answer = False
+
+	response = send_prompt(primeDirectives, TASK_COMPLETED_TEXT + task, context)
+	
+	# Remove dots and convert to uppercase
+	response = response.replace(".", "").upper()
+	
+	if response == "YES":
+		answer = True
+		
+	return answer	
 	
 	
 def runPrompt(primeDirectives, prompt, context, missionMode):	
