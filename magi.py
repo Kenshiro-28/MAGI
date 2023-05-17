@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.04
+Version     : 2.05
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -16,7 +16,7 @@ import time
 from plugins import web
 
 MODEL = "gpt-3.5-turbo"
-CONTEXT_SIZE = 4 # Number of messages to remember
+CONTEXT_SIZE = 3 # Number of messages to remember
 TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
