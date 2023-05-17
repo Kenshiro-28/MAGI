@@ -16,7 +16,7 @@ import time
 from plugins import web
 
 MODEL = "gpt-3.5-turbo"
-CONTEXT_SIZE = 10 # Number of messages to remember
+CONTEXT_SIZE = 4 # Number of messages to remember
 TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
@@ -30,10 +30,8 @@ MODEL_TEXT = "\nModel: "
 GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
 BROWSE_INTERNET_QUERY_TEXT = "Tell me if you need updated information from the internet to do this task, write only YES or NO: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
-WEB_SEARCH_LIMIT = 5 # Number of web pages per search
-SUMMARY_PROMPT_TEXT = "PROMPT = "
-SUMMARIZE_TEXT = "\nSummarize the text below, including only the information that is relevant to PROMPT.\n"
-SUMMARY_MERGE_TEXT = "\nSummarize the text above and the text below into a single summary, including only the information that is relevant to PROMPT.\n"
+WEB_SEARCH_LIMIT = 3 # Number of web pages per search
+SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant to PROMPT. Please also remove any references to this website or other websites. Then rewrite it in a professional style. PROMPT = "
 TASK_COMPLETED_TEXT = "Tell me if this task has been completed, write only YES or NO: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
@@ -44,7 +42,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 250
+TEXT_BLOCK_WORDS = 500
 
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
@@ -159,7 +157,6 @@ def runMission(primeDirectives, prompt, context):
 
 def webSearch(primeDirectives, prompt, webContext, missionMode):
 	summary = ""
-	lastSummary = ""	
 
 	query = send_prompt(primeDirectives, GENERATE_WEB_QUERY_TEXT + prompt, webContext)
 
@@ -174,23 +171,18 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 		# Ignore translated web pages
 		if GOOGLE_TRANSLATE_URL_TEXT in url:
 			continue
-	
+			
 		printSystemText("\n" + url, missionMode)	
 		text = web.scrape(url)
 		blockArray = split_text_in_blocks(text)
 
+		# Summarize
 		for block in blockArray:
-			query = SUMMARY_PROMPT_TEXT + prompt + SUMMARIZE_TEXT + block	
-			summary = send_prompt(primeDirectives, query, webContext)
-
-			# Merge the new summary with the old one
-			query = SUMMARY_PROMPT_TEXT + prompt + "\n" + lastSummary + SUMMARY_MERGE_TEXT + summary
+			query = summary + block + SUMMARIZE_TEXT + prompt
 			summary = send_prompt(primeDirectives, query, webContext) 
 
-			if summary:			
-				printSystemText("\n" + summary, missionMode)
-				
-			lastSummary = summary				
+		if summary:			
+			printSystemText("\n" + summary, missionMode)
 			
 	return summary
 	
