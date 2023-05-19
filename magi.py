@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.05
+Version     : 2.06
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -148,7 +148,7 @@ def runMission(primeDirectives, prompt, context):
 		printSystemText("\n" + task, True)
 		
 		while taskCompleted == False:
-			runPrompt(primeDirectives, task, context, True)		
+			runPrompt(primeDirectives, prompt + "\n" + task, context, True)		
 			
 			auxContext = copy.deepcopy(context)
 						
