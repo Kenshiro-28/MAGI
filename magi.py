@@ -150,11 +150,11 @@ def runMission(primeDirectives, prompt, context):
 
 		auxContext = copy.deepcopy(context)
 
-		summary = summarize(primeDirectives, prompt, auxContext, summary, response)	
+		summary = summarize(primeDirectives, prompt, auxContext, summary + response)	
 		
 
-def summarize(primeDirectives, prompt, context, summary, text):
-	query = summary + text + SUMMARIZE_TEXT + prompt
+def summarize(primeDirectives, prompt, context, text):
+	query = text + SUMMARIZE_TEXT + prompt
 	summary = send_prompt(primeDirectives, query, context) 
 	
 	return summary	
@@ -183,7 +183,7 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 
 		# Summarize
 		for block in blockArray:
-			summary = summarize(primeDirectives, prompt, webContext, summary, block)
+			summary = summarize(primeDirectives, prompt, webContext, summary + block)
 
 		if summary:			
 			printSystemText("\n" + summary, missionMode)
