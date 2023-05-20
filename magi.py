@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.06
+Version     : 2.07
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -16,7 +16,7 @@ import time
 from plugins import web
 
 MODEL = "gpt-3.5-turbo"
-CONTEXT_SIZE = 3 # Number of messages to remember
+CONTEXT_SIZE = 2 # Number of messages to remember
 TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
@@ -32,7 +32,6 @@ BROWSE_INTERNET_QUERY_TEXT = "Tell me if you need updated information from the i
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
 SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant to PROMPT. Please also remove any references to this website or other websites. Then rewrite it in a professional style. PROMPT = "
-TASK_COMPLETED_TEXT = "Tell me if this task has been completed, write only YES or NO: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_ERROR_SLEEP_TIME = 5
@@ -133,6 +132,8 @@ def userInput(missionMode):
 
 
 def runMission(primeDirectives, prompt, context):
+	summary = ""
+
 	mission = send_prompt(primeDirectives, MISSION_PROMPT + prompt, context)
 	
 	missionTitle = NEW_MISSION_TEXT + mission + "\n"
@@ -143,17 +144,21 @@ def runMission(primeDirectives, prompt, context):
 	mission = [line for line in mission.splitlines() if line.strip()]
 
 	for task in mission:
-		taskCompleted = False
-
 		printSystemText("\n" + task, True)
+
+		response = runPrompt(primeDirectives, summary + "\n" + task, context, True)	
+
+		auxContext = copy.deepcopy(context)
+
+		summary = summarize(primeDirectives, prompt, auxContext, summary, response)	
 		
-		while taskCompleted == False:
-			runPrompt(primeDirectives, prompt + "\n" + task, context, True)		
-			
-			auxContext = copy.deepcopy(context)
-						
-			taskCompleted = isTaskCompleted(primeDirectives, task, auxContext)
-		
+
+def summarize(primeDirectives, prompt, context, summary, text):
+	query = summary + text + SUMMARIZE_TEXT + prompt
+	summary = send_prompt(primeDirectives, query, context) 
+	
+	return summary	
+
 
 def webSearch(primeDirectives, prompt, webContext, missionMode):
 	summary = ""
@@ -178,8 +183,7 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 
 		# Summarize
 		for block in blockArray:
-			query = summary + block + SUMMARIZE_TEXT + prompt
-			summary = send_prompt(primeDirectives, query, webContext) 
+			summary = summarize(primeDirectives, prompt, webContext, summary, block)
 
 		if summary:			
 			printSystemText("\n" + summary, missionMode)
@@ -201,20 +205,6 @@ def isWebBrowsingRequired(primeDirectives, prompt, webContext):
 	return answer
 
 
-def isTaskCompleted(primeDirectives, task, context):
-	answer = False
-
-	response = send_prompt(primeDirectives, TASK_COMPLETED_TEXT + task, context)
-	
-	# Remove dots and convert to uppercase
-	response = response.replace(".", "").upper()
-	
-	if response == "YES":
-		answer = True
-		
-	return answer	
-	
-	
 def runPrompt(primeDirectives, prompt, context, missionMode):	
 	webContext = copy.deepcopy(context)
 
@@ -233,6 +223,8 @@ def runPrompt(primeDirectives, prompt, context, missionMode):
 	response = send_prompt(primeDirectives, newPrompt, context)
 
 	printMagiText("\n" + response, missionMode)
+	
+	return response	
 	
 
 def checkPrompt(primeDirectives, prompt, context, missionMode):	
