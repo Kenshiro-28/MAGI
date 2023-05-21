@@ -82,7 +82,7 @@ def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERAT
 		printSystemText(MODEL_ERROR_TEXT + str(e), False) 
 		
 		# If the token limit is exceeded, forget the oldest message
-		if TOKEN_LIMIT_ERROR_TEXT in str(e):
+		if messages and TOKEN_LIMIT_ERROR_TEXT in str(e):
 			messages.pop(0)
 		
 		time.sleep(MODEL_ERROR_SLEEP_TIME)				
