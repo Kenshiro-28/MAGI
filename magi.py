@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.07
+Version     : 2.08
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -35,6 +35,8 @@ SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant 
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_ERROR_SLEEP_TIME = 5
+
+TOKEN_LIMIT_ERROR_TEXT = "tokens"
 
 SYSTEM_COLOR = "\033[32m"
 MAGI_COLOR = "\033[99m"
@@ -71,13 +73,18 @@ def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERAT
 		response = openai.ChatCompletion.create(
 		    model=model,
 		    messages=messages,
-		    temperature=temperature, # this is the degree of randomness of the model's output
+		    temperature=temperature,
 		)
 
 		return response.choices[0].message["content"]
 		
 	except Exception as e:
 		printSystemText(MODEL_ERROR_TEXT + str(e), False) 
+		
+		# If the token limit is exceeded, forget the oldest message
+		if TOKEN_LIMIT_ERROR_TEXT in str(e):
+			messages.pop(0)
+		
 		time.sleep(MODEL_ERROR_SLEEP_TIME)				
 
 		return get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE)
