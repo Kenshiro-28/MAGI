@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.08
+Version     : 2.09
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -22,7 +22,9 @@ SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and pr
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_FILE_PATH = "mission.txt"
-MISSION_PROMPT = "Divide this mission in a list of independent tasks to be executed by you, one task per line, without subtasks. Write ONLY the list of tasks. MISSION: "
+GENERATE_MISSION_TEXT = "Divide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
+MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission. MISSION = "
+CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
@@ -111,14 +113,14 @@ def send_prompt(primeDirectives, prompt, context):
 def printSystemText(text, missionMode):
 	print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)
 	
-	if missionMode == True:
+	if missionMode:
 		saveMissionData(text)	
 
 	
 def printMagiText(text, missionMode):
 	print(END_COLOR + MAGI_COLOR + text + END_COLOR)
 	
-	if missionMode == True:
+	if missionMode:
 		saveMissionData(text)		
 
 
@@ -132,7 +134,7 @@ def userInput(missionMode):
 
 	prompt = input(USER_COLOR + "\n$ ")
 	
-	if missionMode == True:
+	if missionMode:
 		saveMissionData(prompt)	
 	
 	return prompt		
@@ -140,25 +142,33 @@ def userInput(missionMode):
 
 def runMission(primeDirectives, prompt, context):
 	summary = ""
+	missionCompleted = False
 
-	mission = send_prompt(primeDirectives, MISSION_PROMPT + prompt, context)
-	
-	missionTitle = NEW_MISSION_TEXT + mission + "\n"
-	
-	printSystemText(missionTitle, True)
-	
-	# Remove blank lines
-	mission = [line for line in mission.splitlines() if line.strip()]
-
-	for task in mission:
-		printSystemText("\n" + task, True)
-
-		response = runPrompt(primeDirectives, summary + "\n" + task, context, True)	
-
-		auxContext = copy.deepcopy(context)
-
-		summary = summarize(primeDirectives, prompt, auxContext, summary + response)	
+	while not missionCompleted:
+		mission = send_prompt(primeDirectives, GENERATE_MISSION_TEXT + summary + prompt, context)
 		
+		missionTitle = NEW_MISSION_TEXT + mission + "\n"
+		
+		printSystemText(missionTitle, True)
+		
+		# Remove blank lines
+		mission = [line for line in mission.splitlines() if line.strip()]
+
+		for task in mission:
+			printSystemText("\n" + task, True)
+
+			response = runPrompt(primeDirectives, summary + "\n" + task, context, True)	
+
+			auxContext = copy.deepcopy(context)
+
+			summary = summarize(primeDirectives, prompt, auxContext, summary + "\n" + response)	
+		
+		auxContext = copy.deepcopy(context)
+		missionCompleted = isPromptCompleted(primeDirectives, summary + MISSION_COMPLETED_TEXT + prompt, auxContext)
+		
+		if not missionCompleted:
+			printMagiText(CONTINUE_MISSION_TEXT + summary, True)		
+
 
 def summarize(primeDirectives, prompt, context, text):
 	query = text + SUMMARIZE_TEXT + prompt
@@ -198,10 +208,10 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 	return summary
 	
 
-def isWebBrowsingRequired(primeDirectives, prompt, webContext):
+def isPromptCompleted(primeDirectives, prompt, context):
 	answer = False
 
-	response = send_prompt(primeDirectives, BROWSE_INTERNET_QUERY_TEXT + prompt, webContext)
+	response = send_prompt(primeDirectives, prompt, context)
 	
 	# Remove dots and convert to uppercase
 	response = response.replace(".", "").upper()
@@ -210,21 +220,21 @@ def isWebBrowsingRequired(primeDirectives, prompt, webContext):
 		answer = True
 		
 	return answer
-
+	
 
 def runPrompt(primeDirectives, prompt, context, missionMode):	
 	webContext = copy.deepcopy(context)
 
 	newPrompt = prompt
 
-	browseWeb = isWebBrowsingRequired(primeDirectives, prompt, webContext)
+	browseWeb = isPromptCompleted(primeDirectives, BROWSE_INTERNET_QUERY_TEXT + prompt, webContext)
 	
-	while browseWeb == True:
+	while browseWeb:
 		summary = webSearch(primeDirectives, newPrompt, webContext, missionMode)
 
 		newPrompt = prompt + "\n" + summary
 			
-		browseWeb = isWebBrowsingRequired(primeDirectives, newPrompt, webContext)			
+		browseWeb = isPromptCompleted(primeDirectives, BROWSE_INTERNET_QUERY_TEXT + newPrompt, webContext)
 
 	# Send the prompt to the model	
 	response = send_prompt(primeDirectives, newPrompt, context)
@@ -244,7 +254,7 @@ def checkPrompt(primeDirectives, prompt, context, missionMode):
 def switchMissionMode(missionMode):
 	missionMode = not missionMode
 
-	if missionMode == True:
+	if missionMode:
 		printSystemText("\nMission mode enabled", False)
 	else:
 		printSystemText("\nMission mode disabled", False)
