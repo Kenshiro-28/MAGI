@@ -118,17 +118,17 @@ def printSystemText(text, missionMode):
 	print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)
 	
 	if missionMode:
-		saveMissionData(text)	
+		saveMissionLog(text)	
 
 	
 def printMagiText(text, missionMode):
 	print(END_COLOR + MAGI_COLOR + text + END_COLOR)
 	
 	if missionMode:
-		saveMissionData(text)		
+		saveMissionLog(text)		
 
 
-def saveMissionData(text):
+def saveMissionLog(text):
 	with open(MISSION_LOG_FILE_PATH, 'a') as missionFile:
 		missionFile.write(text + "\n")
 
@@ -139,7 +139,7 @@ def userInput(missionMode):
 	prompt = input(USER_COLOR + "\n$ ")
 	
 	if missionMode:
-		saveMissionData(prompt)	
+		saveMissionLog(prompt)	
 	
 	return prompt		
 
