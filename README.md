@@ -10,7 +10,9 @@ You can set your Prime Directives in the file **prime_directives.txt**.
 
 ## Mission mode
 
-MAGI features a Mission mode that analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves. To enable Mission mode, type the letter **m** and press enter. The mission data will be saved in the file **mission.txt**.
+MAGI features a Mission mode that analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves. To enable Mission mode, type the letter **m** and press enter. The mission log will be saved in the file **mission_log.txt**.
+
+You can add useful information in the file **mission_data.txt**. This information will only be used if it is related to the current mission.
 
 ## API key 
 
