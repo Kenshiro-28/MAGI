@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.09
+Version     : 2.10
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -21,7 +21,9 @@ TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
-MISSION_FILE_PATH = "mission.txt"
+MISSION_LOG_FILE_PATH = "mission_log.txt"
+MISSION_DATA_FILE_PATH = "mission_data.txt"
+MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 GENERATE_MISSION_TEXT = "Divide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n\n"
@@ -38,7 +40,9 @@ SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_ERROR_SLEEP_TIME = 5
 
-TOKEN_LIMIT_ERROR_TEXT = "tokens"
+TOKEN_LIMIT_ERROR = "tokens"
+
+READ_TEXT_FILE_WARNING = "\n[WARNING] File not found: "
 
 SYSTEM_COLOR = "\033[32m"
 MAGI_COLOR = "\033[99m"
@@ -84,7 +88,7 @@ def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERAT
 		printSystemText(MODEL_ERROR_TEXT + str(e), False) 
 		
 		# If the token limit is exceeded, forget the oldest message
-		if messages and TOKEN_LIMIT_ERROR_TEXT in str(e):
+		if messages and TOKEN_LIMIT_ERROR in str(e):
 			messages.pop(0)
 		
 		time.sleep(MODEL_ERROR_SLEEP_TIME)				
@@ -125,7 +129,7 @@ def printMagiText(text, missionMode):
 
 
 def saveMissionData(text):
-	with open(MISSION_FILE_PATH, 'a') as missionFile:
+	with open(MISSION_LOG_FILE_PATH, 'a') as missionFile:
 		missionFile.write(text + "\n")
 
 	
@@ -141,8 +145,13 @@ def userInput(missionMode):
 
 
 def runMission(primeDirectives, prompt, context):
-	summary = ""
 	missionCompleted = False
+
+	# Load mission data
+	summary = loadMissionData(primeDirectives, prompt, context)
+	
+	if summary:			
+		printSystemText(MISSION_DATA_TEXT + summary, True)
 
 	while not missionCompleted:
 		mission = send_prompt(primeDirectives, GENERATE_MISSION_TEXT + summary + prompt, context)
@@ -177,6 +186,26 @@ def summarize(primeDirectives, prompt, context, text):
 	return summary	
 
 
+def summarizeBlockArray(primeDirectives, prompt, context, blockArray):
+	summary = ""
+
+	# Summarize
+	for block in blockArray:
+		summary = summarize(primeDirectives, prompt, context, summary + block)
+
+	return summary		
+
+
+def loadMissionData(primeDirectives, prompt, context):
+	missionData = readTextFile(MISSION_DATA_FILE_PATH)
+		
+	blockArray = split_text_in_blocks(missionData)
+
+	summary = summarizeBlockArray(primeDirectives, prompt, context, blockArray)	
+		
+	return summary			
+
+
 def webSearch(primeDirectives, prompt, webContext, missionMode):
 	summary = ""
 
@@ -198,9 +227,7 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 		text = web.scrape(url)
 		blockArray = split_text_in_blocks(text)
 
-		# Summarize
-		for block in blockArray:
-			summary = summarize(primeDirectives, prompt, webContext, summary + block)
+		summary = summarizeBlockArray(primeDirectives, prompt, webContext, blockArray)
 
 		if summary:			
 			printSystemText("\n" + summary, missionMode)
@@ -262,14 +289,25 @@ def switchMissionMode(missionMode):
 	return missionMode
 
 
+def readTextFile(path):
+	try:
+		with open(path) as textFile:
+			text = textFile.read().strip()
+			return text	
+	
+	except FileNotFoundError:
+		printSystemText(READ_TEXT_FILE_WARNING + str(path), False)
+		return ""
+	
+
 # Main logic
 context = []
 missionMode = False
+primeDirectives = readTextFile(PRIME_DIRECTIVES_FILE_PATH)
 
 printSystemText(MODEL_TEXT + MODEL, missionMode)
 
-with open(PRIME_DIRECTIVES_FILE_PATH) as primeDirectivesFile:
-	primeDirectives = primeDirectivesFile.read().strip()
+if primeDirectives:
 	printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives, missionMode)
 
 printSystemText(SYSTEM_HINT_TEXT, missionMode)
