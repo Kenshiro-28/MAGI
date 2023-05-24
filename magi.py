@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.10
+Version     : 2.11
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -26,13 +26,13 @@ MISSION_DATA_FILE_PATH = "mission_data.txt"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 GENERATE_MISSION_TEXT = "Divide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
-CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n\n"
+CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
 MODEL_TEXT = "\nModel: "
 GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
-BROWSE_INTERNET_QUERY_TEXT = "Tell me if you need updated information from the internet to do this task, write only YES or NO: "
+BROWSE_INTERNET_QUERY_TEXT = "Tell me if you need to get updated information from the internet to perform this task, write only YES or NO. TASK = "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
 SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant to PROMPT. Please also remove any references to this website or other websites. Then rewrite it in a professional style. PROMPT = "
