@@ -14,9 +14,11 @@ MAGI features a Mission mode that analyzes your query and generates an enhanced 
 
 You can add useful information in the file **mission_data.txt**. This information will only be used if it is related to the current mission.
 
-## API key 
+## Model 
 
-Save your OpenAI API key in an environment variable called **OPENAI_API_KEY**.
+You can use any model that is compatible with Llama.cpp. After cloning the repository, save your model to the root folder. This one is working fine:
+
+https://huggingface.co/TheBloke/wizard-vicuna-13B-GGML/resolve/main/wizard-vicuna-13B.ggmlv3.q4_0.bin
 
 ## Installation
 
@@ -52,10 +54,10 @@ You can install Docker from the official repositories of your Linux system:
 $ sudo apt install docker.io
 ```
 
-Create a Docker image with the OpenAI key:
+Create a Docker image:
 
 ```
-$ sudo docker build --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} --no-cache -t magi .
+$ sudo docker build --no-cache -t magi .
 ```
 
 ### Running

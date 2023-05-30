@@ -2,22 +2,19 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 2.11
+Version     : 3.00
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
 '''
 
-import openai
+from llama_cpp import Llama
 import os
 import sys
 import copy
 import time
 from plugins import web
 
-MODEL = "gpt-3.5-turbo"
-CONTEXT_SIZE = 2 # Number of messages to remember
-TEMPERATURE = 1
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
@@ -28,19 +25,24 @@ GENERATE_MISSION_TEXT = "Divide this mission in a list of independent tasks, one
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
-MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
-MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
-MODEL_TEXT = "\nModel: "
+MISSION_MODE_ENABLED_TEXT = "Mission mode enabled"
+MISSION_MODE_DISABLED_TEXT = "Mission mode disabled"
+MODEL_TEXT = "\n\nModel: "
+USER_TEXT = "### USER: " 
+ASSISTANT_TEXT = "\n### ASSISTANT: "
 GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
-BROWSE_INTERNET_QUERY_TEXT = "Tell me if you need to get updated information from the internet to perform this task, write only YES or NO. TASK = "
+BROWSE_INTERNET_QUERY_TEXT = "Does the information in TEXT refer to something that exists at the present moment? Write only YES or NO. TEXT = "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant to PROMPT. Please also remove any references to this website or other websites. Then rewrite it in a professional style. PROMPT = "
+SUMMARIZE_TEXT = ". Summarize the above text, including ONLY information that is relevant to: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
-MODEL_ERROR_SLEEP_TIME = 5
+MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found."
 
-TOKEN_LIMIT_ERROR = "tokens"
+MAX_TOKENS = 2048
+EXTRA_TOKEN_COUNT = 48
+MAX_INPUT_TOKENS = MAX_TOKENS // 2
+MAX_INPUT_TOKENS_ERROR = "[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
 READ_TEXT_FILE_WARNING = "\n[WARNING] File not found: "
 
@@ -55,8 +57,6 @@ GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
 MISSION_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
-
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 def split_text_in_blocks(text):
@@ -74,42 +74,46 @@ def split_text_in_blocks(text):
 	return blockArray
 
 
-def get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE):
-	try:
-		response = openai.ChatCompletion.create(
-		    model=model,
-		    messages=messages,
-		    temperature=temperature,
-		)
+def get_number_of_tokens(text):
+	tokenized_text = model.tokenize(text.encode('utf-8'))
+	text_tokens = len(tokenized_text) + EXTRA_TOKEN_COUNT
+	
+	return text_tokens
+	
 
-		return response.choices[0].message["content"]
+def get_context_data(context):
+	text = ' '.join(context)
+	text_tokens = get_number_of_tokens(text)
+	
+	return text, text_tokens
+	
+	
+def get_completion_from_messages(context):
+	try:
+		text, text_tokens = get_context_data(context)
+		
+		# Check context size
+		while context and text_tokens > MAX_INPUT_TOKENS:
+			context.pop(0)
+			text, text_tokens = get_context_data(context)
+
+		response = model(text, max_tokens = MAX_TOKENS - text_tokens)
+
+		return response['choices'][0]['text']
 		
 	except Exception as e:
 		printSystemText(MODEL_ERROR_TEXT + str(e), False) 
-		
-		# If the token limit is exceeded, forget the oldest message
-		if messages and TOKEN_LIMIT_ERROR in str(e):
-			messages.pop(0)
-		
-		time.sleep(MODEL_ERROR_SLEEP_TIME)				
-
-		return get_completion_from_messages(messages, model = MODEL, temperature = TEMPERATURE)
+		exit()
 
 
 def send_prompt(primeDirectives, prompt, context):
-	command = primeDirectives + "\n" + prompt
-	context.append({'role':'user', 'content':f"{command}"})
+	command = USER_TEXT + primeDirectives + " " + prompt + ASSISTANT_TEXT
+
+	context.append(command)
 
 	response = get_completion_from_messages(context) 
 
-	context.append({'role':'assistant', 'content':f"{response}"})
-
-	# Check context size
-	contextSize = len(context)
-	
-	while contextSize > CONTEXT_SIZE:
-		context.pop(0)
-		contextSize = len(context)		
+	context.append(response)
 
 	return response
 
@@ -138,6 +142,8 @@ def userInput(missionMode):
 
 	prompt = input(USER_COLOR + "\n$ ")
 	
+	print(SYSTEM_COLOR)	
+	
 	if missionMode:
 		saveMissionLog(prompt)	
 	
@@ -148,13 +154,13 @@ def runMission(primeDirectives, prompt, context):
 	missionCompleted = False
 
 	# Load mission data
-	summary = loadMissionData(primeDirectives, prompt, context)
+	summary = loadMissionData(prompt, context)
 	
 	if summary:			
 		printSystemText(MISSION_DATA_TEXT + summary, True)
 
 	while not missionCompleted:
-		mission = send_prompt(primeDirectives, GENERATE_MISSION_TEXT + summary + prompt, context)
+		mission = send_prompt("", GENERATE_MISSION_TEXT + summary + prompt, context)
 		
 		missionTitle = NEW_MISSION_TEXT + mission + "\n"
 		
@@ -166,50 +172,50 @@ def runMission(primeDirectives, prompt, context):
 		for task in mission:
 			printSystemText("\n" + task, True)
 
-			response = runPrompt(primeDirectives, summary + "\n" + task, context, True)	
+			response = runPrompt(primeDirectives, summary + " " + task, context, True)	
 
 			auxContext = copy.deepcopy(context)
 
-			summary = summarize(primeDirectives, prompt, auxContext, summary + "\n" + response)	
+			summary = summarize(prompt, auxContext, summary + " " + response)	
 		
 		auxContext = copy.deepcopy(context)
-		missionCompleted = isPromptCompleted(primeDirectives, summary + MISSION_COMPLETED_TEXT + prompt, auxContext)
+		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + prompt, auxContext)
 		
 		if not missionCompleted:
 			printMagiText(CONTINUE_MISSION_TEXT + summary, True)		
 
 
-def summarize(primeDirectives, prompt, context, text):
+def summarize(prompt, context, text):
 	query = text + SUMMARIZE_TEXT + prompt
-	summary = send_prompt(primeDirectives, query, context) 
+	summary = send_prompt("", query, context) 
 	
 	return summary	
 
 
-def summarizeBlockArray(primeDirectives, prompt, context, blockArray):
+def summarizeBlockArray(prompt, context, blockArray):
 	summary = ""
 
 	# Summarize
 	for block in blockArray:
-		summary = summarize(primeDirectives, prompt, context, summary + block)
+		summary = summarize(prompt, context, summary + block)
 
 	return summary		
 
 
-def loadMissionData(primeDirectives, prompt, context):
+def loadMissionData(prompt, context):
 	missionData = readTextFile(MISSION_DATA_FILE_PATH)
 		
 	blockArray = split_text_in_blocks(missionData)
 
-	summary = summarizeBlockArray(primeDirectives, prompt, context, blockArray)	
+	summary = summarizeBlockArray(prompt, context, blockArray)	
 		
 	return summary			
 
 
-def webSearch(primeDirectives, prompt, webContext, missionMode):
+def webSearch(prompt, webContext, missionMode):
 	summary = ""
 
-	query = send_prompt(primeDirectives, GENERATE_WEB_QUERY_TEXT + prompt, webContext)
+	query = send_prompt("", GENERATE_WEB_QUERY_TEXT + prompt, webContext)
 
 	# Remove double quotes
 	query = query.replace('"', '')
@@ -227,7 +233,7 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 		text = web.scrape(url)
 		blockArray = split_text_in_blocks(text)
 
-		summary = summarizeBlockArray(primeDirectives, prompt, webContext, blockArray)
+		summary = summarizeBlockArray(prompt, webContext, blockArray)
 
 		if summary:			
 			printSystemText("\n" + summary, missionMode)
@@ -235,13 +241,12 @@ def webSearch(primeDirectives, prompt, webContext, missionMode):
 	return summary
 	
 
-def isPromptCompleted(primeDirectives, prompt, context):
+def isPromptCompleted(prompt, context):
 	answer = False
 
-	response = send_prompt(primeDirectives, prompt, context)
+	response = send_prompt("", prompt, context)
 	
-	# Remove dots and convert to uppercase
-	response = response.replace(".", "").upper()
+	response = response.split()[0].replace(".", "").replace(",", "").strip().upper()
 	
 	if response == "YES":
 		answer = True
@@ -254,14 +259,14 @@ def runPrompt(primeDirectives, prompt, context, missionMode):
 
 	newPrompt = prompt
 
-	browseWeb = isPromptCompleted(primeDirectives, BROWSE_INTERNET_QUERY_TEXT + prompt, webContext)
+	browseWeb = isPromptCompleted(BROWSE_INTERNET_QUERY_TEXT + prompt, webContext)
 	
 	while browseWeb:
-		summary = webSearch(primeDirectives, newPrompt, webContext, missionMode)
+		summary = webSearch(newPrompt, webContext, missionMode)
 
-		newPrompt = prompt + "\n" + summary
+		newPrompt = prompt + ". " + summary
 			
-		browseWeb = isPromptCompleted(primeDirectives, BROWSE_INTERNET_QUERY_TEXT + newPrompt, webContext)
+		browseWeb = isPromptCompleted(BROWSE_INTERNET_QUERY_TEXT + newPrompt, webContext)
 
 	# Send the prompt to the model	
 	response = send_prompt(primeDirectives, newPrompt, context)
@@ -282,9 +287,9 @@ def switchMissionMode(missionMode):
 	missionMode = not missionMode
 
 	if missionMode:
-		printSystemText("\nMission mode enabled", False)
+		printSystemText(MISSION_MODE_ENABLED_TEXT, False)
 	else:
-		printSystemText("\nMission mode disabled", False)
+		printSystemText(MISSION_MODE_DISABLED_TEXT, False)
 		
 	return missionMode
 
@@ -300,12 +305,41 @@ def readTextFile(path):
 		return ""
 	
 
+def loadModel():
+	model = None
+
+	fileArray = os.listdir()
+
+	# Filter for .bin files
+	binFileArray = [f for f in fileArray if f.endswith('.bin')]
+
+	if binFileArray:
+		# Get the first .bin file
+		modelFile = binFileArray[0]
+
+		# Get the file name without the .bin extension
+		modelName = os.path.splitext(modelFile)[0]
+		
+		print()
+		
+		# Load model		
+		model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS)
+
+		# Print model name		
+		printSystemText(MODEL_TEXT + modelName, False)	
+	else:
+		printSystemText(MODEL_NOT_FOUND_ERROR, False)
+		exit()		
+		
+	return model		
+
+
 # Main logic
 context = []
 missionMode = False
-primeDirectives = readTextFile(PRIME_DIRECTIVES_FILE_PATH)
+model = loadModel()
 
-printSystemText(MODEL_TEXT + MODEL, missionMode)
+primeDirectives = readTextFile(PRIME_DIRECTIVES_FILE_PATH)
 
 if primeDirectives:
 	printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives, missionMode)
@@ -315,8 +349,13 @@ printSystemText(SYSTEM_HINT_TEXT, missionMode)
 # Main loop
 while True:
 	prompt = userInput(missionMode)
-
+	prompt_tokens = get_number_of_tokens(prompt)
+	
 	if prompt == "":
+		continue
+	
+	if prompt_tokens > MAX_INPUT_TOKENS:
+		printSystemText(MAX_INPUT_TOKENS_ERROR + str(prompt_tokens), False)
 		continue
 	
 	command = prompt.split()[0]

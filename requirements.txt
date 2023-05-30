@@ -1,4 +1,4 @@
-openai
+llama-cpp-python
 selenium
 bs4
 webdriver_manager

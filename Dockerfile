@@ -16,10 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 WORKDIR /app
 COPY . /app
 
-# Get the variable OPENAI_API_KEY from system environment
-ARG OPENAI_API_KEY
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-
 # Specify the command to run your Python app
 CMD ["python", "magi.py"]
 
