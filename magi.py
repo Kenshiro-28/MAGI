@@ -142,8 +142,6 @@ def userInput(missionMode):
 
 	prompt = input(USER_COLOR + "\n$ ")
 	
-	print(SYSTEM_COLOR)	
-	
 	if missionMode:
 		saveMissionLog(prompt)	
 	
@@ -324,6 +322,7 @@ def loadModel():
 		
 		# Load model		
 		model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS)
+		model.verbose = False
 
 		# Print model name		
 		printSystemText(MODEL_TEXT + modelName, False)	
