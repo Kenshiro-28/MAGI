@@ -172,7 +172,7 @@ def runMission(primeDirectives, prompt, context):
 		for task in mission:
 			printSystemText("\n" + task, True)
 
-			response = runPrompt(primeDirectives, summary + " " + task, context, True)	
+			response = runPrompt(primeDirectives, task, context, True)	
 
 			auxContext = copy.deepcopy(context)
 
