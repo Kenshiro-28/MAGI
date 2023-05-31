@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent leveraging the GPT model, providing streamlined and professional AI assistance for various tasks. Each time a query is made, MAGI decides autonomously whether to access the Internet for up-to-date information. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves.
+MAGI is an autonomous agent leveraging the LLaMA model, providing streamlined and professional AI assistance for various tasks. Each time a query is made, MAGI decides autonomously whether to access the Internet for up-to-date information. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves.
 
 ## Prime Directives
 
@@ -16,13 +16,15 @@ You can add useful information in the file **mission_data.txt**. This informatio
 
 ## Model 
 
-You can use any model that is compatible with Llama.cpp. After cloning the repository, save your model to the root folder. This one is working fine:
+You can use any LLaMA model that is compatible with Llama.cpp. After cloning the repository, save the .bin file in the root folder. This one is working fine:
 
 https://huggingface.co/TheBloke/wizard-vicuna-13B-GGML/resolve/main/wizard-vicuna-13B.ggmlv3.q4_0.bin
 
 ## Installation
 
 - Clone this repository.
+
+- Save a LlaMA model in the root folder.
 
 - Install Python 3.10 or later.
 
@@ -54,7 +56,7 @@ You can install Docker from the official repositories of your Linux system:
 $ sudo apt install docker.io
 ```
 
-Create a Docker image:
+Save a LlaMA model in the root folder and create a Docker image:
 
 ```
 $ sudo docker build --no-cache -t magi .
