@@ -16,7 +16,7 @@ You can add useful information in the file **mission_data.txt**. This informatio
 
 ## Model 
 
-You can use any LLaMA model that is compatible with Llama.cpp. After cloning the repository, save the .bin file in the root folder. This one is working fine:
+You can use any LLaMA model that is compatible with llama.cpp. After cloning the repository, save the .bin file in the root folder. This one is working fine:
 
 https://huggingface.co/TheBloke/wizard-vicuna-13B-GGML/resolve/main/wizard-vicuna-13B.ggmlv3.q4_0.bin
 
@@ -24,7 +24,7 @@ https://huggingface.co/TheBloke/wizard-vicuna-13B-GGML/resolve/main/wizard-vicun
 
 - Clone this repository.
 
-- Save a LlaMA model in the root folder.
+- Save a LLaMA model in the root folder.
 
 - Install Python 3.10 or later.
 
@@ -56,7 +56,7 @@ You can install Docker from the official repositories of your Linux system:
 $ sudo apt install docker.io
 ```
 
-Save a LlaMA model in the root folder and create a Docker image:
+Save a LLaMA model in the root folder and create a Docker image:
 
 ```
 $ sudo docker build --no-cache -t magi .
