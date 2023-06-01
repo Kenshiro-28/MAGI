@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.00
+Version     : 3.01
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -28,13 +28,13 @@ NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
 MODEL_TEXT = "\n\nModel: "
-USER_TEXT = "### USER: " 
-ASSISTANT_TEXT = "\n### ASSISTANT: "
+USER_TEXT = "USER: " 
+ASSISTANT_TEXT = " ASSISTANT: "
 GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
 BROWSE_INTERNET_QUERY_TEXT = "Does the information in TEXT refer to something that exists at the present moment? Write only YES or NO. TEXT = "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-SUMMARIZE_TEXT = ". Summarize the above text, including ONLY information that is relevant to: "
+SUMMARIZE_TEXT = ". Summarize the above text, including ONLY the information that is relevant to: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found."
@@ -99,7 +99,7 @@ def get_completion_from_messages(context):
 
 		response = model(text, max_tokens = MAX_TOKENS - text_tokens)
 
-		return response['choices'][0]['text']
+		return response['choices'][0]['text'].lstrip()
 		
 	except Exception as e:
 		printSystemText(MODEL_ERROR_TEXT + str(e), False) 

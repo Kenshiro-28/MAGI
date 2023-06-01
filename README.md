@@ -16,7 +16,14 @@ You can add useful information in the file **mission_data.txt**. This informatio
 
 ## Model 
 
-You can use any LLaMA model that is compatible with llama.cpp. After cloning the repository, save the .bin file in the root folder. This one is working fine:
+You can use any LLaMA model that is compatible with llama.cpp and has the Vicuna v1.1 prompt format:
+
+```
+USER: Who was Sun Tzu?
+ASSISTANT: 
+```
+
+After cloning the repository, save the .bin file in the root folder. This one is working fine:
 
 https://huggingface.co/TheBloke/wizard-vicuna-13B-GGML/resolve/main/wizard-vicuna-13B.ggmlv3.q4_0.bin
 
