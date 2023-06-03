@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.01
+Version     : 3.02
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -34,10 +34,10 @@ GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information
 BROWSE_INTERNET_QUERY_TEXT = "Does the information in TEXT refer to something that exists at the present moment? Write only YES or NO. TEXT = "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-SUMMARIZE_TEXT = ". Summarize the above text, including ONLY the information that is relevant to: "
+SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant to PROMPT. Then rewrite it in a professional style. PROMPT = "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
-MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found."
+MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
 MAX_TOKENS = 2048
 EXTRA_TOKEN_COUNT = 48
@@ -51,7 +51,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 500
+TEXT_BLOCK_WORDS = 200
 
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
