@@ -158,7 +158,8 @@ def runMission(primeDirectives, prompt, context):
 		printSystemText(MISSION_DATA_TEXT + summary, True)
 
 	while not missionCompleted:
-		mission = send_prompt("", summary + GENERATE_MISSION_TEXT + prompt, context)
+		auxContext = copy.deepcopy(context)	
+		mission = send_prompt("", summary + GENERATE_MISSION_TEXT + prompt, auxContext)
 		
 		missionTitle = NEW_MISSION_TEXT + mission + "\n"
 		
