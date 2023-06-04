@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.02
+Version     : 3.03
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -21,7 +21,7 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_LOG_FILE_PATH = "mission_log.txt"
 MISSION_DATA_FILE_PATH = "mission_data.txt"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_MISSION_TEXT = "Divide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
+GENERATE_MISSION_TEXT = "\nDivide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
@@ -31,7 +31,7 @@ MODEL_TEXT = "\n\nModel: "
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
 GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
-BROWSE_INTERNET_QUERY_TEXT = "Does the information in TEXT refer to something that exists at the present moment? Write only YES or NO. TEXT = "
+BROWSE_INTERNET_QUERY_TEXT = "Is this a request for information about a non-historical event? Write only YES or NO: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
 SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant to PROMPT. Then rewrite it in a professional style. PROMPT = "
@@ -41,7 +41,7 @@ MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
 MAX_TOKENS = 2048
 EXTRA_TOKEN_COUNT = 48
-MAX_INPUT_TOKENS = MAX_TOKENS // 2
+MAX_INPUT_TOKENS = MAX_TOKENS // 2 + EXTRA_TOKEN_COUNT
 MAX_INPUT_TOKENS_ERROR = "[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
 READ_TEXT_FILE_WARNING = "\n[WARNING] File not found: "
@@ -107,7 +107,7 @@ def get_completion_from_messages(context):
 
 
 def send_prompt(primeDirectives, prompt, context):
-	command = USER_TEXT + primeDirectives + " " + prompt + ASSISTANT_TEXT
+	command = USER_TEXT + primeDirectives + "\n" + prompt + ASSISTANT_TEXT
 
 	context.append(command)
 
@@ -152,13 +152,13 @@ def runMission(primeDirectives, prompt, context):
 	missionCompleted = False
 
 	# Load mission data
-	summary = loadMissionData(prompt, context)
+	summary = loadMissionData(prompt)
 	
 	if summary:			
 		printSystemText(MISSION_DATA_TEXT + summary, True)
 
 	while not missionCompleted:
-		mission = send_prompt("", GENERATE_MISSION_TEXT + summary + prompt, context)
+		mission = send_prompt("", summary + GENERATE_MISSION_TEXT + prompt, context)
 		
 		missionTitle = NEW_MISSION_TEXT + mission + "\n"
 		
@@ -173,8 +173,7 @@ def runMission(primeDirectives, prompt, context):
 			response = runPrompt(primeDirectives, task, context, True)	
 
 			auxContext = copy.deepcopy(context)
-
-			summary = summarize(prompt, auxContext, summary + " " + response)	
+			summary = summarize(prompt, auxContext, summary + "\n" + response)	
 		
 		auxContext = copy.deepcopy(context)
 		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + prompt, auxContext)
@@ -200,7 +199,9 @@ def summarizeBlockArray(prompt, context, blockArray):
 	return summary		
 
 
-def loadMissionData(prompt, context):
+def loadMissionData(prompt):
+	context = []
+
 	missionData = readTextFile(MISSION_DATA_FILE_PATH)
 		
 	blockArray = split_text_in_blocks(missionData)
@@ -253,21 +254,18 @@ def isPromptCompleted(prompt, context):
 	
 
 def runPrompt(primeDirectives, prompt, context, missionMode):	
-	webContext = copy.deepcopy(context)
+	summary = ""
 
-	newPrompt = prompt
+	webContext = copy.deepcopy(context)
 
 	browseWeb = isPromptCompleted(BROWSE_INTERNET_QUERY_TEXT + prompt, webContext)
 	
-	while browseWeb:
-		summary = webSearch(newPrompt, webContext, missionMode)
-
-		newPrompt = prompt + ". " + summary
-			
-		browseWeb = isPromptCompleted(BROWSE_INTERNET_QUERY_TEXT + newPrompt, webContext)
+	if browseWeb:
+		summary = webSearch(prompt, webContext, missionMode)
+		summary += "\n"	
 
 	# Send the prompt to the model	
-	response = send_prompt(primeDirectives, newPrompt, context)
+	response = send_prompt(primeDirectives, summary + prompt, context)
 
 	printMagiText("\n" + response, missionMode)
 	
