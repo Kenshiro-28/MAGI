@@ -209,8 +209,6 @@ def loadMissionData(prompt):
 
 
 def webSearch(prompt, context, missionMode):
-	summary = ""
-
 	# Remove digits, dots, dashes and spaces at the beginning of the prompt
 	query = re.sub(r"^[0-9.\- ]*", '', prompt)
 
@@ -231,8 +229,6 @@ def webSearch(prompt, context, missionMode):
 
 		if summary:			
 			printSystemText("\n" + summary, missionMode)
-			
-	return summary
 	
 
 def isPromptCompleted(prompt, context):
@@ -250,10 +246,8 @@ def isPromptCompleted(prompt, context):
 	
 
 def runPrompt(primeDirectives, prompt, context, missionMode):	
-	summary = ""
-
 	if missionMode:
-		summary = webSearch(prompt, context, missionMode)
+		webSearch(prompt, context, missionMode)
 
 	# Send the prompt to the model	
 	response = send_prompt(primeDirectives, prompt, context)
