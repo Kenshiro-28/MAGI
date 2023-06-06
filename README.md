@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent leveraging the LLaMA model, providing streamlined and professional AI assistance for various tasks. Each time a query is made, MAGI decides autonomously whether to access the Internet for up-to-date information. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves.
+MAGI is an autonomous agent leveraging the LLaMA model, providing streamlined and professional AI assistance for various tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode runs autonomously, generating a task list and browsing the Internet until the mission is successfully completed.
 
 ## Prime Directives
 
@@ -10,7 +10,7 @@ You can set your Prime Directives in the file **prime_directives.txt**.
 
 ## Mission mode
 
-MAGI features a Mission mode that analyzes your query and generates an enhanced response based on a list of tasks that it automatically solves. To enable Mission mode, type the letter **m** and press enter. The mission log will be saved in the file **mission_log.txt**.
+MAGI features a Mission mode that runs autonomously and browses the Internet for up-to-date information. To enable Mission mode, type the letter **m** and press enter. The mission log will be saved in the file **mission_log.txt**.
 
 You can add useful information in the file **mission_data.txt**. This information will only be used if it is related to the current mission.
 
@@ -25,15 +25,17 @@ ASSISTANT:
 
 After cloning the repository, save the .bin file in the root folder. This one is working fine:
 
-https://huggingface.co/TheBloke/wizard-vicuna-13B-GGML/resolve/main/wizard-vicuna-13B.ggmlv3.q4_0.bin
+https://huggingface.co/CRD716/ggml-vicuna-1.1-quantized/resolve/main/ggml-vicuna-7b-1.1-q5_1.bin
 
 ## Installation
+
+- Install Python 3.10 or later.
+
+- Install a C++ compiler.
 
 - Clone this repository.
 
 - Save a LLaMA model in the root folder.
-
-- Install Python 3.10 or later.
 
 - Install Python packages:
 
@@ -82,4 +84,5 @@ Print the log of the last run:
 ```
 $ sudo docker logs $(sudo docker ps -l -q)
 ```
+
 

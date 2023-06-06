@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.03
+Version     : 3.04
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -10,6 +10,7 @@ Description : Autonomous agent
 
 from llama_cpp import Llama
 import os
+import re
 import sys
 import copy
 import time
@@ -30,11 +31,9 @@ MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
 MODEL_TEXT = "\n\nModel: "
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
-GENERATE_WEB_QUERY_TEXT = "Generate a query for google search to get information about this question, write only the query: "
-BROWSE_INTERNET_QUERY_TEXT = "Is this a request for information about a non-historical event? Write only YES or NO: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-SUMMARIZE_TEXT = "\nRemove information from the above text that is not relevant to PROMPT. Then rewrite it in a professional style. PROMPT = "
+SUMMARIZE_TEXT = "\nWrite the information from the text above that is relevant to: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
@@ -51,7 +50,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 200
+TEXT_BLOCK_WORDS = 300
 
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
@@ -93,7 +92,7 @@ def get_completion_from_messages(context):
 		text, text_tokens = get_context_data(context)
 		
 		# Check context size
-		while context and text_tokens > MAX_INPUT_TOKENS:
+		while len(context) > 1 and text_tokens > MAX_INPUT_TOKENS:
 			context.pop(0)
 			text, text_tokens = get_context_data(context)
 
@@ -158,8 +157,7 @@ def runMission(primeDirectives, prompt, context):
 		printSystemText(MISSION_DATA_TEXT + summary, True)
 
 	while not missionCompleted:
-		auxContext = copy.deepcopy(context)	
-		mission = send_prompt("", summary + GENERATE_MISSION_TEXT + prompt, auxContext)
+		mission = send_prompt("", summary + GENERATE_MISSION_TEXT + prompt, context)
 		
 		missionTitle = NEW_MISSION_TEXT + mission + "\n"
 		
@@ -173,11 +171,9 @@ def runMission(primeDirectives, prompt, context):
 
 			response = runPrompt(primeDirectives, task, context, True)	
 
-			auxContext = copy.deepcopy(context)
-			summary = summarize(prompt, auxContext, summary + "\n" + response)	
+			summary = summarize(prompt, context, summary + "\n" + response)	
 		
-		auxContext = copy.deepcopy(context)
-		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + prompt, auxContext)
+		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + prompt, context)
 		
 		if not missionCompleted:
 			printMagiText(CONTINUE_MISSION_TEXT + summary, True)		
@@ -212,16 +208,14 @@ def loadMissionData(prompt):
 	return summary			
 
 
-def webSearch(prompt, webContext, missionMode):
+def webSearch(prompt, context, missionMode):
 	summary = ""
 
-	query = send_prompt("", GENERATE_WEB_QUERY_TEXT + prompt, webContext)
+	# Remove digits, dots, dashes and spaces at the beginning of the prompt
+	query = re.sub(r"^[0-9.\- ]*", '', prompt)
 
-	# Remove double quotes
-	query = query.replace('"', '')
-	
 	printSystemText(WEB_SEARCH_TEXT + query, missionMode)
-		
+
 	urls = web.search(query, WEB_SEARCH_LIMIT)
 
 	for url in urls:
@@ -233,7 +227,7 @@ def webSearch(prompt, webContext, missionMode):
 		text = web.scrape(url)
 		blockArray = split_text_in_blocks(text)
 
-		summary = summarizeBlockArray(prompt, webContext, blockArray)
+		summary = summarizeBlockArray(prompt, context, blockArray)
 
 		if summary:			
 			printSystemText("\n" + summary, missionMode)
@@ -245,8 +239,9 @@ def isPromptCompleted(prompt, context):
 	answer = False
 
 	response = send_prompt("", prompt, context)
-	
-	response = response.split()[0].replace(".", "").replace(",", "").strip().upper()
+
+	if response:	
+		response = response.split()[0].replace(".", "").replace(",", "").strip().upper()
 	
 	if response == "YES":
 		answer = True
@@ -257,16 +252,11 @@ def isPromptCompleted(prompt, context):
 def runPrompt(primeDirectives, prompt, context, missionMode):	
 	summary = ""
 
-	webContext = copy.deepcopy(context)
-
-	browseWeb = isPromptCompleted(BROWSE_INTERNET_QUERY_TEXT + prompt, webContext)
-	
-	if browseWeb:
-		summary = webSearch(prompt, webContext, missionMode)
-		summary += "\n"	
+	if missionMode:
+		summary = webSearch(prompt, context, missionMode)
 
 	# Send the prompt to the model	
-	response = send_prompt(primeDirectives, summary + prompt, context)
+	response = send_prompt(primeDirectives, prompt, context)
 
 	printMagiText("\n" + response, missionMode)
 	
