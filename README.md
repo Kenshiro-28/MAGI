@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent leveraging the LLaMA model, providing streamlined and professional AI assistance for various tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode runs autonomously, generating a task list and browsing the Internet until the mission is successfully completed.
+MAGI is an autonomous agent that leverages the LLaMA model to offer streamlined and professional AI assistance across a wide range of tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode allows MAGI to work autonomously and browse the Internet for up-to-date information.
 
 ## Prime Directives
 
@@ -23,7 +23,9 @@ USER: Who was Sun Tzu?
 ASSISTANT: 
 ```
 
-After cloning the repository, save the .bin file in the root folder. This one is working fine:
+After cloning the repository, save the .bin file in the root folder. 
+
+This model works fine on an average computer with 16 GB of RAM:
 
 https://huggingface.co/CRD716/ggml-vicuna-1.1-quantized/resolve/main/ggml-vicuna-7b-1.1-q5_1.bin
 
@@ -59,13 +61,17 @@ I strongly recommend running MAGI inside a Docker container. This method signifi
 
 ### Installation
 
-You can install Docker from the official repositories of your Linux system:
+- Install Docker, you can do it from the official repositories of your Linux system:
 
 ```
 $ sudo apt install docker.io
 ```
 
-Save a LLaMA model in the root folder and create a Docker image:
+- Clone this repository.
+
+- Save a LLaMA model in the root folder.
+
+- Create a Docker image, you can do it by running this command in the root folder:
 
 ```
 $ sudo docker build --no-cache -t magi .
@@ -84,5 +90,4 @@ Print the log of the last run:
 ```
 $ sudo docker logs $(sudo docker ps -l -q)
 ```
-
 

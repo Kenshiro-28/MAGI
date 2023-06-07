@@ -22,7 +22,7 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_LOG_FILE_PATH = "mission_log.txt"
 MISSION_DATA_FILE_PATH = "mission_data.txt"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_MISSION_TEXT = "\nDivide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
+GENERATE_TASK_LIST_TEXT = "Divide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
@@ -33,7 +33,7 @@ USER_TEXT = "USER: "
 ASSISTANT_TEXT = " ASSISTANT: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-SUMMARIZE_TEXT = "\nWrite the information from the text above that is relevant to: "
+SUMMARIZE_TEXT = "\nWrite a detailed summary of the previous text, giving priority to what is related to: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
@@ -147,37 +147,63 @@ def userInput(missionMode):
 	return prompt		
 
 
-def runMission(primeDirectives, prompt, context):
+def runMission(primeDirectives, mission, context):
 	missionCompleted = False
 
-	# Load mission data
-	summary = loadMissionData(prompt)
+	summary = loadMissionData(mission)
 	
 	if summary:			
 		printSystemText(MISSION_DATA_TEXT + summary, True)
 
 	while not missionCompleted:
-		mission = send_prompt("", summary + GENERATE_MISSION_TEXT + prompt, context)
+		taskListText = send_prompt("", summary + GENERATE_TASK_LIST_TEXT + mission, context)
 		
-		missionTitle = NEW_MISSION_TEXT + mission + "\n"
+		printSystemText(NEW_MISSION_TEXT + taskListText + "\n", True)
 		
-		printSystemText(missionTitle, True)
-		
-		# Remove blank lines
-		mission = [line for line in mission.splitlines() if line.strip()]
+		# Remove blank lines and create the task list
+		taskList = [line for line in taskListText.splitlines() if line.strip()]
 
-		for task in mission:
+		for task in taskList:
 			printSystemText("\n" + task, True)
 
-			response = runPrompt(primeDirectives, task, context, True)	
+			response = runTask(primeDirectives, task, context)
 
-			summary = summarize(prompt, context, summary + "\n" + response)	
+			summary = summarize(mission, context, summary + "\n" + response)	
 		
-		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + prompt, context)
+		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + mission, context)
 		
 		if not missionCompleted:
 			printMagiText(CONTINUE_MISSION_TEXT + summary, True)		
 
+
+def runTask(primeDirectives, task, context):
+	# Remove digits, dots, dashes and spaces at the beginning of the task
+	task = re.sub(r"^[0-9.\- ]*", '', task)
+	
+	printSystemText(WEB_SEARCH_TEXT + task, True)
+
+	urls = web.search(task, WEB_SEARCH_LIMIT)
+
+	for url in urls:
+		# Ignore translated web pages
+		if GOOGLE_TRANSLATE_URL_TEXT in url:
+			continue
+			
+		printSystemText("\n" + url, True)	
+		text = web.scrape(url)
+		blockArray = split_text_in_blocks(text)
+
+		summary = summarizeBlockArray(task, blockArray)
+
+		if summary:			
+			printSystemText("\n" + summary, True)
+	
+	response = send_prompt(primeDirectives, summary + "\n" + task, context)
+	
+	printMagiText("\n" + response, True)
+	
+	return response
+	
 
 def summarize(prompt, context, text):
 	query = text + SUMMARIZE_TEXT + prompt
@@ -186,7 +212,8 @@ def summarize(prompt, context, text):
 	return summary	
 
 
-def summarizeBlockArray(prompt, context, blockArray):
+def summarizeBlockArray(prompt, blockArray):
+	context = []
 	summary = ""
 
 	# Summarize
@@ -197,40 +224,15 @@ def summarizeBlockArray(prompt, context, blockArray):
 
 
 def loadMissionData(prompt):
-	context = []
-
 	missionData = readTextFile(MISSION_DATA_FILE_PATH)
 		
 	blockArray = split_text_in_blocks(missionData)
 
-	summary = summarizeBlockArray(prompt, context, blockArray)	
+	summary = summarizeBlockArray(prompt, blockArray)	
 		
 	return summary			
 
-
-def webSearch(prompt, context, missionMode):
-	# Remove digits, dots, dashes and spaces at the beginning of the prompt
-	query = re.sub(r"^[0-9.\- ]*", '', prompt)
-
-	printSystemText(WEB_SEARCH_TEXT + query, missionMode)
-
-	urls = web.search(query, WEB_SEARCH_LIMIT)
-
-	for url in urls:
-		# Ignore translated web pages
-		if GOOGLE_TRANSLATE_URL_TEXT in url:
-			continue
-			
-		printSystemText("\n" + url, missionMode)	
-		text = web.scrape(url)
-		blockArray = split_text_in_blocks(text)
-
-		summary = summarizeBlockArray(prompt, context, blockArray)
-
-		if summary:			
-			printSystemText("\n" + summary, missionMode)
 	
-
 def isPromptCompleted(prompt, context):
 	answer = False
 
@@ -245,23 +247,12 @@ def isPromptCompleted(prompt, context):
 	return answer
 	
 
-def runPrompt(primeDirectives, prompt, context, missionMode):	
-	if missionMode:
-		webSearch(prompt, context, missionMode)
-
-	# Send the prompt to the model	
-	response = send_prompt(primeDirectives, prompt, context)
-
-	printMagiText("\n" + response, missionMode)
-	
-	return response	
-	
-
 def checkPrompt(primeDirectives, prompt, context, missionMode):	
 	if missionMode:
 		runMission(primeDirectives, prompt, context)
 	else:
-		runPrompt(primeDirectives, prompt, context, missionMode)
+		response = send_prompt(primeDirectives, prompt, context)
+		printMagiText("\n" + response, False)
 
 
 def switchMissionMode(missionMode):
