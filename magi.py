@@ -22,7 +22,7 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_LOG_FILE_PATH = "mission_log.txt"
 MISSION_DATA_FILE_PATH = "mission_data.txt"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_TASK_LIST_TEXT = "Divide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
+GENERATE_TASK_LIST_TEXT = "\nDivide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
@@ -33,7 +33,7 @@ USER_TEXT = "USER: "
 ASSISTANT_TEXT = " ASSISTANT: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-SUMMARIZE_TEXT = "\nWrite a detailed summary of the previous text, giving priority to what is related to: "
+SUMMARIZE_TEXT = "\nWrite the information from the text above that is relevant to this topic: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
@@ -106,7 +106,10 @@ def get_completion_from_messages(context):
 
 
 def send_prompt(primeDirectives, prompt, context):
-	command = USER_TEXT + primeDirectives + "\n" + prompt + ASSISTANT_TEXT
+	if primeDirectives:
+		primeDirectives += "\n"
+
+	command = USER_TEXT + primeDirectives + prompt + ASSISTANT_TEXT
 
 	context.append(command)
 
@@ -315,7 +318,7 @@ model = loadModel()
 primeDirectives = readTextFile(PRIME_DIRECTIVES_FILE_PATH)
 
 if primeDirectives:
-	printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives, missionMode)
+	printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives, False)
 
 printSystemText(SYSTEM_HINT_TEXT, missionMode)
 		
