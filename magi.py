@@ -33,7 +33,7 @@ USER_TEXT = "USER: "
 ASSISTANT_TEXT = " ASSISTANT: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-SUMMARIZE_TEXT = "\nWrite the information from the text above that is relevant to this topic: "
+SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
@@ -50,7 +50,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 300
+TEXT_BLOCK_WORDS = 400
 
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
@@ -102,7 +102,7 @@ def get_completion_from_messages(context):
 		
 	except Exception as e:
 		printSystemText(MODEL_ERROR_TEXT + str(e), False) 
-		exit()
+		return ""
 
 
 def send_prompt(primeDirectives, prompt, context):
@@ -169,9 +169,9 @@ def runMission(primeDirectives, mission, context):
 		for task in taskList:
 			printSystemText("\n" + task, True)
 
-			response = runTask(primeDirectives, task, context)
-
-			summary = summarize(mission, context, summary + "\n" + response)	
+			taskSummary = runTask(primeDirectives, task, context)
+			
+			summary = updateSummary(mission, context, summary, taskSummary)
 		
 		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + mission, context)
 		
@@ -180,6 +180,8 @@ def runMission(primeDirectives, mission, context):
 
 
 def runTask(primeDirectives, task, context):
+	summary = ""
+
 	# Remove digits, dots, dashes and spaces at the beginning of the task
 	task = re.sub(r"^[0-9.\- ]*", '', task)
 	
@@ -196,32 +198,41 @@ def runTask(primeDirectives, task, context):
 		text = web.scrape(url)
 		blockArray = split_text_in_blocks(text)
 
-		summary = summarizeBlockArray(task, blockArray)
+		webSummary = summarizeBlockArray(task, blockArray)
 
-		if summary:			
-			printSystemText("\n" + summary, True)
+		summary = updateSummary(task, context, summary, webSummary)
+
+		if webSummary:			
+			printSystemText("\n" + webSummary, True)
 	
-	response = send_prompt(primeDirectives, summary + "\n" + task, context)
+	printMagiText("\n" + summary, True)
 	
-	printMagiText("\n" + response, True)
-	
-	return response
+	return summary
 	
 
-def summarize(prompt, context, text):
-	query = text + SUMMARIZE_TEXT + prompt
-	summary = send_prompt("", query, context) 
+def summarize(topic, context, text):
+	summary = send_prompt("", text + SUMMARIZE_TEXT + topic, context) 
 	
-	return summary	
+	return summary
+	
+
+def updateSummary(topic, context, summary, text):
+	if text:
+		if summary:
+			summary = summarize(topic, context, summary + "\n" + text)
+		else:
+			summary = text
+
+	return summary
 
 
-def summarizeBlockArray(prompt, blockArray):
+def summarizeBlockArray(topic, blockArray):
 	context = []
 	summary = ""
 
 	# Summarize
 	for block in blockArray:
-		summary = summarize(prompt, context, summary + block)
+		summary = updateSummary(topic, context, summary, block)
 
 	return summary		
 
