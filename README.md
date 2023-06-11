@@ -27,7 +27,7 @@ After cloning the repository, save the .bin file in the root folder.
 
 This model works fine on an average computer with 16 GB of RAM:
 
-https://huggingface.co/CRD716/ggml-vicuna-1.1-quantized/resolve/main/ggml-vicuna-7b-1.1-q5_1.bin
+https://huggingface.co/TheBloke/samantha-1.1-llama-13B-GGML/resolve/main/samantha-1.1-llama-13b.ggmlv3.q4_K_M.bin
 
 ## Installation
 
