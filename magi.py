@@ -215,7 +215,7 @@ def runTask(primeDirectives, task, mission, context):
 	response = send_prompt(primeDirectives, task, context)
 
 	# Search for updated information on the Internet
-	query = basic_summary(task, mission)	
+	query = basic_summary(mission, task)
 	webSummary = webSearch(query)
 	
 	summary = response + UPDATED_DATA_TEXT + webSummary
@@ -225,11 +225,11 @@ def runTask(primeDirectives, task, mission, context):
 	return summary
 	
 
-def basic_summary(task, mission):
+def basic_summary(text1, text2):
 	context = []	
-	query = send_prompt("", BASIC_SUMMARY_TEXT + mission + "\n" + task, context) 
+	summary = send_prompt("", BASIC_SUMMARY_TEXT + text1 + "\n" + text2, context) 
 	
-	return query
+	return summary
 
 
 def summarize(topic, context, text):
