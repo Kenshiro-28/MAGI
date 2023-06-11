@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.04
+Version     : 3.05
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -22,7 +22,7 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_LOG_FILE_PATH = "mission_log.txt"
 MISSION_DATA_FILE_PATH = "mission_data.txt"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_TASK_LIST_TEXT = "\nDivide this mission in a list of independent tasks, one task per line, without subtasks. Write ONLY the list of tasks. MISSION = "
+GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
@@ -33,6 +33,8 @@ USER_TEXT = "USER: "
 ASSISTANT_TEXT = " ASSISTANT: "
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
+UPDATED_DATA_TEXT = "\n\nUPDATED DATA: "
+BASIC_SUMMARY_TEXT = "Summarize the following text: "
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
@@ -169,7 +171,7 @@ def runMission(primeDirectives, mission, context):
 		for task in taskList:
 			printSystemText("\n" + task, True)
 
-			taskSummary = runTask(primeDirectives, task, context)
+			taskSummary = runTask(primeDirectives, task, mission, context)
 			
 			summary = updateSummary(mission, context, summary, taskSummary)
 		
@@ -179,15 +181,13 @@ def runMission(primeDirectives, mission, context):
 			printMagiText(CONTINUE_MISSION_TEXT + summary, True)		
 
 
-def runTask(primeDirectives, task, context):
-	summary = ""
+def webSearch(query):
+	context = []
+	summary	= ""
 
-	# Remove digits, dots, dashes and spaces at the beginning of the task
-	task = re.sub(r"^[0-9.\- ]*", '', task)
-	
-	printSystemText(WEB_SEARCH_TEXT + task, True)
+	printSystemText(WEB_SEARCH_TEXT + query, True)
 
-	urls = web.search(task, WEB_SEARCH_LIMIT)
+	urls = web.search(query, WEB_SEARCH_LIMIT)
 
 	for url in urls:
 		# Ignore translated web pages
@@ -198,17 +198,39 @@ def runTask(primeDirectives, task, context):
 		text = web.scrape(url)
 		blockArray = split_text_in_blocks(text)
 
-		webSummary = summarizeBlockArray(task, blockArray)
+		webSummary = summarizeBlockArray(query, blockArray)
 
-		summary = updateSummary(task, context, summary, webSummary)
+		summary = updateSummary(query, context, summary, webSummary)
 
 		if webSummary:			
 			printSystemText("\n" + webSummary, True)
+			
+	return summary
+	
+
+def runTask(primeDirectives, task, mission, context):
+	# Remove digits, dots, dashes and spaces at the beginning of the task
+	task = re.sub(r"^[0-9.\- ]*", '', task)
+
+	response = send_prompt(primeDirectives, task, context)
+
+	# Search for updated information on the Internet
+	query = basic_summary(task, mission)	
+	webSummary = webSearch(query)
+	
+	summary = response + UPDATED_DATA_TEXT + webSummary
 	
 	printMagiText("\n" + summary, True)
 	
 	return summary
 	
+
+def basic_summary(task, mission):
+	context = []	
+	query = send_prompt("", BASIC_SUMMARY_TEXT + mission + "\n" + task, context) 
+	
+	return query
+
 
 def summarize(topic, context, text):
 	summary = send_prompt("", text + SUMMARIZE_TEXT + topic, context) 
