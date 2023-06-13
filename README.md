@@ -27,7 +27,7 @@ After cloning the repository, save the .bin file in the root folder.
 
 This model works fine on an average computer with 16 GB of RAM:
 
-https://huggingface.co/TheBloke/manticore-13b-chat-pyg-GGML/resolve/main/Manticore-13B-Chat-Pyg.ggmlv3.q4_K_M.bin
+https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/resolve/main/Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_K_M.bin
 
 ## Installation
 
