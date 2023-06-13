@@ -1,5 +1,5 @@
 llama-cpp-python
-selenium
+selenium==4.9.1
 bs4
 webdriver_manager
 
