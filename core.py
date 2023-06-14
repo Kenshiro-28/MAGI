@@ -1,42 +1,18 @@
-'''
-=====================================================================================
-Name        : MAGI
-Author      : Kenshiro
-Version     : 3.05
-Copyright   : GNU General Public License (GPLv3)
-Description : Autonomous agent 
-=====================================================================================
-'''
-
 from llama_cpp import Llama
 import os
-import re
 import sys
-import copy
-import time
-from plugins import web
 
-SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
-PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
-PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
-MISSION_LOG_FILE_PATH = "mission_log.txt"
-MISSION_DATA_FILE_PATH = "mission_data.txt"
-MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
-MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
-CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
-NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
-MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
-MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
-MODEL_TEXT = "\n\nModel: "
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
-WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
-WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-UPDATED_DATA_TEXT = "\n\nUPDATED DATA: "
+
 BASIC_SUMMARY_TEXT = "Summarize the following text: "
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
+PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
+MISSION_LOG_FILE_PATH = "mission_log.txt"
+MISSION_DATA_FILE_PATH = "mission_data.txt"
+
+MODEL_TEXT = "\n\nModel: "
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
@@ -52,12 +28,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 500
-
-GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
-
-MISSION_COMMAND = "M"
-EXIT_COMMAND = "EXIT"
+TEXT_BLOCK_WORDS = 400
 
 
 def split_text_in_blocks(text):
@@ -103,7 +74,7 @@ def get_completion_from_messages(context):
 		return response['choices'][0]['text'].lstrip()
 		
 	except Exception as e:
-		printSystemText(MODEL_ERROR_TEXT + str(e), False) 
+		print_system_text(MODEL_ERROR_TEXT + str(e), False) 
 		return ""
 
 
@@ -122,108 +93,35 @@ def send_prompt(primeDirectives, prompt, context):
 	return response
 
 
-def printSystemText(text, missionMode):
+def print_system_text(text, missionMode):
 	print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)
 	
 	if missionMode:
-		saveMissionLog(text)	
+		save_mission_log(text)	
 
 	
-def printMagiText(text, missionMode):
+def print_magi_text(text, missionMode):
 	print(END_COLOR + MAGI_COLOR + text + END_COLOR)
 	
 	if missionMode:
-		saveMissionLog(text)		
+		save_mission_log(text)	
 
 
-def saveMissionLog(text):
+def save_mission_log(text):
 	with open(MISSION_LOG_FILE_PATH, 'a') as missionFile:
 		missionFile.write(text + "\n")
 
 	
-def userInput(missionMode):
+def user_input(missionMode):
 	sys.stdin.flush()
 
 	prompt = input(USER_COLOR + "\n$ ")
 	
 	if missionMode:
-		saveMissionLog(prompt)	
+		save_mission_log(prompt)	
 	
 	return prompt		
 
-
-def runMission(primeDirectives, mission, context):
-	missionCompleted = False
-
-	summary = loadMissionData(mission)
-	
-	if summary:			
-		printSystemText(MISSION_DATA_TEXT + summary, True)
-
-	while not missionCompleted:
-		taskListText = send_prompt("", summary + GENERATE_TASK_LIST_TEXT + mission, context)
-		
-		printSystemText(NEW_MISSION_TEXT + taskListText + "\n", True)
-		
-		# Remove blank lines and create the task list
-		taskList = [line for line in taskListText.splitlines() if line.strip()]
-
-		for task in taskList:
-			printSystemText("\n" + task, True)
-
-			taskSummary = runTask(primeDirectives, task, mission, context)
-			
-			summary = updateSummary(mission, context, summary, taskSummary)
-		
-		missionCompleted = isPromptCompleted(summary + MISSION_COMPLETED_TEXT + mission, context)
-		
-		if not missionCompleted:
-			printMagiText(CONTINUE_MISSION_TEXT + summary, True)		
-
-
-def webSearch(query):
-	context = []
-	summary	= ""
-
-	printSystemText(WEB_SEARCH_TEXT + query, True)
-
-	urls = web.search(query, WEB_SEARCH_LIMIT)
-
-	for url in urls:
-		# Ignore translated web pages
-		if GOOGLE_TRANSLATE_URL_TEXT in url:
-			continue
-			
-		printSystemText("\n" + url, True)	
-		text = web.scrape(url)
-		blockArray = split_text_in_blocks(text)
-
-		webSummary = summarizeBlockArray(query, blockArray)
-
-		summary = updateSummary(query, context, summary, webSummary)
-
-		if webSummary:			
-			printSystemText("\n" + webSummary, True)
-			
-	return summary
-	
-
-def runTask(primeDirectives, task, mission, context):
-	# Remove digits, dots, dashes and spaces at the beginning of the task
-	task = re.sub(r"^[0-9.\- ]*", '', task)
-
-	response = send_prompt(primeDirectives, task, context)
-
-	# Search for updated information on the Internet
-	query = basic_summary(mission, task)
-	webSummary = webSearch(query)
-	
-	summary = response + UPDATED_DATA_TEXT + webSummary
-	
-	printMagiText("\n" + summary, True)
-	
-	return summary
-	
 
 def basic_summary(text1, text2):
 	context = []	
@@ -238,7 +136,7 @@ def summarize(topic, context, text):
 	return summary
 	
 
-def updateSummary(topic, context, summary, text):
+def update_summary(topic, context, summary, text):
 	if text:
 		if summary:
 			summary = summarize(topic, context, summary + "\n" + text)
@@ -248,28 +146,28 @@ def updateSummary(topic, context, summary, text):
 	return summary
 
 
-def summarizeBlockArray(topic, blockArray):
+def summarize_block_array(topic, blockArray):
 	context = []
 	summary = ""
 
 	# Summarize
 	for block in blockArray:
-		summary = updateSummary(topic, context, summary, block)
+		summary = update_summary(topic, context, summary, block)
 
 	return summary		
 
 
-def loadMissionData(prompt):
-	missionData = readTextFile(MISSION_DATA_FILE_PATH)
+def load_mission_data(prompt):
+	missionData = read_text_file(MISSION_DATA_FILE_PATH)
 		
 	blockArray = split_text_in_blocks(missionData)
 
-	summary = summarizeBlockArray(prompt, blockArray)	
+	summary = summarize_block_array(prompt, blockArray)	
 		
 	return summary			
 
 	
-def isPromptCompleted(prompt, context):
+def is_prompt_completed(prompt, context):
 	answer = False
 
 	response = send_prompt("", prompt, context)
@@ -283,37 +181,18 @@ def isPromptCompleted(prompt, context):
 	return answer
 	
 
-def checkPrompt(primeDirectives, prompt, context, missionMode):	
-	if missionMode:
-		runMission(primeDirectives, prompt, context)
-	else:
-		response = send_prompt(primeDirectives, prompt, context)
-		printMagiText("\n" + response, False)
-
-
-def switchMissionMode(missionMode):
-	missionMode = not missionMode
-
-	if missionMode:
-		printSystemText(MISSION_MODE_ENABLED_TEXT, False)
-	else:
-		printSystemText(MISSION_MODE_DISABLED_TEXT, False)
-		
-	return missionMode
-
-
-def readTextFile(path):
+def read_text_file(path):
 	try:
 		with open(path) as textFile:
 			text = textFile.read().strip()
 			return text	
 	
 	except FileNotFoundError:
-		printSystemText(READ_TEXT_FILE_WARNING + str(path), False)
+		print_system_text(READ_TEXT_FILE_WARNING + str(path), False)
 		return ""
 	
 
-def loadModel():
+def load_model():
 	model = None
 
 	fileArray = os.listdir()
@@ -335,47 +214,14 @@ def loadModel():
 		model.verbose = False
 
 		# Print model name		
-		printSystemText(MODEL_TEXT + modelName, False)	
+		print_system_text(MODEL_TEXT + modelName, False)	
 	else:
-		printSystemText(MODEL_NOT_FOUND_ERROR, False)
+		print_system_text(MODEL_NOT_FOUND_ERROR, False)
 		exit()		
-		
-	return model		
 
+	return model
 
-# Main logic
-context = []
-missionMode = False
-model = loadModel()
-
-primeDirectives = readTextFile(PRIME_DIRECTIVES_FILE_PATH)
-
-if primeDirectives:
-	printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives, False)
-
-printSystemText(SYSTEM_HINT_TEXT, missionMode)
-		
-# Main loop
-while True:
-	prompt = userInput(missionMode)
-	prompt_tokens = get_number_of_tokens(prompt)
 	
-	if prompt == "":
-		continue
+# Initialize
+model = load_model()
 	
-	if prompt_tokens > MAX_INPUT_TOKENS:
-		printSystemText(MAX_INPUT_TOKENS_ERROR + str(prompt_tokens), False)
-		continue
-	
-	command = prompt.split()[0]
-	
-	if command.upper() == EXIT_COMMAND:
-		break
-	
-	if command.upper() == MISSION_COMMAND:
-		missionMode = switchMissionMode(missionMode)
-	else:
-		checkPrompt(primeDirectives, prompt, context, missionMode)
-	
-printSystemText("\n", missionMode)
-
