@@ -10,6 +10,8 @@ def webSearch(query):
 	context = []
 	summary	= ""
 
+	query = query.replace('"', '')
+
 	core.print_system_text(WEB_SEARCH_TEXT + query, True)
 
 	urls = web.search(query, WEB_SEARCH_LIMIT)
