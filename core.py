@@ -5,7 +5,6 @@ import sys
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
 
-BASIC_SUMMARY_TEXT = "Summarize the following text: "
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
@@ -121,13 +120,6 @@ def user_input(missionMode):
 		save_mission_log(prompt)	
 	
 	return prompt		
-
-
-def basic_summary(text1, text2):
-	context = []	
-	summary = send_prompt("", BASIC_SUMMARY_TEXT + text1 + "\n" + text2, context) 
-	
-	return summary
 
 
 def summarize(topic, context, text):

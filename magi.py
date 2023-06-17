@@ -2,15 +2,15 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.06
+Version     : 3.07
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
 '''
 
 import core
+import plugin
 import re
-from plugins import web
 
 SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
@@ -21,12 +21,8 @@ CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfull
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
-
-WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
-WEB_SEARCH_LIMIT = 3 # Number of web pages per search
+WEB_SEARCH_QUERY = "Create a one line search query for Google that would yield the most comprehensive and relevant results on the topic of: "
 UPDATED_DATA_TEXT = "\n\nUPDATED DATA: "
-
-GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
 MISSION_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
@@ -61,33 +57,6 @@ def runMission(primeDirectives, mission, context):
 			core.print_magi_text(CONTINUE_MISSION_TEXT + summary, True)		
 
 
-def webSearch(query):
-	context = []
-	summary	= ""
-
-	core.print_system_text(WEB_SEARCH_TEXT + query, True)
-
-	urls = web.search(query, WEB_SEARCH_LIMIT)
-
-	for url in urls:
-		# Ignore translated web pages
-		if GOOGLE_TRANSLATE_URL_TEXT in url:
-			continue
-			
-		core.print_system_text("\n" + url, True)	
-		text = web.scrape(url)
-		blockArray = core.split_text_in_blocks(text)
-
-		webSummary = core.summarize_block_array(query, blockArray)
-
-		summary = core.update_summary(query, context, summary, webSummary)
-
-		if webSummary:			
-			core.print_system_text("\n" + webSummary, True)
-			
-	return summary
-	
-
 def runTask(primeDirectives, task, mission, context):
 	# Remove digits, dots, dashes and spaces at the beginning of the task
 	task = re.sub(r"^[0-9.\- ]*", '', task)
@@ -95,8 +64,8 @@ def runTask(primeDirectives, task, mission, context):
 	response = core.send_prompt(primeDirectives, task, context)
 
 	# Search for updated information on the Internet
-	query = core.basic_summary(mission, task)
-	webSummary = webSearch(query)
+	query = core.send_prompt("", WEB_SEARCH_QUERY + task, context) 
+	webSummary = plugin.webSearch(query)
 	
 	summary = response + UPDATED_DATA_TEXT + webSummary
 	
