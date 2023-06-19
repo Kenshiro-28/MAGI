@@ -10,6 +10,7 @@ SUMMARIZE_TEXT = "\nSummarize the information from the above text that is releva
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 MISSION_LOG_FILE_PATH = "mission_log.txt"
 MISSION_DATA_FILE_PATH = "mission_data.txt"
+CONFIG_FILE_PATH = "config.cfg"
 
 MODEL_TEXT = "\n\nModel: "
 MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
@@ -28,6 +29,8 @@ USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
 TEXT_BLOCK_WORDS = 400
+
+CONFIG_ERROR = "[ERROR] Config file error: "
 
 
 def split_text_in_blocks(text):
@@ -213,7 +216,37 @@ def load_model():
 
 	return model
 
+
+def load_config():
+	config = {}
+
+	try:
+		with open(CONFIG_FILE_PATH, 'r') as file:
+			for line in file:
+				# Remove any leading/trailing white spaces
+				line = line.strip()
+
+				# Skip invalid lines
+				if not line or line.startswith('#') or line.count('=') == 0:
+					continue
+
+				# Split each line into a key-value pair
+				key, value = line.split('=', 1)
+
+				# Remove any leading/trailing white spaces from key and value
+				key = key.strip()
+				value = value.strip()
+
+				# Add to dictionary
+				config[key] = value
+				
+	except Exception as e:
+		print_system_text(CONFIG_ERROR + str(e), False)
+		
+	return config
+
 	
 # Initialize
 model = load_model()
-	
+config = load_config()
+
