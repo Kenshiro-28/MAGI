@@ -1,6 +1,7 @@
 from llama_cpp import Llama
 import os
 import sys
+import time
 
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
@@ -32,6 +33,7 @@ TEXT_BLOCK_WORDS = 400
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
+SLEEP_TIME = 1
 
 def split_text_in_blocks(text):
 	index = 0
@@ -72,6 +74,8 @@ def get_completion_from_messages(context):
 			text, text_tokens = get_context_data(context)
 
 		response = model(text, max_tokens = MAX_TOKENS - text_tokens)
+
+		time.sleep(SLEEP_TIME)
 
 		return response['choices'][0]['text'].lstrip()
 		
