@@ -31,6 +31,8 @@ https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/resolve/main/W
 
 ## Installation
 
+- Install Firefox
+
 - Install Python 3.11 or later.
 
 - Install a C++ compiler.
