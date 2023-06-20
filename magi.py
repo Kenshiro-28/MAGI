@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.09
+Version     : 3.10
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -17,12 +17,13 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
-CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n\n----- Summary -----\n\n"
+MISSION_SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
+CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n"
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
 WEB_SEARCH_QUERY = "Create a one line search query for Google that would yield the most comprehensive and relevant results on the topic of: "
-UPDATED_DATA_TEXT = "\n\nUPDATED DATA: "
+WEB_SUMMARY_TEXT = "\n\nWEB SUMMARY: "
 
 MISSION_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
@@ -51,10 +52,12 @@ def runMission(primeDirectives, mission, context):
 			
 			summary = core.update_summary(mission, context, summary, taskSummary)
 		
+		core.print_magi_text(MISSION_SUMMARY_TEXT + summary, True)
+
 		missionCompleted = core.is_prompt_completed(summary + MISSION_COMPLETED_TEXT + mission, context)
-		
+
 		if not missionCompleted:
-			core.print_magi_text(CONTINUE_MISSION_TEXT + summary, True)		
+			core.print_magi_text(CONTINUE_MISSION_TEXT, True)		
 
 
 def runTask(primeDirectives, task, mission, context):
@@ -64,10 +67,12 @@ def runTask(primeDirectives, task, mission, context):
 	response = core.send_prompt(primeDirectives, task, context)
 
 	# Search for updated information on the Internet
-	query = core.send_prompt("", WEB_SEARCH_QUERY + task, context) 
-	webSummary = plugin.webSearch(query)
-	
-	summary = response + UPDATED_DATA_TEXT + webSummary
+	if plugin.WEB_PLUGIN_ACTIVE:
+		query = core.send_prompt("", WEB_SEARCH_QUERY + task, context) 
+		webSummary = plugin.webSearch(query)
+		summary = response + WEB_SUMMARY_TEXT + webSummary
+	else:
+		summary = response
 	
 	core.print_magi_text("\n" + summary, True)
 	

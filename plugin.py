@@ -1,11 +1,18 @@
 import core
-from plugins import web
+from plugins.web import web
 
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
-# Web operations
+WEB_PLUGIN_ACTIVE = False
+WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
+WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
+ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
+
+
+# WEB PLUGIN OPERATIONS
+
 def webSearch(query):
 	context = []
 	summary	= ""
@@ -34,4 +41,14 @@ def webSearch(query):
 			
 	return summary
 	
+
+# Initialize
+
+if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
+	WEB_PLUGIN_ACTIVE = True
+	core.print_system_text(WEB_PLUGIN_ENABLED_TEXT, False)
+else:
+	core.print_system_text(WEB_PLUGIN_DISABLED_TEXT, False)
 	
+
+				

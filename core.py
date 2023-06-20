@@ -14,7 +14,7 @@ MISSION_DATA_FILE_PATH = "mission_data.txt"
 CONFIG_FILE_PATH = "config.cfg"
 
 MODEL_TEXT = "\n\nModel: "
-MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
+MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
 MAX_TOKENS = 2048
@@ -29,11 +29,12 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 400
+TEXT_BLOCK_WORDS = 500
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
 SLEEP_TIME = 1
+
 
 def split_text_in_blocks(text):
 	index = 0
