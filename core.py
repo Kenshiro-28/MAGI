@@ -29,7 +29,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 500
+TEXT_BLOCK_WORDS = 400
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
