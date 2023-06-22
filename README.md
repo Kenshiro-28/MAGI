@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent that leverages the LLaMA model to offer streamlined and professional AI assistance across a wide range of tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode allows MAGI to work autonomously and browse the Internet for up-to-date information. MAGI can be teleoperated remotely via Telegram, allowing you to have AI support on the go.
+MAGI is an autonomous agent that leverages the LLaMA model to offer streamlined and professional AI assistance across a wide range of tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode allows MAGI to work autonomously and browse the Internet for up-to-date information. MAGI can be teleoperated via Telegram, allowing you to have AI support on the go.
 
 ## Prime Directives
 
