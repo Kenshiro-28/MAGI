@@ -33,7 +33,9 @@ This plugin allows you to teleoperate MAGI via Telegram, allowing you to have AI
 #### Configuration
 
 ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: disabled).
+
 TELEGRAM_BOT_TOKEN: the token you received from BotFather.
+
 TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
 ## Model 
