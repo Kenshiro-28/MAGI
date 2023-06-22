@@ -16,7 +16,7 @@ SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and pr
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
-MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
+EVALUATE_MISSION_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 MISSION_SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 MISSION_COMPLETED_TEXT = "\n\nMission completed.\n"
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed."
@@ -56,7 +56,7 @@ def runMission(primeDirectives, mission, context):
 		
 		printMagiText(MISSION_SUMMARY_TEXT + summary, True)
 
-		missionCompleted = core.is_prompt_completed(summary + MISSION_COMPLETED_TEXT + mission, context)
+		missionCompleted = core.is_prompt_completed(summary + EVALUATE_MISSION_TEXT + mission, context)
 
 		if missionCompleted:
 			printMagiText(MISSION_COMPLETED_TEXT, True)
