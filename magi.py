@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.10
+Version     : 3.11
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -24,6 +24,7 @@ MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
 WEB_SEARCH_QUERY = "Create a one line search query for Google that would yield the most comprehensive and relevant results on the topic of: "
 WEB_SUMMARY_TEXT = "\n\nWEB SUMMARY: "
+TELEGRAM_MESSAGE_TEXT = "\n[TELEGRAM] "
 
 MISSION_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
@@ -35,29 +36,29 @@ def runMission(primeDirectives, mission, context):
 	summary = core.load_mission_data(mission)
 	
 	if summary:			
-		core.print_system_text(MISSION_DATA_TEXT + summary, True)
+		printSystemText(MISSION_DATA_TEXT + summary, True)
 
 	while not missionCompleted:
 		taskListText = core.send_prompt("", summary + GENERATE_TASK_LIST_TEXT + mission, context)
 		
-		core.print_system_text(NEW_MISSION_TEXT + taskListText + "\n", True)
+		printSystemText(NEW_MISSION_TEXT + taskListText + "\n", True)
 		
 		# Remove blank lines and create the task list
 		taskList = [line for line in taskListText.splitlines() if line.strip()]
 
 		for task in taskList:
-			core.print_system_text("\n" + task, True)
+			printSystemText("\n" + task, True)
 
 			taskSummary = runTask(primeDirectives, task, mission, context)
 			
 			summary = core.update_summary(mission, context, summary, taskSummary)
 		
-		core.print_magi_text(MISSION_SUMMARY_TEXT + summary, True)
+		printMagiText(MISSION_SUMMARY_TEXT + summary, True)
 
 		missionCompleted = core.is_prompt_completed(summary + MISSION_COMPLETED_TEXT + mission, context)
 
 		if not missionCompleted:
-			core.print_magi_text(CONTINUE_MISSION_TEXT, True)		
+			printMagiText(CONTINUE_MISSION_TEXT, True)		
 
 
 def runTask(primeDirectives, task, mission, context):
@@ -74,7 +75,7 @@ def runTask(primeDirectives, task, mission, context):
 	else:
 		summary = response
 	
-	core.print_magi_text("\n" + summary, True)
+	printMagiText("\n" + summary, True)
 	
 	return summary
 	
@@ -84,18 +85,44 @@ def checkPrompt(primeDirectives, prompt, context, missionMode):
 		runMission(primeDirectives, prompt, context)
 	else:
 		response = core.send_prompt(primeDirectives, prompt, context)
-		core.print_magi_text("\n" + response, False)
+		printMagiText("\n" + response, False)
 
 
 def switchMissionMode(missionMode):
 	missionMode = not missionMode
 
 	if missionMode:
-		core.print_system_text(MISSION_MODE_ENABLED_TEXT, False)
+		printSystemText(MISSION_MODE_ENABLED_TEXT, False)
 	else:
-		core.print_system_text(MISSION_MODE_DISABLED_TEXT, False)
+		printSystemText(MISSION_MODE_DISABLED_TEXT, False)
 		
 	return missionMode
+
+
+def printSystemText(text, missionMode):
+	if plugin.TELEGRAM_PLUGIN_ACTIVE:
+		plugin.send_telegram_bot(text)
+		
+	core.print_system_text(text, missionMode)
+	
+	
+def printMagiText(text, missionMode):
+	if plugin.TELEGRAM_PLUGIN_ACTIVE:
+		plugin.send_telegram_bot(text)
+		
+	core.print_magi_text(text, missionMode)
+		
+
+def userInput(missionMode):
+	if plugin.TELEGRAM_PLUGIN_ACTIVE:
+		prompt = plugin.receive_telegram_bot()
+		
+		if prompt:
+			core.print_system_text(TELEGRAM_MESSAGE_TEXT + prompt, missionMode)		
+	else:
+		prompt = core.user_input(missionMode)
+		
+	return prompt		
 
 
 # Main logic
@@ -106,20 +133,21 @@ if __name__ == "__main__":
 	primeDirectives = core.read_text_file(core.PRIME_DIRECTIVES_FILE_PATH)
 
 	if primeDirectives:
-		core.print_system_text(PRIME_DIRECTIVES_TEXT + primeDirectives, False)
+		printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives, missionMode)
 
-	core.print_system_text(SYSTEM_HINT_TEXT, missionMode)
+	printSystemText(SYSTEM_HINT_TEXT, missionMode)
 			
 	# Main loop
 	while True:
-		prompt = core.user_input(missionMode)
-		prompt_tokens = core.get_number_of_tokens(prompt)
-		
+		prompt = userInput(missionMode)
+
 		if prompt == "":
 			continue
+			
+		prompt_tokens = core.get_number_of_tokens(prompt)
 		
 		if prompt_tokens > core.MAX_INPUT_TOKENS:
-			core.print_system_text(core.MAX_INPUT_TOKENS_ERROR + str(prompt_tokens), False)
+			printSystemText(core.MAX_INPUT_TOKENS_ERROR + str(prompt_tokens), False)
 			continue
 		
 		command = prompt.split()[0]
@@ -132,5 +160,5 @@ if __name__ == "__main__":
 		else:
 			checkPrompt(primeDirectives, prompt, context, missionMode)
 		
-	core.print_system_text("\n", missionMode)
+	printSystemText("\n", missionMode)
 

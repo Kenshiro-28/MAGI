@@ -2,8 +2,10 @@ from telegram import Bot
 from telegram.error import Forbidden, NetworkError
 import asyncio
 
-TIMEOUT = 5
+TIMEOUT = 10
 FORBIDDEN_ERROR = "[ERROR] The user has removed or blocked the Telegram bot."
+TELEGRAM_PLUGIN_ERROR = "[ERROR] Telegram plugin exception: "
+
 
 class TelegramBot:
 
@@ -20,6 +22,8 @@ class TelegramBot:
 			await asyncio.sleep(TIMEOUT)
 		except Forbidden:
 			print(FORBIDDEN_ERROR)
+		except Exception as e:
+			print(TELEGRAM_PLUGIN_ERROR + str(e))		
 
 
 	async def receive(self):
@@ -38,7 +42,7 @@ class TelegramBot:
 				for update in updates:
 					# Bot can receive updates without messages and not all messages contain text
 					if update.message and update.message.text and str(update.message.from_user.id) == self.user:
-						messageList.append(update.message.text + "\n")
+						messageList.append(update.message.text)
 
 					next_update_id = update.update_id + 1
 				
@@ -49,10 +53,11 @@ class TelegramBot:
 
 			except NetworkError:
 				await asyncio.sleep(TIMEOUT)
-
 			except Forbidden:
 				# The user has removed or blocked the bot.
 				update_id += 1
+			except Exception as e:
+				print(TELEGRAM_PLUGIN_ERROR + str(e))
 
 		return messageList
 		
@@ -64,6 +69,8 @@ class TelegramBot:
 			update_id = (await self.bot.get_updates())[0].update_id
 		except IndexError:
 			update_id = None
+		except Exception as e:
+			print(TELEGRAM_PLUGIN_ERROR + str(e))			
 			
 		return update_id			
 

@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent that leverages the LLaMA model to offer streamlined and professional AI assistance across a wide range of tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode allows MAGI to work autonomously and browse the Internet for up-to-date information.
+MAGI is an autonomous agent that leverages the LLaMA model to offer streamlined and professional AI assistance across a wide range of tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode allows MAGI to work autonomously and browse the Internet for up-to-date information. MAGI can be teleoperated remotely via Telegram, allowing you to have AI support on the go.
 
 ## Prime Directives
 
@@ -10,9 +10,31 @@ You can set your Prime Directives in the file **prime_directives.txt**.
 
 ## Mission mode
 
-MAGI features a Mission mode that runs autonomously and browses the Internet for up-to-date information. To enable Mission mode, type the letter **m** and press enter. The mission log will be saved in the file **mission_log.txt**.
+MAGI features a mission mode that runs autonomously and browses the Internet for up-to-date information. To enable mission mode, type the letter **m** and press enter. The mission log will be saved in the file **mission_log.txt**.
 
 You can add useful information in the file **mission_data.txt**. This information will only be used if it is related to the current mission.
+
+## Plugins
+
+You can configure MAGI plugins by editing the file **config.cfg**.
+
+### Web plugin
+
+This plugin allows mission mode to browse the Internet for up-to-date information.
+
+#### Configuration
+
+ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: enabled).
+
+### Telegram plugin
+
+This plugin allows you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input. To use this plugin you have to create a Telegram bot with BotFather (Username: @BotFather) and save the token assigned to your bot. You must also write to userinfobot (Username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
+
+#### Configuration
+
+ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: disabled).
+TELEGRAM_BOT_TOKEN: the token you received from BotFather.
+TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
 ## Model 
 
