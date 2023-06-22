@@ -18,7 +18,8 @@ MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
 MISSION_COMPLETED_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 MISSION_SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
-CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed.\n\n"
+MISSION_COMPLETED_TEXT = "\n\nMission completed.\n"
+CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed."
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"
@@ -57,7 +58,9 @@ def runMission(primeDirectives, mission, context):
 
 		missionCompleted = core.is_prompt_completed(summary + MISSION_COMPLETED_TEXT + mission, context)
 
-		if not missionCompleted:
+		if missionCompleted:
+			printMagiText(MISSION_COMPLETED_TEXT, True)
+		else:
 			printMagiText(CONTINUE_MISSION_TEXT, True)		
 
 
