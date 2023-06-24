@@ -28,7 +28,7 @@ ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: enabled).
 
 ### Telegram plugin
 
-This plugin allows you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input. To use this plugin you have to create a Telegram bot with BotFather (Username: @BotFather) and save the token assigned to your bot. You must also write to userinfobot (Username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
+This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input. To use this plugin you have to create a Telegram bot with BotFather (Username: @BotFather) and save the token assigned to your bot. You must also write to userinfobot (Username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
 
 #### Configuration
 
@@ -64,7 +64,7 @@ I strongly recommend running MAGI inside a Docker container. This method signifi
 - Install the following packages:
 
 ```
-sudo apt install docker.io apparmor-utils
+$ sudo apt install docker.io apparmor-utils
 ```
 
 #### Other systems
