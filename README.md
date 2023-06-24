@@ -53,45 +53,25 @@ This model works fine on an average computer with 16 GB of RAM:
 
 https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/resolve/main/Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_K_M.bin
 
-## Installation
+## Docker installation
 
-- Install Firefox
+I strongly recommend running MAGI inside a Docker container. This method significantly mitigates potential risks by isolating the application from the host system. 
 
-- Install Python 3.11 or later.
+### Prerequisites
 
-- Install a C++ compiler.
+#### Linux
 
-- Clone this repository.
-
-- Save a LLaMA model in the root folder.
-
-- Install Python packages:
+- Install the following packages:
 
 ```
-$ pip install -r requirements.txt
+sudo apt install docker.io apparmor-utils
 ```
 
-## Running
+#### Other systems
 
-Run this command in the root folder to start MAGI:
-
-```
-$ python magi.py
-```
-
-To exit MAGI, type the command **exit** or press Ctrl + C.
-
-## Docker
-
-I strongly recommend running MAGI inside a Docker container. This method significantly mitigates potential risks by isolating the application from the host system. Continue with the following steps to set up your Docker environment:
+- Install Docker
 
 ### Installation
-
-- Install Docker, you can do it from the official repositories of your Linux system:
-
-```
-$ sudo apt install docker.io
-```
 
 - Clone this repository.
 
@@ -116,4 +96,48 @@ Print the log of the last run:
 ```
 $ sudo docker logs $(sudo docker ps -l -q)
 ```
+
+To exit MAGI, type the command **exit** or press Ctrl + C.
+
+## Local installation
+
+### Prerequisites
+
+#### Linux
+
+- Install the following packages:
+
+```
+$ sudo apt install build-essential python3-venv python3-pip apparmor-utils firefox-esr 
+```
+
+#### Other systems
+
+- Install Firefox
+
+- Install Python 3.11 or later.
+
+- Install a C++ compiler.
+
+### Installation
+
+- Clone this repository.
+
+- Save a LLaMA model in the root folder.
+
+- Install Python packages:
+
+```
+$ pip install -r requirements.txt
+```
+
+### Running
+
+Run this command in the root folder to start MAGI:
+
+```
+$ python magi.py
+```
+
+To exit MAGI, type the command **exit** or press Ctrl + C.
 
