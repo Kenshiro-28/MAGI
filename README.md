@@ -28,7 +28,11 @@ ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: enabled).
 
 ### Telegram plugin
 
-This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input. To use this plugin you have to create a Telegram bot with BotFather (Username: @BotFather) and save the token assigned to your bot. You must also write to userinfobot (Username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
+This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input.
+
+To use this plugin you have to create a Telegram bot with BotFather (username: @BotFather) and save the token assigned to your bot. 
+
+You must also write to userinfobot (username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
 
 #### Configuration
 
@@ -51,7 +55,7 @@ After cloning the repository, save the .bin file in the root folder.
 
 This model works fine on an average computer with 16 GB of RAM:
 
-https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/resolve/main/Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_K_M.bin
+https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/resolve/main/Wizard-Vicuna-13B-Uncensored.ggmlv3.q6_K.bin
 
 ## Docker installation
 
