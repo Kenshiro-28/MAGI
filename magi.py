@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.11
+Version     : 3.12
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -16,7 +16,6 @@ SYSTEM_HINT_TEXT = "\n\nHint: to enable mission mode, type the letter 'm' and pr
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
-EVALUATE_MISSION_TEXT = "\nTell me if the above text successfully completes the mission, write only YES or NO. MISSION = "
 MISSION_SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 MISSION_COMPLETED_TEXT = "\n\nMission completed.\n"
 CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed."
@@ -39,29 +38,21 @@ def runMission(primeDirectives, mission, context):
 	if summary:			
 		printSystemText(MISSION_DATA_TEXT + summary, True)
 
-	while not missionCompleted:
-		taskListText = core.send_prompt("", summary + GENERATE_TASK_LIST_TEXT + mission, context)
+	taskListText = core.send_prompt("", summary + GENERATE_TASK_LIST_TEXT + mission, context)
+	
+	printSystemText(NEW_MISSION_TEXT + taskListText + "\n", True)
+	
+	# Remove blank lines and create the task list
+	taskList = [line for line in taskListText.splitlines() if line.strip()]
+
+	for task in taskList:
+		printSystemText("\n" + task, True)
+
+		taskSummary = runTask(primeDirectives, task, mission, context)
 		
-		printSystemText(NEW_MISSION_TEXT + taskListText + "\n", True)
-		
-		# Remove blank lines and create the task list
-		taskList = [line for line in taskListText.splitlines() if line.strip()]
-
-		for task in taskList:
-			printSystemText("\n" + task, True)
-
-			taskSummary = runTask(primeDirectives, task, mission, context)
-			
-			summary = core.update_summary(mission, context, summary, taskSummary)
-		
-		printMagiText(MISSION_SUMMARY_TEXT + summary, True)
-
-		missionCompleted = core.is_prompt_completed(summary + EVALUATE_MISSION_TEXT + mission, context)
-
-		if missionCompleted:
-			printMagiText(MISSION_COMPLETED_TEXT, True)
-		else:
-			printMagiText(CONTINUE_MISSION_TEXT, True)		
+		summary = core.update_summary(mission, context, summary, taskSummary)
+	
+	printMagiText(MISSION_SUMMARY_TEXT + summary, True)
 
 
 def runTask(primeDirectives, task, mission, context):
