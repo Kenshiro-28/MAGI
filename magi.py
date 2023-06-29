@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.12
+Version     : 3.13
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -17,8 +17,6 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
 MISSION_SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
-MISSION_COMPLETED_TEXT = "\n\nMission completed.\n"
-CONTINUE_MISSION_TEXT = "\n\nI will continue the mission until it is successfully completed."
 NEW_MISSION_TEXT = "\n\n----- Mission -----\n\n"
 MISSION_MODE_ENABLED_TEXT = "\nMission mode enabled"
 MISSION_MODE_DISABLED_TEXT = "\nMission mode disabled"

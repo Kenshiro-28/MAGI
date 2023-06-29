@@ -3,6 +3,8 @@ import os
 import sys
 import time
 
+SYSTEM_TEXT = "\n\nSystem: v3.13"
+
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
 
@@ -13,7 +15,7 @@ MISSION_LOG_FILE_PATH = "mission_log.txt"
 MISSION_DATA_FILE_PATH = "mission_data.txt"
 CONFIG_FILE_PATH = "config.cfg"
 
-MODEL_TEXT = "\n\nModel: "
+MODEL_TEXT = "\nModel: "
 MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
@@ -212,9 +214,9 @@ def load_model():
 		# Load model		
 		model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS)
 		model.verbose = False
-
-		# Print model name		
-		print_system_text(MODEL_TEXT + modelName, False)	
+		
+		print_system_text(SYSTEM_TEXT, False)
+		print_system_text(MODEL_TEXT + modelName, False)		
 	else:
 		print_system_text(MODEL_NOT_FOUND_ERROR, False)
 		exit()		
