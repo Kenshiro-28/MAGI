@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.13
+Version     : 3.14
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -29,8 +29,6 @@ EXIT_COMMAND = "EXIT"
 
 
 def runMission(primeDirectives, mission, context):
-	missionCompleted = False
-
 	summary = core.load_mission_data(mission)
 	
 	if summary:			
