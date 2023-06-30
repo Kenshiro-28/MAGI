@@ -135,6 +135,20 @@ $ sudo apt install build-essential python3-venv python3-pip apparmor-utils firef
 $ pip install -r requirements.txt
 ```
 
+#### Enable GPU acceleration (optional)
+
+llama.cpp supports multiple BLAS backends for faster processing. To enable GPU acceleration on a Linux system with an Nvidia graphics card, run the following commands:
+
+```
+$ sudo apt install nvidia-cuda-toolkit
+$ export LLAMA_CUBLAS=1
+$ CMAKE_ARGS="-DLLAMA_CUBLAS=on" FORCE_CMAKE=1 pip install llama-cpp-python --force-reinstall --upgrade --no-cache-dir
+```
+
+For other systems you can check the project website:
+
+https://pypi.org/project/llama-cpp-python/
+
 ### Running
 
 Run this command in the root folder to start MAGI:
@@ -144,4 +158,5 @@ $ python magi.py
 ```
 
 To exit MAGI, type the command **exit** or press Ctrl + C.
+
 
