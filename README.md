@@ -135,9 +135,9 @@ $ sudo apt install build-essential python3-venv python3-pip apparmor-utils firef
 $ pip install -r requirements.txt
 ```
 
-#### Enable GPU acceleration (optional)
+#### GPU acceleration (optional)
 
-llama.cpp supports multiple BLAS backends for faster processing. To enable GPU acceleration on a Linux system with an Nvidia graphics card, run the following commands:
+To enable GPU acceleration on a Linux system with an Nvidia graphics card, run the following commands:
 
 ```
 $ sudo apt install nvidia-cuda-toolkit

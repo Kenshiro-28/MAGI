@@ -3,7 +3,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v3.14"
+SYSTEM_TEXT = "\n\nSystem: v3.15"
 
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
@@ -20,8 +20,7 @@ MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a resp
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
 MAX_TOKENS = 2048
-EXTRA_TOKEN_COUNT = 48
-MAX_INPUT_TOKENS = MAX_TOKENS // 2 + EXTRA_TOKEN_COUNT
+MAX_INPUT_TOKENS = MAX_TOKENS // 2
 MAX_INPUT_TOKENS_ERROR = "[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
 READ_TEXT_FILE_WARNING = "\n[WARNING] File not found: "
@@ -31,7 +30,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 400
+TEXT_BLOCK_WORDS = 450
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
@@ -55,7 +54,7 @@ def split_text_in_blocks(text):
 
 def get_number_of_tokens(text):
 	tokenized_text = model.tokenize(text.encode('utf-8'))
-	text_tokens = len(tokenized_text) + EXTRA_TOKEN_COUNT
+	text_tokens = len(tokenized_text)
 	
 	return text_tokens
 	
