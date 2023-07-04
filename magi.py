@@ -80,26 +80,26 @@ def runMission(primeDirectives, mission, context, ai_mode):
 		if summary:			
 			printSystemText(MISSION_DATA_TEXT + summary, ai_mode)
 
-	taskList = createTaskList(mission, summary, context, ACTIONS_TEXT, ai_mode)
+	actionList = createTaskList(mission, summary, context, ACTIONS_TEXT, ai_mode)
 
-	for task in taskList:
-		task = sanitizeTask(task)
+	for action in actionList:
+		action = sanitizeTask(action)
 	
-		printSystemText(ACTION_TAG + task, ai_mode)
+		printSystemText(ACTION_TAG + action, ai_mode)
 
-		taskSummary = runTask(primeDirectives, task, mission, context, ai_mode)
+		actionSummary = runAction(primeDirectives, action, mission, context, ai_mode)
 		
-		summary = core.update_summary(mission, context, summary, taskSummary)
+		summary = core.update_summary(mission, context, summary, actionSummary)
 	
 	printMagiText(SUMMARY_TEXT + summary, ai_mode)
 
 
-def runTask(primeDirectives, task, mission, context, ai_mode):
-	response = core.send_prompt(primeDirectives, task, context)
+def runAction(primeDirectives, action, mission, context, ai_mode):
+	response = core.send_prompt(primeDirectives, action, context)
 
 	# Search for updated information on the Internet
 	if plugin.WEB_PLUGIN_ACTIVE:
-		query = core.send_prompt("", WEB_SEARCH_QUERY + task, context) 
+		query = core.send_prompt("", WEB_SEARCH_QUERY + action, context) 
 		webSummary = plugin.webSearch(query, ai_mode)
 		summary = response + WEB_SUMMARY_TEXT + webSummary
 	else:
