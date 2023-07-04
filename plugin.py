@@ -26,13 +26,13 @@ TELEGRAM_PLUGIN_WAIT_TIME = 3
 
 # WEB PLUGIN OPERATIONS
 
-def webSearch(query):
+def webSearch(query, ai_mode):
 	context = []
 	summary	= ""
 
 	query = query.replace('"', '')
 
-	core.print_system_text(WEB_SEARCH_TEXT + query, True)
+	core.print_system_text(WEB_SEARCH_TEXT + query, ai_mode)
 
 	urls = web.search(query, WEB_SEARCH_LIMIT)
 
@@ -41,7 +41,7 @@ def webSearch(query):
 		if GOOGLE_TRANSLATE_URL_TEXT in url:
 			continue
 			
-		core.print_system_text("\n" + url, True)	
+		core.print_system_text("\n" + url, ai_mode)
 		text = web.scrape(url)
 		blockArray = core.split_text_in_blocks(text)
 
@@ -50,7 +50,7 @@ def webSearch(query):
 		summary = core.update_summary(query, context, summary, webSummary)
 
 		if webSummary:			
-			core.print_system_text("\n" + webSummary, True)
+			core.print_system_text("\n" + webSummary, ai_mode)
 			
 	return summary
 
@@ -92,17 +92,17 @@ def receive_telegram_bot():
 # Web plugin
 if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
 	WEB_PLUGIN_ACTIVE = True
-	core.print_system_text(WEB_PLUGIN_ENABLED_TEXT, False)
+	core.print_system_text(WEB_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
 else:
-	core.print_system_text(WEB_PLUGIN_DISABLED_TEXT, False)
+	core.print_system_text(WEB_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
 	
 # Telegram plugin
 if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
 	TELEGRAM_PLUGIN_ACTIVE = True
 	TELEGRAM_BOT_TOKEN = core.config.get(TELEGRAM_BOT_TOKEN_KEY, '')
 	TELEGRAM_USER_ID = core.config.get(TELEGRAM_USER_ID_KEY, '')
-	core.print_system_text(TELEGRAM_PLUGIN_ENABLED_TEXT, False)
+	core.print_system_text(TELEGRAM_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
 else:
-	core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, False)
+	core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
 
 				

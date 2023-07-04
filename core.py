@@ -1,9 +1,10 @@
 from llama_cpp import Llama
+from enum import Enum
 import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v3.15"
+SYSTEM_TEXT = "\n\nSystem: v3.16"
 
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "
@@ -35,6 +36,12 @@ TEXT_BLOCK_WORDS = 450
 CONFIG_ERROR = "[ERROR] Config file error: "
 
 SLEEP_TIME = 1
+
+
+class AiMode(Enum):
+	NORMAL  = 0
+	MISSION = 1
+	NERV    = 2
 
 
 def split_text_in_blocks(text):
@@ -82,7 +89,7 @@ def get_completion_from_messages(context):
 		return response['choices'][0]['text'].lstrip()
 		
 	except Exception as e:
-		print_system_text(MODEL_ERROR_TEXT + str(e), False) 
+		print_system_text(MODEL_ERROR_TEXT + str(e), AiMode.NORMAL) 
 		return ""
 
 
@@ -101,17 +108,17 @@ def send_prompt(primeDirectives, prompt, context):
 	return response
 
 
-def print_system_text(text, missionMode):
+def print_system_text(text, ai_mode):
 	print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)
 	
-	if missionMode:
+	if ai_mode != AiMode.NORMAL:
 		save_mission_log(text)	
 
 	
-def print_magi_text(text, missionMode):
+def print_magi_text(text, ai_mode):
 	print(END_COLOR + MAGI_COLOR + text + END_COLOR)
 	
-	if missionMode:
+	if ai_mode != AiMode.NORMAL:
 		save_mission_log(text)	
 
 
@@ -120,13 +127,13 @@ def save_mission_log(text):
 		missionFile.write(text + "\n")
 
 	
-def user_input(missionMode):
+def user_input(ai_mode):
 	sys.stdin.flush()
 
 	prompt = input(USER_COLOR + "\n$ ")
 	
-	if missionMode:
-		save_mission_log(prompt)	
+	if ai_mode != AiMode.NORMAL:
+		save_mission_log("\n" + prompt)	
 	
 	return prompt		
 
@@ -189,7 +196,7 @@ def read_text_file(path):
 			return text	
 	
 	except FileNotFoundError:
-		print_system_text(READ_TEXT_FILE_WARNING + str(path), False)
+		print_system_text(READ_TEXT_FILE_WARNING + str(path), AiMode.NORMAL)
 		return ""
 	
 
@@ -214,10 +221,10 @@ def load_model():
 		model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS)
 		model.verbose = False
 		
-		print_system_text(SYSTEM_TEXT, False)
-		print_system_text(MODEL_TEXT + modelName, False)		
+		print_system_text(SYSTEM_TEXT, AiMode.NORMAL)
+		print_system_text(MODEL_TEXT + modelName, AiMode.NORMAL)		
 	else:
-		print_system_text(MODEL_NOT_FOUND_ERROR, False)
+		print_system_text(MODEL_NOT_FOUND_ERROR, AiMode.NORMAL)
 		exit()		
 
 	return model
@@ -247,7 +254,7 @@ def load_config():
 				config[key] = value
 				
 	except Exception as e:
-		print_system_text(CONFIG_ERROR + str(e), False)
+		print_system_text(CONFIG_ERROR + str(e), AiMode.NORMAL)
 		
 	return config
 
