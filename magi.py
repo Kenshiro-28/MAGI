@@ -100,7 +100,7 @@ def runTask(primeDirectives, task, mission, context, ai_mode):
 	# Search for updated information on the Internet
 	if plugin.WEB_PLUGIN_ACTIVE:
 		query = core.send_prompt("", WEB_SEARCH_QUERY + task, context) 
-		webSummary = plugin.webSearch(query)
+		webSummary = plugin.webSearch(query, ai_mode)
 		summary = response + WEB_SUMMARY_TEXT + webSummary
 	else:
 		summary = response
