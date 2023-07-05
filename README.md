@@ -8,11 +8,19 @@ MAGI never forgets its Prime Directives. You can use popular prompts to enhance 
 
 You can set your Prime Directives in the file **prime_directives.txt**. 
 
-## Mission mode
+## AI modes
 
-MAGI features a mission mode that runs autonomously and browses the Internet for up-to-date information. To enable mission mode, type the letter **m** and press enter. The mission log will be saved in the file **mission_log.txt**.
+To toggle between the different AI modes, type the letter **m** and press enter.
 
-You can add useful information in the file **mission_data.txt**. This information will only be used if it is related to the current mission.
+When running in Mission or NERV mode, a log will be saved in the file **mission_log.txt**. 
+
+You can also add useful information in the file **mission_data.txt**.
+
+- Normal mode: in this mode, MAGI will respond similarly to other chatbots.
+
+- Mission mode: this mode generates a more elaborate response based on an action list and up-to-date information from the Internet.
+
+- NERV mode: this mode authorizes MAGI to run autonomously. Once it receives a prompt, it runs continuously and ignores further commands. MAGI plans strategies to complete its goal and gets up-to-date information from the Internet.
 
 ## Plugins
 
@@ -55,7 +63,7 @@ After cloning the repository, save the .bin file in the root folder.
 
 This model works fine on an average computer with 16 GB of RAM:
 
-https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/resolve/main/Wizard-Vicuna-13B-Uncensored.ggmlv3.q6_K.bin
+https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML/resolve/main/Wizard-Vicuna-7B-Uncensored.ggmlv3.q8_0.bin
 
 ## Docker installation
 
