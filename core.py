@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v3.16"
+SYSTEM_TEXT = "\n\nSystem: v3.17"
 
 USER_TEXT = "USER: " 
 ASSISTANT_TEXT = " ASSISTANT: "

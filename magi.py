@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.16
+Version     : 3.17
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -23,7 +23,7 @@ MISSION_TAG = "\n[MISSION] "
 ACTION_TAG = "\n[ACTION] "
 NORMAL_MODE_TEXT = "\nNormal mode enabled"
 MISSION_MODE_TEXT = "\nMission mode enabled"
-NERV_MODE_TEXT = "\nNERV mode enabled\n\n[WARNING] this mode runs continuously"
+NERV_MODE_TEXT = "\nNERV mode enabled"
 WEB_SEARCH_QUERY = "Create a one line search query for Google that would yield the most comprehensive and relevant results on the topic of: "
 WEB_SUMMARY_TEXT = "\n\nWEB SUMMARY: "
 TELEGRAM_MESSAGE_TEXT = "\n[TELEGRAM] "

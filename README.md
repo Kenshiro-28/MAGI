@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent that leverages the LLaMA model to offer streamlined and professional AI assistance across a wide range of tasks. Prime Directives allow you to customize the behavior of the model to suit your needs. Mission mode allows MAGI to work autonomously and browse the Internet for up-to-date information. MAGI can be teleoperated via Telegram, allowing you to have AI support on the go.
+MAGI is an autonomous agent that leverages the LLaMA model to offer an open-source AI accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing and remote operation through Telegram.
 
 ## Prime Directives
 
@@ -12,15 +12,29 @@ You can set your Prime Directives in the file **prime_directives.txt**.
 
 To toggle between the different AI modes, type the letter **m** and press enter.
 
-When running in Mission or NERV mode, a log will be saved in the file **mission_log.txt**. 
+### Normal mode
+
+MAGI will respond similarly to other chatbots, it will not save a log or browse the Internet. 
+
+This is the default mode when the program starts.
+
+### Mission mode
+
+MAGI will generate a more elaborate response based on an action list and up-to-date information from the Internet.
+
+It will save a log in the file **mission_log.txt**.
 
 You can also add useful information in the file **mission_data.txt**.
 
-- Normal mode: in this mode, MAGI will respond similarly to other chatbots.
+### NERV mode
 
-- Mission mode: this mode generates a more elaborate response based on an action list and up-to-date information from the Internet.
+MAGI will autonomously plan and execute strategies to complete its goal, browsing the Internet for up-to-date information.
 
-- NERV mode: this mode authorizes MAGI to run autonomously. Once it receives a prompt, it runs continuously and ignores further commands. MAGI plans strategies to complete its goal and gets up-to-date information from the Internet.
+Once it receives a prompt, it will run continuously and accept no further prompts. To exit MAGI, press Ctrl + C.
+
+It will save a log in the file **mission_log.txt**.
+
+You can also add useful information in the file **mission_data.txt**.
 
 ## Plugins
 
