@@ -4,7 +4,7 @@ MAGI is an autonomous agent that leverages the LLaMA model to offer an open-sour
 
 ## Prime Directives
 
-MAGI never forgets its Prime Directives. You can use popular prompts to enhance the behavior of the model. 
+You can set MAGI to behave like a fictional character or follow a set of rules. You just have to describe what you want and MAGI will follow your instructions.
 
 You can set your Prime Directives in the file **prime_directives.txt**. 
 
@@ -42,7 +42,7 @@ You can configure MAGI plugins by editing the file **config.cfg**.
 
 ### Web plugin
 
-This plugin allows mission mode to browse the Internet for up-to-date information.
+This plugin allows MAGI to browse the Internet for up-to-date information.
 
 #### Configuration
 
