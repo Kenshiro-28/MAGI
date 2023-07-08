@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 3.17
+Version     : 3.18
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -19,6 +19,7 @@ GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subt
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
 STRATEGY_TEXT = "\n\n----- Strategy -----\n\n"
+PROGRESS_REPORT_TEXT = "\n\n----- Progress Report -----\n\n"
 MISSION_TAG = "\n[MISSION] "
 ACTION_TAG = "\n[ACTION] "
 NORMAL_MODE_TEXT = "\nNormal mode enabled"
@@ -68,7 +69,7 @@ def runNerv(primeDirectives, goal, context, ai_mode):
 			
 			summary = core.update_summary(goal, context, summary, missionSummary)
 		
-		printMagiText(SUMMARY_TEXT + summary, ai_mode)
+		printMagiText(PROGRESS_REPORT_TEXT + summary, ai_mode)
 	
 
 def runMission(primeDirectives, mission, context, ai_mode):
