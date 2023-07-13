@@ -1,5 +1,10 @@
+# Core
 llama-cpp-python
+
+# Web Plugin
 selenium==4.9.1
 beautifulsoup4==4.12.2
 webdriver-manager==3.8.6
+
+# Telegram Plugin
 python-telegram-bot
