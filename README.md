@@ -75,9 +75,21 @@ ASSISTANT:
 
 After cloning the repository, save the .bin file in the root folder. 
 
-This model works fine on an average computer with 16 GB of RAM:
+### Recommended model
 
-https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML/resolve/main/Wizard-Vicuna-7B-Uncensored.ggmlv3.q8_0.bin
+https://github.com/melodysdreamj/WizardVicunaLM
+
+At the time of writing, WizardVicunaLM is the best 13B parameter model according to the OpenLLM Leaderboard:
+
+https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard
+
+For an average computer with 16 GB of RAM, you can try the 13B parameter version:
+
+https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/blob/main/Wizard-Vicuna-13B-Uncensored.ggmlv3.q5_K_M.bin
+
+For a fast computer with 32 GB of RAM, you can try the 30B parameter version:
+
+https://huggingface.co/TheBloke/Wizard-Vicuna-30B-Uncensored-GGML/blob/main/Wizard-Vicuna-30B-Uncensored.ggmlv3.q5_K_M.bin
 
 ## Docker installation
 

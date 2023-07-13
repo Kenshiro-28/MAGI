@@ -1,5 +1,5 @@
 llama-cpp-python
 selenium==4.9.1
-bs4
-webdriver_manager
+beautifulsoup4==4.12.2
+webdriver-manager==3.8.6
 python-telegram-bot
