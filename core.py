@@ -4,10 +4,11 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v3.20"
+SYSTEM_TEXT = "\n\nSystem: v4.00"
 
-USER_TEXT = "USER: " 
-ASSISTANT_TEXT = " ASSISTANT: "
+USER_TEXT = "### Instruction:\n"
+ASSISTANT_TEXT = "### Response:\n"
+EOS = "\n\n"
 
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
@@ -20,7 +21,7 @@ MODEL_TEXT = "\nModel: "
 MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
-MAX_TOKENS = 2048
+MAX_TOKENS = 4096
 MAX_INPUT_TOKENS = MAX_TOKENS // 2
 MAX_INPUT_TOKENS_ERROR = "[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
@@ -31,7 +32,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 450
+TEXT_BLOCK_WORDS = 900
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
@@ -97,13 +98,13 @@ def send_prompt(primeDirectives, prompt, context):
 	if primeDirectives:
 		primeDirectives += "\n"
 
-	command = USER_TEXT + primeDirectives + prompt + ASSISTANT_TEXT
+	command = USER_TEXT + primeDirectives + prompt + EOS + ASSISTANT_TEXT
 
 	context.append(command)
 
 	response = get_completion_from_messages(context) 
 
-	context.append(response)
+	context.append(response + EOS)
 
 	return response
 

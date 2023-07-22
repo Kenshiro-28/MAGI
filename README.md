@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent that leverages the LLaMA model to offer an open-source AI accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing and remote operation through Telegram.
+MAGI is an autonomous agent that leverages the Llama 2 model to offer an open-source AI accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing and remote operation through Telegram.
 
 ## Prime Directives
 
@@ -66,30 +66,23 @@ TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
 ## Model 
 
-You can use any LLaMA model that is compatible with llama.cpp and has the Vicuna v1.1 prompt format:
+You can use any Llama 2 model that is compatible with llama.cpp and has the Alpaca prompt format:
 
 ```
-USER: Who was Sun Tzu?
-ASSISTANT: 
+### Instruction:
+Who was Sun Tzu?
+
+### Response:
+(include newline)
 ```
 
 After cloning the repository, save the .bin file in the root folder. 
 
 ### Recommended model
 
-https://github.com/melodysdreamj/WizardVicunaLM
+At the time of writing, Nous-Hermes-Llama2-13b is the best Llama 2 model:
 
-At the time of writing, WizardVicunaLM is the best 13B parameter model according to the OpenLLM Leaderboard:
-
-https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard
-
-For an average computer with 16 GB of RAM, you can try the 13B parameter version:
-
-https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-GGML/blob/main/Wizard-Vicuna-13B-Uncensored.ggmlv3.q5_K_M.bin
-
-For a fast computer with 32 GB of RAM, you can try the 30B parameter version:
-
-https://huggingface.co/TheBloke/Wizard-Vicuna-30B-Uncensored-GGML/blob/main/Wizard-Vicuna-30B-Uncensored.ggmlv3.q5_K_M.bin
+https://huggingface.co/TheBloke/Nous-Hermes-Llama2-GGML/blob/main/nous-hermes-llama2-13b.ggmlv3.q5_K_M.bin
 
 ## Docker installation
 
@@ -113,7 +106,7 @@ $ sudo apt install docker.io apparmor-utils
 
 - Clone this repository.
 
-- Save a LLaMA model in the root folder.
+- Save a Llama 2 model in the root folder.
 
 - Create a Docker image, you can do it by running this command in the root folder:
 
@@ -161,7 +154,7 @@ $ sudo apt install build-essential python3-venv python3-pip apparmor-utils firef
 
 - Clone this repository.
 
-- Save a LLaMA model in the root folder.
+- Save a Llama 2 model in the root folder.
 
 - Install Python packages:
 
