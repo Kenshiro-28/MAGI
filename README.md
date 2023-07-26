@@ -66,23 +66,19 @@ TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
 ## Model 
 
-You can use any Llama 2 model that is compatible with llama.cpp and has the Alpaca prompt format:
+You can use any Llama 2 model that is compatible with llama.cpp and has the following prompt format:
 
 ```
-### Instruction:
-Who was Sun Tzu?
-
-### Response:
-(include newline)
+USER: Who was Sun Tzu? ASSISTANT: 
 ```
 
 After cloning the repository, save the .bin file in the root folder. 
 
 ### Recommended model
 
-At the time of writing, Nous-Hermes-Llama2-13b is the best Llama 2 model:
+At the time of writing, WizardLM-13B-V1.2 is the best Llama 2 model:
 
-https://huggingface.co/TheBloke/Nous-Hermes-Llama2-GGML/blob/main/nous-hermes-llama2-13b.ggmlv3.q5_K_M.bin
+https://huggingface.co/TheBloke/WizardLM-13B-V1.2-GGML/blob/main/wizardlm-13b-v1.2.ggmlv3.q5_K_M.bin
 
 ## Docker installation
 
