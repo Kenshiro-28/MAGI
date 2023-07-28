@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v5.00"
+SYSTEM_TEXT = "\n\nSystem: v5.01"
 
 USER_TEXT = "USER: "
 ASSISTANT_TEXT = "ASSISTANT: "
@@ -219,7 +219,11 @@ def load_model():
 		print()
 		
 		# Load model		
-		model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS)
+		if "70" in modelName:
+			model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS, n_gqa=8)
+		else:
+			model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS)
+
 		model.verbose = False
 		
 		print_system_text(SYSTEM_TEXT, AiMode.NORMAL)
