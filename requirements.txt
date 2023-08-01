@@ -8,3 +8,8 @@ webdriver-manager==3.8.6
 
 # Telegram Plugin
 python-telegram-bot
+
+# Stable Diffusion Plugin
+transformers
+torch
+diffusers
