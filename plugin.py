@@ -1,10 +1,15 @@
+import os
 import core
 import asyncio
 import time
 from plugins.web import web
 from plugins.telegram_bot import telegram_bot
+from plugins.stable_diffusion import stable_diffusion
+
+PLUGIN_WORKSPACE_FOLDER = "workspace"
 
 ASYNCIO_ERROR = "\n[ERROR] Asyncio exception: "
+SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: "
 
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
@@ -22,6 +27,12 @@ ENABLE_TELEGRAM_PLUGIN_KEY = "ENABLE_TELEGRAM_PLUGIN"
 TELEGRAM_BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN"
 TELEGRAM_USER_ID_KEY = "TELEGRAM_USER_ID"
 TELEGRAM_PLUGIN_WAIT_TIME = 3
+
+STABLE_DIFFUSION_PLUGIN_ACTIVE = False
+STABLE_DIFFUSION_PLUGIN_ENABLED_TEXT = "\nStable Diffusion plugin: enabled"
+STABLE_DIFFUSION_PLUGIN_DISABLED_TEXT = "\nStable Diffusion plugin: disabled"
+ENABLE_STABLE_DIFFUSION_PLUGIN_KEY = "ENABLE_STABLE_DIFFUSION_PLUGIN"
+STABLE_DIFFUSION_MODEL_KEY = "STABLE_DIFFUSION_MODEL"
 
 
 # WEB PLUGIN OPERATIONS
@@ -87,7 +98,30 @@ def receive_telegram_bot():
 	return message		
 
 
-# Initialize
+# STABLE DIFFUSION OPERATIONS
+
+stable_diffusion_counter = 1
+
+def generate_image(prompt):
+	global stable_diffusion_counter
+
+	image = stable_diffusion.generate_image(prompt, STABLE_DIFFUSION_MODEL)
+
+	try:
+		if image:
+			path = PLUGIN_WORKSPACE_FOLDER + "/" + str(stable_diffusion_counter) + ".png"		
+			image.save(path)
+			stable_diffusion_counter += 1
+
+	except Exception as e:
+		print(SAVE_FILE_ERROR + str(e)) 		
+		
+
+# INITIALIZE PLUGINS
+
+# Workspace
+if not os.path.exists(PLUGIN_WORKSPACE_FOLDER):
+	os.makedirs(PLUGIN_WORKSPACE_FOLDER)
 
 # Web plugin
 if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
@@ -105,4 +139,12 @@ if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
 else:
 	core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
 
-				
+# Stable Diffusion plugin
+if core.config.get(ENABLE_STABLE_DIFFUSION_PLUGIN_KEY, '').upper() == "YES":
+	STABLE_DIFFUSION_PLUGIN_ACTIVE = True
+	STABLE_DIFFUSION_MODEL = core.config.get(STABLE_DIFFUSION_MODEL_KEY, '')
+	core.print_system_text(STABLE_DIFFUSION_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+else:
+	core.print_system_text(STABLE_DIFFUSION_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+
+

@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 5.01
+Version     : 5.02
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -22,12 +22,14 @@ STRATEGY_TEXT = "\n\n----- Strategy -----\n\n"
 PROGRESS_REPORT_TEXT = "\n\n----- Progress Report -----\n\n"
 MISSION_TAG = "\n[MISSION] "
 ACTION_TAG = "\n[ACTION] "
+TELEGRAM_TAG = "\n[TELEGRAM] "
+STABLE_DIFFUSION_TAG = "\n[STABLE DIFFUSION] "
 NORMAL_MODE_TEXT = "\nNormal mode enabled"
 MISSION_MODE_TEXT = "\nMission mode enabled"
 NERV_MODE_TEXT = "\nNERV mode enabled"
 WEB_SEARCH_QUERY = "Create a one line search query for Google that would yield the most comprehensive and relevant results on the topic of: "
 WEB_SUMMARY_TEXT = "\n\nWEB SUMMARY: "
-TELEGRAM_MESSAGE_TEXT = "\n[TELEGRAM] "
+GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text: "
 
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
@@ -108,6 +110,12 @@ def runAction(primeDirectives, action, context, ai_mode):
 	
 	printMagiText("\n" + summary, ai_mode)
 	
+	# Generate Stable Diffusion image
+	if plugin.STABLE_DIFFUSION_PLUGIN_ACTIVE:
+		image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + summary, context)
+		printSystemText(STABLE_DIFFUSION_TAG + image_prompt + "\n", ai_mode)
+		plugin.generate_image(image_prompt)
+	
 	return summary
 	
 
@@ -154,7 +162,7 @@ def userInput(ai_mode):
 		prompt = plugin.receive_telegram_bot()
 		
 		if prompt:
-			core.print_system_text(TELEGRAM_MESSAGE_TEXT + prompt, ai_mode)		
+			core.print_system_text(TELEGRAM_TAG + prompt, ai_mode)		
 	else:
 		prompt = core.user_input(ai_mode)
 		
