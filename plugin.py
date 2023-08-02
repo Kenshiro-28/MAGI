@@ -83,7 +83,7 @@ def receive_telegram_bot():
 	message = ""
 
 	bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)	
-	
+
 	time.sleep(TELEGRAM_PLUGIN_WAIT_TIME)
 	
 	try:	
@@ -96,6 +96,17 @@ def receive_telegram_bot():
 		print(ASYNCIO_ERROR + str(e))
 
 	return message		
+
+
+def send_image_telegram_bot(image):
+	bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)
+	
+	time.sleep(TELEGRAM_PLUGIN_WAIT_TIME)		
+
+	try:
+		asyncio.run(bot.send_image(image))
+	except Exception as e:
+		print(ASYNCIO_ERROR + str(e))
 
 
 # STABLE DIFFUSION OPERATIONS
@@ -114,8 +125,10 @@ def generate_image(prompt):
 			stable_diffusion_counter += 1
 
 	except Exception as e:
-		print(SAVE_FILE_ERROR + str(e)) 		
+		print(SAVE_FILE_ERROR + str(e))
 		
+	return image
+	
 
 # INITIALIZE PLUGINS
 

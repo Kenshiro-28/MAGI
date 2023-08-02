@@ -1,10 +1,13 @@
 from telegram import Bot
 from telegram.error import Forbidden, NetworkError
 import asyncio
+from io import BytesIO
 
 TIMEOUT = 10
 FORBIDDEN_ERROR = "[ERROR] The user has removed or blocked the Telegram bot."
 TELEGRAM_PLUGIN_ERROR = "[ERROR] Telegram plugin exception: "
+TELEGRAM_IMAGE_NAME = "image.png"
+TELEGRAM_IMAGE_FORMAT = "PNG"
 
 
 class TelegramBot:
@@ -25,6 +28,23 @@ class TelegramBot:
 		except Exception as e:
 			print(TELEGRAM_PLUGIN_ERROR + str(e))		
 
+
+	async def send_image(self, image):
+		try:
+			bytes_io = BytesIO()
+			bytes_io.name = TELEGRAM_IMAGE_NAME
+			image.save(bytes_io, TELEGRAM_IMAGE_FORMAT)
+			bytes_io.seek(0)
+
+			await self.getUpdateId()			
+			await self.bot.send_photo(self.user, photo=bytes_io)
+		except NetworkError:
+			await asyncio.sleep(TIMEOUT)
+		except Forbidden:
+			print(FORBIDDEN_ERROR)
+		except Exception as e:
+			print(TELEGRAM_PLUGIN_ERROR + str(e))
+			
 
 	async def receive(self):
 		messageList = []

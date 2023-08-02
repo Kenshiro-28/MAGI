@@ -114,7 +114,10 @@ def runAction(primeDirectives, action, context, ai_mode):
 	if plugin.STABLE_DIFFUSION_PLUGIN_ACTIVE:
 		image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + summary, context)
 		printSystemText(STABLE_DIFFUSION_TAG + image_prompt + "\n", ai_mode)
-		plugin.generate_image(image_prompt)
+		image = plugin.generate_image(image_prompt)
+		
+		if plugin.TELEGRAM_PLUGIN_ACTIVE and image:
+			plugin.send_image_telegram_bot(image)		
 	
 	return summary
 	
