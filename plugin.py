@@ -109,7 +109,7 @@ def generate_image(prompt):
 
 	try:
 		if image:
-			path = PLUGIN_WORKSPACE_FOLDER + "/" + str(stable_diffusion_counter) + ".png"		
+			path = PLUGIN_WORKSPACE_FOLDER + "/image_" + str(stable_diffusion_counter) + ".png"		
 			image.save(path)
 			stable_diffusion_counter += 1
 
