@@ -168,10 +168,12 @@ def summarize_block_array(topic, blockArray):
 
 def load_mission_data(prompt):
 	missionData = read_text_file(MISSION_DATA_FILE_PATH)
-		
-	blockArray = split_text_in_blocks(missionData)
-
-	summary = summarize_block_array(prompt, blockArray)	
+	
+	if len(missionData.split()) > TEXT_BLOCK_WORDS:
+		blockArray = split_text_in_blocks(missionData)
+		summary = summarize_block_array(prompt, blockArray)	
+	else:
+		summary = missionData	
 		
 	return summary			
 
