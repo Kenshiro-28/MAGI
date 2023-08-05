@@ -128,8 +128,7 @@ def checkPrompt(primeDirectives, prompt, context, ai_mode):
 	elif ai_mode == core.AiMode.NERV:		
 		runNerv(primeDirectives, prompt, context, ai_mode)
 	else:
-		response = core.send_prompt(primeDirectives, prompt, context)
-		printMagiText("\n" + response, ai_mode)
+		runAction(primeDirectives, prompt, context, ai_mode)
 
 
 def switchAiMode(ai_mode):
