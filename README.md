@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent that leverages the Llama 2 model to offer an open-source AI accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing and remote operation through Telegram.
+MAGI is an autonomous agent that leverages the Llama 2 model to offer an open-source AI accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
 
 ## Prime Directives
 
@@ -14,13 +14,13 @@ To toggle between the different AI modes, type the letter **m** and press enter.
 
 ### Normal mode
 
-MAGI will respond similarly to other chatbots, it will not save a log or browse the Internet. 
+MAGI will hold a conversation with you in a similar way to other chatbots.
 
 This is the default mode when the program starts.
 
 ### Mission mode
 
-MAGI will generate a more elaborate response based on an action list and up-to-date information from the Internet.
+MAGI will generate a more elaborate response based on an action list.
 
 It will save a log in the file **mission_log.txt**.
 
@@ -28,7 +28,7 @@ You can also add useful information in the file **mission_data.txt**.
 
 ### NERV mode
 
-MAGI will autonomously plan and execute strategies to complete its goal, browsing the Internet for up-to-date information.
+MAGI will autonomously plan and execute strategies to complete its goal.
 
 Once it receives a prompt, it will run continuously and accept no further prompts. To exit MAGI, press Ctrl + C.
 
@@ -63,6 +63,24 @@ ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: disabled
 TELEGRAM_BOT_TOKEN: the token you received from BotFather.
 
 TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
+
+### Stable Diffusion plugin
+
+This plugin allows MAGI to download a Stable Diffusion model from Hugging Face.
+
+MAGI will use the model to generate context-related images and save them in the folder **workspace**.
+
+If the folder contains images from previous sessions, they will be overwritten.
+
+#### Configuration
+
+ENABLE_STABLE_DIFFUSION_PLUGIN: enable or disable the Stable Diffusion plugin (default: disabled).
+
+STABLE_DIFFUSION_MODEL: this is the model used to generate images. The text is a path to a Hugging Face model.
+
+STABLE_DIFFUSION_IMAGE_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
+
+STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate. This text will be the negative prompt used to generate each image.
 
 ## Model 
 
