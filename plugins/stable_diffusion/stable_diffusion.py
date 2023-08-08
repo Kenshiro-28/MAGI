@@ -5,7 +5,7 @@ from diffusers import logging
 STABLE_DIFFUSION_ERROR = "\n[ERROR] An exception occurred while trying to generate an image: "
 
 IMAGE_WIDTH = 512
-IMAGE_HEIGHT = 512
+IMAGE_HEIGHT = 768
 
 def dummy_checker(images, **kwargs):
 	return images, False
