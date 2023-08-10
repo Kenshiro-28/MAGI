@@ -4,11 +4,11 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v5.03"
+SYSTEM_TEXT = "\n\nSystem: v5.04"
 
 USER_TEXT = "USER: "
 ASSISTANT_TEXT = "ASSISTANT: "
-EOS = " "
+EOS = "\n"
 
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 

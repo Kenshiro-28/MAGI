@@ -84,10 +84,11 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any Llama 2 model that is compatible with llama.cpp and has the following prompt format:
+You can use any Llama 2 model that is compatible with llama.cpp and has the Vicuna prompt format:
 
 ```
-USER: Who was Sun Tzu? ASSISTANT: 
+USER: Who was Sun Tzu?
+ASSISTANT: 
 ```
 
 After cloning the repository, save the .bin file in the root folder. 
