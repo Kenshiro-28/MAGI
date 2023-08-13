@@ -19,7 +19,7 @@ def generate_image(prompt, model, image_specs, negative_prompt):
 		pipe = DiffusionPipeline.from_pretrained(model, custom_pipeline = "lpw_stable_diffusion", torch_dtype = torch.float32, safety_checker = dummy_checker)
 		pipe = pipe.to(device)
 
-		prompt += ", " + image_specs
+		prompt = image_specs + ", " + prompt
 
 		image = pipe.text2img(prompt, negative_prompt = negative_prompt, width = IMAGE_WIDTH, height = IMAGE_HEIGHT, max_embeddings_multiples = 3).images[0]
 
