@@ -3,8 +3,8 @@ import stable_diffusion
 model = "emilianJR/epiCRealism"
 
 prompt = "giant mecha"
-image_specs = "photo"
-negative_prompt = "duplicate, mutilated, extra fingers, mutated hands, mutation, deformed, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, poorly drawn face"
+image_specs = "photo, hyperdetailed"
+negative_prompt = "cross-eyed, disjoined, squinting, deformed, distorted, disfigured, text, signature, logo, low quality, worst quality, mutated hands and fingers, missing fingers, additional fingers"
 
 image = stable_diffusion.generate_image(prompt, model, image_specs, negative_prompt)
 
