@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 5.08
+Version     : 5.09
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -95,6 +95,8 @@ def runMission(primeDirectives, mission, context, ai_mode):
 		summary = core.update_summary(mission, context, summary, actionSummary)
 	
 	printMagiText(SUMMARY_TEXT + summary, ai_mode)
+	
+	return summary	
 
 
 def runAction(primeDirectives, action, context, ai_mode):
