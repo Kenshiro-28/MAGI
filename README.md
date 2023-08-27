@@ -84,20 +84,18 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any GGML model that is compatible with llama.cpp and has the Vicuna prompt format:
+You can use any GGUF model that is compatible with llama-cpp-python and has the Vicuna prompt format:
 
 ```
 USER: Who was Sun Tzu?
 ASSISTANT: 
 ```
 
-After cloning the repository, save the .bin file in the root folder. 
+After cloning the repository, save the .gguf file in the root folder. 
 
 ### Recommended model
 
-At the time of writing, WizardLM-13B-V1.2 is the best Llama 2 model:
-
-https://huggingface.co/TheBloke/WizardLM-13B-V1.2-GGML/blob/main/wizardlm-13b-v1.2.ggmlv3.q5_K_M.bin
+https://huggingface.co/TheBloke/PuddleJumper-13B-GGUF/blob/main/puddlejumper-13b.q5_K_M.gguf
 
 ## Docker installation
 

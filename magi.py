@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 5.09
+Version     : 6.00
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================

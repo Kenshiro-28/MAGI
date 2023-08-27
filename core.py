@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v5.09"
+SYSTEM_TEXT = "\n\nSystem: v6.00"
 
 USER_TEXT = "USER: "
 ASSISTANT_TEXT = "ASSISTANT: "
@@ -208,14 +208,14 @@ def load_model():
 
 	fileArray = os.listdir()
 
-	# Filter for .bin files
-	binFileArray = [f for f in fileArray if f.endswith('.bin')]
+	# Filter for model files
+	modelFileArray = [f for f in fileArray if f.endswith('.gguf')]
 
-	if binFileArray:
-		# Get the first .bin file
-		modelFile = binFileArray[0]
+	if modelFileArray:
+		# Get the first model file
+		modelFile = modelFileArray[0]
 
-		# Get the file name without the .bin extension
+		# Get the file name without the .gguf extension
 		modelName = os.path.splitext(modelFile)[0]
 		
 		print()
