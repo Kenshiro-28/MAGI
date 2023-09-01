@@ -4,11 +4,11 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v6.00"
+SYSTEM_TEXT = "\n\nSystem: v7.00"
 
-USER_TEXT = "USER: "
-ASSISTANT_TEXT = "ASSISTANT: "
-EOS = "\n"
+USER_TEXT = "### Instruction:\n"
+ASSISTANT_TEXT = "### Response:"
+EOS = "\n\n"
 
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
@@ -87,7 +87,7 @@ def get_completion_from_messages(context):
 
 		time.sleep(SLEEP_TIME)
 
-		return response['choices'][0]['text'].lstrip()
+		return response['choices'][0]['text']
 		
 	except Exception as e:
 		print_system_text(MODEL_ERROR_TEXT + str(e), AiMode.NORMAL) 

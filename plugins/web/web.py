@@ -1,9 +1,5 @@
 import os
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.firefox import GeckoDriverManager
+import requests
 from bs4 import BeautifulSoup
 
 TIMEOUT = 10
@@ -15,33 +11,22 @@ WEB_SCRAPE_ERROR = "\n[ERROR] An exception occurred while trying to scrape a web
 def search(query, maxUrls):
 	try:
 		urlArray = []
-		numUrls = 0
 
-		options = webdriver.FirefoxOptions()
-		options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36")
-		options.headless = True
-		options.add_argument("--disable-gpu")
+		headers = {
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
+		}
 
-		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path=os.devnull, service_args=["--log", "fatal"])
+		response = requests.get(WEB_SEARCH_TEXT + query, headers=headers)
+		response.raise_for_status()
 
-		driver.get(WEB_SEARCH_TEXT + query)
+		soup = BeautifulSoup(response.text, 'html.parser')
+		search_results = soup.select(".g .yuRUbf a")
 
-		WebDriverWait(driver, TIMEOUT).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g .yuRUbf a")))
-
-		# Extract the search result URLs from the page
-		search_results = driver.find_elements("css selector", ".g .yuRUbf a")
-		
-		for result in search_results:
-			if numUrls < maxUrls:
-				urlArray.append(result.get_attribute("href"))  
-				numUrls += 1
-			else:
-				break
-		
-		driver.quit()
+		for result in search_results[:maxUrls]:
+			urlArray.append(result['href'])
 
 		return urlArray
-		
+	
 	except Exception as e:
 		print("\n" + WEB_SEARCH_ERROR + str(e)) 		
 		return [""]
@@ -51,20 +36,14 @@ def scrape(url):
 	try:
 		text = ""
 
-		options = webdriver.FirefoxOptions()
-		options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36")
-		options.headless = True
-		options.add_argument("--disable-gpu")
-		
-		driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options, service_log_path=os.devnull, service_args=["--log", "fatal"])
+		headers = {
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
+		}
 
-		driver.get(url)
+		response = requests.get(url, headers=headers)
+		response.raise_for_status()
 
-		WebDriverWait(driver, TIMEOUT).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-
-		# Get the HTML content directly from the browser's DOM
-		page_source = driver.execute_script("return document.body.outerHTML;")
-		soup = BeautifulSoup(page_source, "html.parser")
+		soup = BeautifulSoup(response.text, 'html.parser')
 
 		for script in soup(["script", "style"]):
 			script.extract()
@@ -74,12 +53,10 @@ def scrape(url):
 		chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
 		text = "\n".join(chunk for chunk in chunks if chunk)
 
-		driver.quit()
-
-		return text
+		return text	
 		
 	except Exception as e:
 		print("\n" + WEB_SCRAPE_ERROR + str(e))
 		return ""
 		
-		
+

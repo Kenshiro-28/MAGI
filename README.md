@@ -84,18 +84,24 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any GGUF model that is compatible with llama-cpp-python and has the Vicuna prompt format:
+You can use any GGUF model that is compatible with llama-cpp-python and has the Alpaca prompt format:
 
 ```
-USER: Who was Sun Tzu?
-ASSISTANT: 
+### Instruction:
+Who was Sun Tzu?
+
+### Response:
 ```
 
 After cloning the repository, save the .gguf file in the root folder. 
 
 ### Recommended model
 
-https://huggingface.co/TheBloke/PuddleJumper-13B-GGUF/blob/main/puddlejumper-13b.q5_K_M.gguf
+WizardCoder-Python-34B-V1.0 is a versatile model with strong programming skills.
+
+This model requires 32 GB of RAM to operate.
+
+https://huggingface.co/TheBloke/WizardCoder-Python-34B-V1.0-GGUF/blob/main/wizardcoder-python-34b-v1.0.Q5_K_M.gguf
 
 ## Docker installation
 
