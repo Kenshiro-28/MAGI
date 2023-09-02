@@ -158,12 +158,10 @@ To exit MAGI, type the command **exit** or press Ctrl + C.
 - Install the following packages:
 
 ```
-$ sudo apt install build-essential python3-venv python3-pip apparmor-utils firefox-esr 
+$ sudo apt install build-essential python3-venv python3-pip apparmor-utils
 ```
 
 #### Other systems
-
-- Install Firefox
 
 - Install Python 3.11 or later.
 
