@@ -27,6 +27,7 @@ ENABLE_TELEGRAM_PLUGIN_KEY = "ENABLE_TELEGRAM_PLUGIN"
 TELEGRAM_BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN"
 TELEGRAM_USER_ID_KEY = "TELEGRAM_USER_ID"
 TELEGRAM_PLUGIN_WAIT_TIME = 3
+TELEGRAM_PLUGIN_CHAR_LIMIT = 4096
 
 STABLE_DIFFUSION_PLUGIN_ACTIVE = False
 STABLE_DIFFUSION_PLUGIN_ENABLED_TEXT = "\nStable Diffusion plugin: enabled"
@@ -71,14 +72,17 @@ def webSearch(query, ai_mode):
 # TELEGRAM PLUGIN OPERATIONS
 
 def send_telegram_bot(text):
-	bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)	
+	for i in range(0, len(text), TELEGRAM_PLUGIN_CHAR_LIMIT):
+		bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)	
+	
+		message = text[i:i + TELEGRAM_PLUGIN_CHAR_LIMIT]
 
-	time.sleep(TELEGRAM_PLUGIN_WAIT_TIME)
+		time.sleep(TELEGRAM_PLUGIN_WAIT_TIME)
 
-	try:
-		asyncio.run(bot.send(text))
-	except Exception as e:
-		print(ASYNCIO_ERROR + str(e))
+		try:
+			asyncio.run(bot.send(message))
+		except Exception as e:
+			print(ASYNCIO_ERROR + str(e))
 
 
 def receive_telegram_bot():

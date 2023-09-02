@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v7.00"
+SYSTEM_TEXT = "\n\nSystem: v7.01"
 
 USER_TEXT = "### Instruction:\n"
 ASSISTANT_TEXT = "### Response:"
@@ -106,7 +106,7 @@ def send_prompt(primeDirectives, prompt, context):
 
 	context.append(response + EOS)
 
-	return response
+	return response.lstrip()
 
 
 def print_system_text(text, ai_mode):
