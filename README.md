@@ -95,11 +95,17 @@ Who was Sun Tzu?
 
 After cloning the repository, save the .gguf file in the root folder. 
 
-### Recommended model
+### Recommended models
 
-WizardCoder-Python-34B-V1.0 is a versatile model with strong programming skills.
+#### Stheno-L2-13B
 
-This model requires 32 GB of RAM to operate.
+Stheno-L2-13B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+
+https://huggingface.co/TheBloke/Stheno-L2-13B-GGUF/blob/main/stheno-l2-13b.Q5_K_M.gguf
+
+#### WizardCoder-Python-34B-V1.0
+
+WizardCoder-Python-34B-V1.0 is a versatile model with strong programming skills that requires 32 GB of RAM to operate.
 
 https://huggingface.co/TheBloke/WizardCoder-Python-34B-V1.0-GGUF/blob/main/wizardcoder-python-34b-v1.0.Q5_K_M.gguf
 
