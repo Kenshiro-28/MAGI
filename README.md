@@ -84,30 +84,19 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any GGUF model that is compatible with llama-cpp-python and has the Alpaca prompt format:
+You can use any GGUF model that is compatible with llama-cpp-python and has the Vicuna prompt format:
 
 ```
-### Instruction:
-Who was Sun Tzu?
-
-### Response:
+USER: Who was Sun Tzu? ASSISTANT:
 ```
 
 After cloning the repository, save the .gguf file in the root folder. 
 
-### Recommended models
+### Recommended model
 
-#### Stheno-L2-13B
+Xwin-LM-13B-V0.1 is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
-Stheno-L2-13B is a very good general-purpose model that only requires 16 GB of RAM to operate.
-
-https://huggingface.co/TheBloke/Stheno-L2-13B-GGUF/blob/main/stheno-l2-13b.Q5_K_M.gguf
-
-#### WizardCoder-Python-34B-V1.0
-
-WizardCoder-Python-34B-V1.0 is a versatile model with strong programming skills that requires 32 GB of RAM to operate.
-
-https://huggingface.co/TheBloke/WizardCoder-Python-34B-V1.0-GGUF/blob/main/wizardcoder-python-34b-v1.0.Q5_K_M.gguf
+https://huggingface.co/TheBloke/Xwin-LM-13B-V0.1-GGUF/blob/main/xwin-lm-13b-v0.1.Q5_K_M.gguf
 
 ## Docker installation
 
