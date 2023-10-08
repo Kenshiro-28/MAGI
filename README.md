@@ -153,7 +153,7 @@ To exit MAGI, type the command **exit** or press Ctrl + C.
 - Install the following packages:
 
 ```
-$ sudo apt install build-essential python3-venv python3-pip apparmor-utils
+$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils
 ```
 
 #### Other systems
@@ -161,6 +161,8 @@ $ sudo apt install build-essential python3-venv python3-pip apparmor-utils
 - Install Python 3.11 or later.
 
 - Install a C++ compiler.
+
+- Install OpenBLAS.
 
 ### Installation
 
@@ -171,22 +173,8 @@ $ sudo apt install build-essential python3-venv python3-pip apparmor-utils
 - Install Python packages:
 
 ```
-$ pip install -r requirements.txt
+$ CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" pip install --no-cache-dir -r requirements.txt
 ```
-
-#### GPU acceleration (optional)
-
-To enable GPU acceleration on a Linux system with an Nvidia graphics card, run the following commands:
-
-```
-$ sudo apt install nvidia-cuda-toolkit
-$ export LLAMA_CUBLAS=1
-$ CMAKE_ARGS="-DLLAMA_CUBLAS=on" FORCE_CMAKE=1 pip install llama-cpp-python --force-reinstall --upgrade --no-cache-dir
-```
-
-For other systems you can check the project website:
-
-https://pypi.org/project/llama-cpp-python/
 
 ### Running
 

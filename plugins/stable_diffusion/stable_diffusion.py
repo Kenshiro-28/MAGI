@@ -14,10 +14,7 @@ def generate_image(prompt, model, image_specs, negative_prompt):
 	try:
 		logging.set_verbosity_error()
 	
-		device = torch.device('cpu')
-
 		pipe = DiffusionPipeline.from_pretrained(model, custom_pipeline = "lpw_stable_diffusion", torch_dtype = torch.float32, safety_checker = dummy_checker)
-		pipe = pipe.to(device)
 
 		prompt = image_specs + ", " + prompt
 
