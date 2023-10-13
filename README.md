@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an autonomous agent that leverages the Llama 2 model to offer an open-source AI accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
+MAGI is an autonomous agent based on open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
 
 ## Prime Directives
 
@@ -84,19 +84,22 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any Llama 2 model that is compatible with llama-cpp-python and has the Vicuna prompt format:
+You can use any model that is compatible with llama-cpp-python and has the Alpaca prompt format:
 
 ```
-USER: Who was Sun Tzu? ASSISTANT:
+### Instruction:
+Who was Sun Tzu?
+
+### Response:
 ```
 
 After cloning the repository, save the .gguf file in the root folder. 
 
 ### Recommended model
 
-Vicuna-13B-v1.5 is a very good general-purpose model that only requires 16 GB of RAM to operate.
+U-Amethyst-20B-GGUF is a very good general-purpose model that only requires 24 GB of RAM to operate.
 
-https://huggingface.co/TheBloke/vicuna-13B-v1.5-GGUF/blob/main/vicuna-13b-v1.5.Q5_K_M.gguf
+https://huggingface.co/TheBloke/U-Amethyst-20B-GGUF/blob/main/u-amethyst-20b.Q5_K_M.gguf
 
 ## Docker installation
 

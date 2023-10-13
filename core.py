@@ -4,11 +4,11 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v8.01"
+SYSTEM_TEXT = "\n\nSystem: v9.00"
 
-USER_TEXT = "USER: "
-ASSISTANT_TEXT = "ASSISTANT:"
-EOS = " "
+USER_TEXT = "### Instruction:\n"
+ASSISTANT_TEXT = "### Response:\n"
+EOS = "\n\n"
 
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
@@ -32,7 +32,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 750
+TEXT_BLOCK_WORDS = 1000
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
