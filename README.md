@@ -97,9 +97,11 @@ After cloning the repository, save the .gguf file in the root folder.
 
 ### Recommended model
 
-U-Amethyst-20B-GGUF is a very good general-purpose model that only requires 24 GB of RAM to operate.
+MLewd-ReMM-L2-Chat-20B is a very good general-purpose model that only requires 24 GB of RAM to operate.
 
-https://huggingface.co/TheBloke/U-Amethyst-20B-GGUF/blob/main/u-amethyst-20b.Q5_K_M.gguf
+This model is not censored, proceed with caution.
+
+https://huggingface.co/TheBloke/MLewd-ReMM-L2-Chat-20B-GGUF/blob/main/mlewd-remm-l2-chat-20b.Q5_K_M.gguf
 
 ## Docker installation
 
