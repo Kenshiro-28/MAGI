@@ -97,11 +97,11 @@ After cloning the repository, save the .gguf file in the root folder.
 
 ### Recommended model
 
-MLewd-ReMM-L2-Chat-20B is a very good general-purpose model that only requires 24 GB of RAM to operate.
+Stheno-1.8-L2-13B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/TheBloke/MLewd-ReMM-L2-Chat-20B-GGUF/blob/main/mlewd-remm-l2-chat-20b.Q5_K_M.gguf
+https://huggingface.co/Sao10K/Stheno-1.8-L2-13B-GGUF/blob/main/Stheno-1.8-L2-13B.q5_K_M.gguf
 
 ## Docker installation
 
