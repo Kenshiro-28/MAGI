@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v9.00"
+SYSTEM_TEXT = "\n\nSystem: v9.01"
 
 USER_TEXT = "### Instruction:\n"
 ASSISTANT_TEXT = "### Response:\n"
@@ -32,7 +32,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 1000
+TEXT_BLOCK_WORDS = 500
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
