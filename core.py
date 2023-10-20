@@ -4,11 +4,11 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v9.01"
+SYSTEM_TEXT = "\n\nSystem: v10.00"
 
-USER_TEXT = "### Instruction:\n"
-ASSISTANT_TEXT = "### Response:\n"
-EOS = "\n\n"
+USER_TEXT = "<|im_start|>user\n"
+ASSISTANT_TEXT = "<|im_start|>assistant\n"
+EOS = "<|im_end|>\n"
 
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
@@ -83,7 +83,7 @@ def get_completion_from_messages(context):
 			context.pop(0)
 			text, text_tokens = get_context_data(context)
 
-		response = model(text, max_tokens = MAX_TOKENS - text_tokens)
+		response = model(text, max_tokens = MAX_TOKENS - text_tokens, stop = EOS.strip())
 
 		time.sleep(SLEEP_TIME)
 

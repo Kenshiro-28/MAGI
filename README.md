@@ -84,24 +84,25 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any model that is compatible with llama-cpp-python and has the Alpaca prompt format:
+You can use any model that is compatible with llama-cpp-python and has the ChatML prompt format:
 
 ```
-### Instruction:
-Who was Sun Tzu?
-
-### Response:
+<|im_start|>system
+{system_message}<|im_end|>
+<|im_start|>user
+{prompt}<|im_end|>
+<|im_start|>assistant
 ```
 
 After cloning the repository, save the .gguf file in the root folder. 
 
 ### Recommended model
 
-Stheno-1.8-L2-13B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Dolphin-2.1-mistral-7B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/Sao10K/Stheno-1.8-L2-13B-GGUF/blob/main/Stheno-1.8-L2-13B.q5_K_M.gguf
+https://huggingface.co/TheBloke/dolphin-2.1-mistral-7B-GGUF/blob/main/dolphin-2.1-mistral-7b.Q8_0.gguf
 
 ## Docker installation
 
