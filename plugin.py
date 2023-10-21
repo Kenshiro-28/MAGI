@@ -13,7 +13,7 @@ SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: 
 
 WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-WEB_MAX_SIZE = 200 # Max text blocks per web page
+WEB_MAX_SIZE = 100 # Max text blocks per web page
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 
 WEB_PLUGIN_ACTIVE = False

@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v10.00"
+SYSTEM_TEXT = "\n\nSystem: v10.01"
 
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
@@ -36,8 +36,7 @@ TEXT_BLOCK_WORDS = 500
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
-SLEEP_TIME = 1
-
+MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
 
 class AiMode(Enum):
 	NORMAL  = 0
@@ -85,8 +84,6 @@ def get_completion_from_messages(context):
 
 		response = model(text, max_tokens = MAX_TOKENS - text_tokens, stop = EOS.strip())
 
-		time.sleep(SLEEP_TIME)
-
 		return response['choices'][0]['text']
 		
 	except Exception as e:
@@ -117,7 +114,13 @@ def print_system_text(text, ai_mode):
 
 	
 def print_magi_text(text, ai_mode):
-	print(END_COLOR + MAGI_COLOR + text + END_COLOR)
+	print(END_COLOR + MAGI_COLOR, end='')
+	
+	for char in text:
+		print(char, end='', flush=True)
+		time.sleep(MAGI_TEXT_SLEEP_TIME)
+		
+	print(END_COLOR)
 	
 	if ai_mode != AiMode.NORMAL:
 		save_mission_log(text)	
