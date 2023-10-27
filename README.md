@@ -84,7 +84,7 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any model that is compatible with llama-cpp-python and has the ChatML prompt format:
+You can use any model supported by llama-cpp-python, as long as it has a context size of at least 8K tokens and adheres to the ChatML prompt format:
 
 ```
 <|im_start|>system
@@ -102,7 +102,7 @@ Dolphin-2.1-mistral-7B is a very good general-purpose model that only requires 1
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/TheBloke/dolphin-2.1-mistral-7B-GGUF/blob/main/dolphin-2.1-mistral-7b.Q8_0.gguf
+https://huggingface.co/TheBloke/dolphin-2.1-mistral-7B-GGUF/blob/main/dolphin-2.1-mistral-7b.Q6_K.gguf
 
 ## Docker installation
 

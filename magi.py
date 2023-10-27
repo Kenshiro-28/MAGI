@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 10.01
+Version     : 10.02
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -170,7 +170,7 @@ def userInput(ai_mode):
 	else:
 		prompt = core.user_input(ai_mode)
 		
-	return prompt		
+	return prompt.strip()
 
 
 # Main logic

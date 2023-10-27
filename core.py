@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v10.01"
+SYSTEM_TEXT = "\n\nSystem: v10.02"
 
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
@@ -21,7 +21,7 @@ MODEL_TEXT = "\nModel: "
 MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
-MAX_TOKENS = 4096
+MAX_TOKENS = 8192
 MAX_INPUT_TOKENS = MAX_TOKENS // 2
 MAX_INPUT_TOKENS_ERROR = "[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
@@ -32,7 +32,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 500
+TEXT_BLOCK_WORDS = 1000
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
@@ -84,7 +84,7 @@ def get_completion_from_messages(context):
 
 		response = model(text, max_tokens = MAX_TOKENS - text_tokens, stop = EOS.strip())
 
-		return response['choices'][0]['text']
+		return response['choices'][0]['text'].strip()
 		
 	except Exception as e:
 		print_system_text(MODEL_ERROR_TEXT + str(e), AiMode.NORMAL) 
@@ -103,7 +103,7 @@ def send_prompt(primeDirectives, prompt, context):
 
 	context.append(response + EOS)
 
-	return response.lstrip()
+	return response
 
 
 def print_system_text(text, ai_mode):
@@ -139,7 +139,7 @@ def user_input(ai_mode):
 	if ai_mode != AiMode.NORMAL:
 		save_mission_log("\n" + prompt)	
 	
-	return prompt		
+	return prompt
 
 
 def summarize(topic, context, text):
