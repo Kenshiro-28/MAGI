@@ -98,11 +98,11 @@ After cloning the repository, save the .gguf file in the root folder.
 
 ### Recommended model
 
-Dolphin-2.1-mistral-7B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Dolphin 2.2.1 Mistral 7B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/TheBloke/dolphin-2.1-mistral-7B-GGUF/blob/main/dolphin-2.1-mistral-7b.Q6_K.gguf
+https://huggingface.co/TheBloke/dolphin-2.2.1-mistral-7B-GGUF/blob/main/dolphin-2.2.1-mistral-7b.Q8_0.gguf
 
 ## Docker installation
 
