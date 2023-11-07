@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v10.02"
+SYSTEM_TEXT = "\n\nSystem: v10.03"
 
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
@@ -67,7 +67,7 @@ def get_number_of_tokens(text):
 	
 
 def get_context_data(context):
-	text = ' '.join(context)
+	text = ''.join(context)
 	text_tokens = get_number_of_tokens(text)
 	
 	return text, text_tokens
