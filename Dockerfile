@@ -1,7 +1,10 @@
 # Use an official Python base image from the Docker Hub
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y build-essential pkg-config libopenblas-dev
+RUN apt-get update && \
+    apt-get install -y build-essential pkg-config libopenblas-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # Set environment variables
 ENV PIP_NO_CACHE_DIR=yes \

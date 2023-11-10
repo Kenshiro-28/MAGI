@@ -1,5 +1,5 @@
 # Core
-llama-cpp-python==0.2.13
+llama-cpp-python
 
 # Web Plugin
 beautifulsoup4
