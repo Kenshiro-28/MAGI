@@ -82,7 +82,7 @@ def get_completion_from_messages(context):
 			context.pop(0)
 			text, text_tokens = get_context_data(context)
 
-		response = model(text, max_tokens = MAX_TOKENS - text_tokens, stop = EOS.strip())
+		response = model(text, max_tokens = MAX_TOKENS - text_tokens)
 
 		return response['choices'][0]['text'].strip()
 		

@@ -126,7 +126,7 @@ $ sudo apt install docker.io apparmor-utils
 
 - Clone this repository.
 
-- Save a Llama 2 model in the root folder.
+- Save a model in the root folder.
 
 - Create a Docker image, you can do it by running this command in the root folder:
 
@@ -174,7 +174,7 @@ $ sudo apt install build-essential pkg-config libopenblas-dev python3-venv pytho
 
 - Clone this repository.
 
-- Save a Llama 2 model in the root folder.
+- Save a model in the root folder.
 
 - Install Python packages:
 
