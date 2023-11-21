@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 10.04
+Version     : 10.05
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -15,7 +15,8 @@ import re
 SYSTEM_HINT_TEXT = "\n\nHint: to switch AI mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_TASK_LIST_TEXT = "\nWrite a task list. Write one task per line, no subtasks. Write ONLY the task list. MISSION = "
+GENERATE_TASK_LIST_TEXT = "\nBreak down the following mission into a flat list of independent tasks. MISSION = "
+ACTION_HELPER_TEXT = "Do this: "
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
 STRATEGY_TEXT = "\n\n----- Strategy -----\n\n"
@@ -36,8 +37,8 @@ EXIT_COMMAND = "EXIT"
 
 
 def sanitizeTask(task):
-	# Remove digits, dots, dashes and spaces at the beginning of the task
-	task = re.sub(r"^[0-9.\- ]*", '', task)
+	# Remove digits, dots, dashes, spaces and "Task:" prefixes at the beginning of the task
+	task = re.sub(r"^[0-9.\- ]*|^[Tt]ask[:]? *", '', task)
 	
 	return task
 	
@@ -89,6 +90,8 @@ def runMission(primeDirectives, mission, context, ai_mode):
 		action = sanitizeTask(action)
 	
 		printSystemText(ACTION_TAG + action, ai_mode)
+
+		action = ACTION_HELPER_TEXT + action
 
 		actionSummary = runAction(primeDirectives, action, context, ai_mode)
 		

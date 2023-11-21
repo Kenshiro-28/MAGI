@@ -16,7 +16,7 @@ def generate_image(prompt, model, image_specs, negative_prompt):
 	try:
 		logging.set_verbosity_error()
 	
-		pipe = DiffusionPipeline.from_pretrained(model, custom_pipeline = "lpw_stable_diffusion", torch_dtype = torch.float32, safety_checker = dummy_checker)
+		pipe = DiffusionPipeline.from_pretrained(model, custom_pipeline = "lpw_stable_diffusion", safety_checker = dummy_checker)
 		pipe.scheduler = KDPM2DiscreteScheduler.from_config(pipe.scheduler.config, use_karras_sigmas = True, algorithm_type="sde-dpmsolver++")
 
 		prompt = image_specs + ", " + prompt
