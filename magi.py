@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 10.06
+Version     : 10.07
 Copyright   : GNU General Public License (GPLv3)
 Description : Autonomous agent 
 =====================================================================================
@@ -15,7 +15,7 @@ import re
 SYSTEM_HINT_TEXT = "\n\nHint: to switch AI mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_TASK_LIST_TEXT = "\nBreak down the following mission into a flat list of independent tasks. MISSION = "
+GENERATE_TASK_LIST_TEXT = "\nBreak down the following mission into a flat list of tasks, with each task described in a single line. Don't write titles or headings. MISSION = "
 ACTION_HELPER_TEXT = "Do this: "
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
@@ -28,9 +28,9 @@ STABLE_DIFFUSION_TAG = "\n[STABLE DIFFUSION] "
 NORMAL_MODE_TEXT = "\nNormal mode enabled"
 MISSION_MODE_TEXT = "\nMission mode enabled"
 NERV_MODE_TEXT = "\nNERV mode enabled"
-WEB_SEARCH_QUERY = "Create a one line search query for Google that would yield the most comprehensive and relevant results on the topic of: "
+WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
 WEB_SUMMARY_TEXT = "\n\nWEB SUMMARY: "
-GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text: "
+GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Don't write titles or headings. TEXT = "
 
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
