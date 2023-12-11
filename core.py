@@ -4,8 +4,9 @@ import os
 import sys
 import time
 
-SYSTEM_TEXT = "\n\nSystem: v10.07"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.08"
 
+SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
 EOS = "<|im_end|>\n"
@@ -78,8 +79,9 @@ def get_completion_from_messages(context):
 		text, text_tokens = get_context_data(context)
 		
 		# Check context size
-		while len(context) > 1 and text_tokens > MAX_INPUT_TOKENS:
-			context.pop(0)
+		while len(context) > 3 and text_tokens > MAX_INPUT_TOKENS:
+			context.pop(1)
+			context.pop(1)
 			text, text_tokens = get_context_data(context)
 
 		response = model(text, max_tokens = MAX_TOKENS - text_tokens)
@@ -92,10 +94,11 @@ def get_completion_from_messages(context):
 
 
 def send_prompt(primeDirectives, prompt, context):
-	if primeDirectives:
-		primeDirectives += "\n"
+	if not context:
+		primeDirectives = SYSTEM_TEXT + primeDirectives + EOS
+		context.append(primeDirectives)
 
-	command = USER_TEXT + primeDirectives + prompt + EOS + ASSISTANT_TEXT
+	command = USER_TEXT + prompt + EOS + ASSISTANT_TEXT
 
 	context.append(command)
 
@@ -231,7 +234,7 @@ def load_model():
 
 		model.verbose = False
 		
-		print_system_text(SYSTEM_TEXT, AiMode.NORMAL)
+		print_system_text(SYSTEM_VERSION_TEXT, AiMode.NORMAL)
 		print_system_text(MODEL_TEXT + modelName, AiMode.NORMAL)		
 	else:
 		print_system_text(MODEL_NOT_FOUND_ERROR, AiMode.NORMAL)
