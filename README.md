@@ -46,7 +46,7 @@ This plugin allows MAGI to browse the Internet for up-to-date information.
 
 #### Configuration
 
-ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: enabled).
+ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: disabled).
 
 ### Telegram plugin
 
@@ -98,11 +98,11 @@ After cloning the repository, save the .gguf file in the root folder.
 
 ### Recommended model
 
-DPOpenHermes 7B v2 is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Dolphin 2.2.1 Mistral 7B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/TheBloke/DPOpenHermes-7B-v2-GGUF/blob/main/dpopenhermes-7b-v2.Q8_0.gguf
+https://huggingface.co/TheBloke/dolphin-2.2.1-mistral-7B-GGUF/blob/main/dolphin-2.2.1-mistral-7b.Q8_0.gguf
 
 ## Docker installation
 
