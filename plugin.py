@@ -7,29 +7,33 @@ from plugins.telegram_bot import telegram_bot
 from plugins.stable_diffusion import stable_diffusion
 
 PLUGIN_WORKSPACE_FOLDER = "workspace"
-
 ASYNCIO_ERROR = "\n[ERROR] Asyncio exception: "
 SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: "
 
-WEB_SEARCH_TEXT = "\n[WEB SEARCH] "
+# WEB PLUGIN
+WEB_PLUGIN_ACTIVE = False
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
 WEB_MAX_SIZE = 30 # Max text blocks per web page
-GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
-
-WEB_PLUGIN_ACTIVE = False
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
+GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
+WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
+WEB_SUMMARY_TEXT = "\n\nWEB SUMMARY: "
+WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 
+# TELEGRAM PLUGIN
 TELEGRAM_PLUGIN_ACTIVE = False
+TELEGRAM_PLUGIN_WAIT_TIME = 3
+TELEGRAM_PLUGIN_CHAR_LIMIT = 4096
 TELEGRAM_PLUGIN_ENABLED_TEXT = "\nTelegram plugin: enabled"
 TELEGRAM_PLUGIN_DISABLED_TEXT = "\nTelegram plugin: disabled"
 ENABLE_TELEGRAM_PLUGIN_KEY = "ENABLE_TELEGRAM_PLUGIN"
 TELEGRAM_BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN"
 TELEGRAM_USER_ID_KEY = "TELEGRAM_USER_ID"
-TELEGRAM_PLUGIN_WAIT_TIME = 3
-TELEGRAM_PLUGIN_CHAR_LIMIT = 4096
+TELEGRAM_TAG = "\n[TELEGRAM] "
 
+# STABLE DIFFUSION PLUGIN
 STABLE_DIFFUSION_PLUGIN_ACTIVE = False
 STABLE_DIFFUSION_PLUGIN_ENABLED_TEXT = "\nStable Diffusion plugin: enabled"
 STABLE_DIFFUSION_PLUGIN_DISABLED_TEXT = "\nStable Diffusion plugin: disabled"
@@ -37,6 +41,60 @@ ENABLE_STABLE_DIFFUSION_PLUGIN_KEY = "ENABLE_STABLE_DIFFUSION_PLUGIN"
 STABLE_DIFFUSION_MODEL_KEY = "STABLE_DIFFUSION_MODEL"
 STABLE_DIFFUSION_IMAGE_SPECS_KEY = "STABLE_DIFFUSION_IMAGE_SPECS"
 STABLE_DIFFUSION_NEGATIVE_PROMPT_KEY = "STABLE_DIFFUSION_NEGATIVE_PROMPT"
+GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Don't write titles or headings. TEXT = "
+STABLE_DIFFUSION_TAG = "\n[STABLE DIFFUSION] "
+
+
+# SHARED OPERATIONS
+def printMagiText(text, ai_mode):
+	if TELEGRAM_PLUGIN_ACTIVE:
+		send_telegram_bot(text)
+		
+	core.print_magi_text(text, ai_mode)
+
+
+def printSystemText(text, ai_mode):
+	if TELEGRAM_PLUGIN_ACTIVE:
+		send_telegram_bot(text)
+		
+	core.print_system_text(text, ai_mode)
+
+
+def userInput(ai_mode):
+	if TELEGRAM_PLUGIN_ACTIVE:
+		prompt = receive_telegram_bot()
+		
+		if prompt:
+			core.print_system_text(TELEGRAM_TAG + prompt, ai_mode)		
+	else:
+		prompt = core.user_input(ai_mode)
+		
+	return prompt.strip()
+
+
+def runAction(primeDirectives, action, context, ai_mode):
+	response = core.send_prompt(primeDirectives, action, context)
+
+	# Search for updated information on the Internet
+	if WEB_PLUGIN_ACTIVE:
+		query = core.send_prompt("", WEB_SEARCH_QUERY + action, context) 
+		webSummary = webSearch(query, ai_mode)
+		summary = response + WEB_SUMMARY_TEXT + webSummary
+	else:
+		summary = response
+	
+	printMagiText("\n" + summary, ai_mode)
+	
+	# Generate Stable Diffusion image
+	if STABLE_DIFFUSION_PLUGIN_ACTIVE:
+		image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + summary, context)
+		printSystemText(STABLE_DIFFUSION_TAG + image_prompt + "\n", ai_mode)
+		image = generate_image(image_prompt)
+		
+		if TELEGRAM_PLUGIN_ACTIVE and image:
+			send_image_telegram_bot(image)		
+	
+	return summary
 
 
 # WEB PLUGIN OPERATIONS
@@ -47,7 +105,7 @@ def webSearch(query, ai_mode):
 
 	query = query.replace('"', '')
 
-	core.print_system_text(WEB_SEARCH_TEXT + query, ai_mode)
+	printSystemText(WEB_SEARCH_TAG + query, ai_mode)
 
 	urls = web.search(query, WEB_SEARCH_LIMIT)
 
@@ -56,7 +114,7 @@ def webSearch(query, ai_mode):
 		if GOOGLE_TRANSLATE_URL_TEXT in url:
 			continue
 			
-		core.print_system_text("\n" + url, ai_mode)
+		printSystemText("\n" + url, ai_mode)
 		text = web.scrape(url)
 		blockArray = core.split_text_in_blocks(text)
 
@@ -65,7 +123,7 @@ def webSearch(query, ai_mode):
 		summary = core.update_summary(query, context, summary, webSummary)
 
 		if webSummary:			
-			core.print_system_text("\n" + webSummary, ai_mode)
+			printSystemText("\n" + webSummary, ai_mode)
 			
 	return summary
 

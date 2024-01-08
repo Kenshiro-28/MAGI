@@ -1,6 +1,12 @@
 # MAGI
 
-MAGI is an autonomous agent based on open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
+MAGI is a chatbot based on open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
+
+## Configuration
+
+The default configuration has all plugins disabled.
+
+You can customize MAGI by editing the file **config.cfg**.
 
 ## Prime Directives
 
@@ -28,17 +34,19 @@ You can also add useful information in the file **mission_data.txt**.
 
 ### NERV mode
 
-MAGI will autonomously plan and execute strategies to complete its goal.
+NERV is a virtual organization composed of AI agents.
 
-Once it receives a prompt, it will run continuously and accept no further prompts. To exit MAGI, press Ctrl + C.
+Each AI agent has a military rank.
 
-It will save a log in the file **mission_log.txt**.
+The AI agents will complete your prompt in a military manner.
+
+You can configure each AI agent to behave like a fictional character or follow a set of rules.
+
+MAGI will save a log in the file **mission_log.txt**.
 
 You can also add useful information in the file **mission_data.txt**.
 
 ## Plugins
-
-You can configure MAGI plugins by editing the file **config.cfg**.
 
 ### Web plugin
 
