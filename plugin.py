@@ -19,8 +19,8 @@ WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
 GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
-WEB_SUMMARY_TEXT = "\n\nWEB SUMMARY: "
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
+WEB_SUMMARY_TAG = "\n[WEB SUMMARY] "
 
 # TELEGRAM PLUGIN
 TELEGRAM_PLUGIN_ACTIVE = False
@@ -75,26 +75,25 @@ def userInput(ai_mode):
 def runAction(primeDirectives, action, context, ai_mode):
 	response = core.send_prompt(primeDirectives, action, context)
 
+	printMagiText("\n" + response, ai_mode)
+
 	# Search for updated information on the Internet
 	if WEB_PLUGIN_ACTIVE:
 		query = core.send_prompt("", WEB_SEARCH_QUERY + action, context) 
-		webSummary = webSearch(query, ai_mode)
-		summary = response + WEB_SUMMARY_TEXT + webSummary
-	else:
-		summary = response
-	
-	printMagiText("\n" + summary, ai_mode)
+		webSummary = WEB_SUMMARY_TAG + webSearch(query, ai_mode)
+		printMagiText(webSummary, ai_mode)
+		response += webSummary
 	
 	# Generate Stable Diffusion image
 	if STABLE_DIFFUSION_PLUGIN_ACTIVE:
-		image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + summary, context)
+		image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + response, context)
 		printSystemText(STABLE_DIFFUSION_TAG + image_prompt + "\n", ai_mode)
 		image = generate_image(image_prompt)
 		
 		if TELEGRAM_PLUGIN_ACTIVE and image:
 			send_image_telegram_bot(image)		
 	
-	return summary
+	return response
 
 
 # WEB PLUGIN OPERATIONS
