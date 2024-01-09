@@ -1,7 +1,7 @@
 import core
 import plugin
 
-NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----"
+NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
 EXECUTE_ORDERS_PROMPT = "\nExecute only the orders specifically assigned to "
 ISSUE_ORDERS_PROMPT_1 = "Give individual orders to each of your soldiers."
 ISSUE_ORDERS_PROMPT_2 = "\nSOLDIERS:\n"
@@ -29,9 +29,9 @@ class Agent:
 	def executeOrders(self, orders, ai_mode):
 		prompt = orders + EXECUTE_ORDERS_PROMPT + self.name + "."
 		
-		response = self.name + ": " + plugin.runAction(self.primeDirectives, prompt, self.context, ai_mode)
+		response = self.tag() + plugin.runAction(self.primeDirectives, prompt, self.context, ai_mode)
 		
-		return response			
+		return response
 
 
 	def issueOrders(self, mission, ai_mode):
@@ -44,13 +44,17 @@ class Agent:
 		else:
 			response = ISSUE_ORDERS_ERROR_TEXT
 
-		response = self.name + ": " + response
+		response = self.tag() + response
 
 		return response
 		
 
+	def tag(self):
+		return "[" + self.name + "] "
+
+
 	def display(self, ai_mode):
-		plugin.printSystemText("\nName: " + self.name + "\n\nPrime Directives: " + self.primeDirectives + "\n", ai_mode)
+		plugin.printSystemText("Name: " + self.name + "\nPrime Directives: " + self.primeDirectives + "\n", ai_mode)
 
 
 def displayNervSquad(ai_mode):
