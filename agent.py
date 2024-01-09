@@ -38,7 +38,7 @@ class Agent:
 		printAgentTag(self, ai_mode)
 	
 		if self.name == CAPTAIN_NAME:
-			prompt = ISSUE_ORDERS_PROMPT_1 + mission + ISSUE_ORDERS_PROMPT_2 + "\n" + SOLDIER_1_NAME + "\n" + SOLDIER_2_NAME + "\n" + SOLDIER_3_NAME
+			prompt = ISSUE_ORDERS_PROMPT_1 + mission + ISSUE_ORDERS_PROMPT_2 + SOLDIER_1_NAME + "\n" + SOLDIER_2_NAME + "\n" + SOLDIER_3_NAME
 			response = core.send_prompt(self.primeDirectives, prompt, self.context)
 			plugin.printMagiText("\n" + response, ai_mode)
 		else:
@@ -55,6 +55,7 @@ class Agent:
 
 def displayNervSquad(ai_mode):
 	plugin.printSystemText(NERV_SQUAD_TEXT, ai_mode)
+
 	captain.display(ai_mode)
 	
 	for soldier in soldiers:
