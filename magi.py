@@ -50,16 +50,13 @@ def createTaskList(mission, summary, context, header, ai_mode):
 
 def runNerv(primeDirectives, mission, context, ai_mode):
 	global nerv_data
-	global team_response
 
 	if not nerv_data:
 		nerv_data = core.load_mission_data(mission)
 		plugin.printSystemText(MISSION_DATA_TEXT + nerv_data, ai_mode)
 		agent.displayNervSquad(ai_mode)
 
-	data = team_response + "\n" + nerv_data
-
-	orders = agent.captain.issueOrders("\nDATA = " + data + "\nMISSION = " + mission, ai_mode)
+	orders = agent.captain.issueOrders("\nDATA = " + nerv_data + "\nMISSION = " + mission, ai_mode)
 	
 	team_response = agent.runSquadOrders(orders, ai_mode)
 
@@ -122,7 +119,6 @@ def switchAiMode(ai_mode):
 if __name__ == "__main__":
 	context = []
 	nerv_data = ""
-	team_response = ""
 	ai_mode = core.AiMode.NORMAL
 
 	primeDirectives = core.read_text_file(core.PRIME_DIRECTIVES_FILE_PATH)

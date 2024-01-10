@@ -41,7 +41,7 @@ ENABLE_STABLE_DIFFUSION_PLUGIN_KEY = "ENABLE_STABLE_DIFFUSION_PLUGIN"
 STABLE_DIFFUSION_MODEL_KEY = "STABLE_DIFFUSION_MODEL"
 STABLE_DIFFUSION_IMAGE_SPECS_KEY = "STABLE_DIFFUSION_IMAGE_SPECS"
 STABLE_DIFFUSION_NEGATIVE_PROMPT_KEY = "STABLE_DIFFUSION_NEGATIVE_PROMPT"
-GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Don't write titles or headings. TEXT = "
+GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Omit any introductory phrases or names. TEXT = "
 STABLE_DIFFUSION_TAG = "\n[STABLE DIFFUSION] "
 
 

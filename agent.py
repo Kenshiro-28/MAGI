@@ -2,7 +2,7 @@ import core
 import plugin
 
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
-EXECUTE_ORDERS_PROMPT = "\nExecute only the orders specifically assigned to "
+GET_ORDERS_PROMPT = "\nOmit any introductory phrases or names. Summarize anonymously and in the second person the task assigned to "
 ISSUE_ORDERS_PROMPT_1 = "Give individual orders to each of your soldiers."
 ISSUE_ORDERS_PROMPT_2 = "\nSOLDIERS:\n"
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
@@ -26,10 +26,15 @@ class Agent:
 		self.context = []
 
 
-	def executeOrders(self, orders, ai_mode):
-		prompt = orders + EXECUTE_ORDERS_PROMPT + self.name + "."
-		
-		response = self.tag() + plugin.runAction(self.primeDirectives, prompt, self.context, ai_mode)
+	def executeOrders(self, team_orders, ai_mode):
+		# Get orders
+		dummy_context = []
+		prompt = team_orders + GET_ORDERS_PROMPT + self.name
+		orders = core.send_prompt("", prompt, dummy_context)
+		plugin.printSystemText("\n" + orders, ai_mode)
+
+		# Execute orders
+		response = self.tag() + plugin.runAction(self.primeDirectives, orders, self.context, ai_mode)
 		
 		return response
 
