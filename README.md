@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is a chatbot based on open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
+MAGI is an advanced chatbot powered by open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
 
 ## Configuration
 
@@ -36,11 +36,9 @@ You can also add useful information in the file **mission_data.txt**.
 
 NERV is a virtual organization composed of AI agents.
 
-Each AI agent has a military rank.
+Each agent has its own memory and remembers the ongoing conversation.
 
-The AI agents will complete your prompt in a military manner.
-
-You can configure each AI agent to behave like a fictional character or follow a set of rules.
+You can configure each agent to behave like a fictional character or follow a set of rules.
 
 MAGI will save a log in the file **mission_log.txt**.
 

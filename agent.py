@@ -31,7 +31,6 @@ class Agent:
 		dummy_context = []
 		prompt = team_orders + GET_ORDERS_PROMPT + self.name
 		orders = core.send_prompt("", prompt, dummy_context)
-		plugin.printSystemText("\n" + orders, ai_mode)
 
 		# Execute orders
 		response = self.tag() + plugin.runAction(self.primeDirectives, orders, self.context, ai_mode)
