@@ -2,9 +2,9 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 10.10
+Version     : 10.11
 Copyright   : GNU General Public License (GPLv3)
-Description : Autonomous agent 
+Description : Advanced Chatbot
 =====================================================================================
 '''
 
