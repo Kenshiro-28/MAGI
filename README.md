@@ -52,11 +52,13 @@ This plugin allows MAGI to browse the Internet for up-to-date information.
 
 #### Configuration
 
-ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: disabled).
+ENABLE_WEB_PLUGIN: enable or disable the web plugin.
 
 ### Telegram plugin
 
 This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input.
+
+If you have both the Telegram plugin and the Stable Diffusion plugin enabled, you will receive the generated images via Telegram.
 
 To use this plugin you have to create a Telegram bot with BotFather (username: @BotFather) and save the token assigned to your bot. 
 
@@ -64,7 +66,7 @@ You must also write to userinfobot (username: @userinfobot) to get your user ID.
 
 #### Configuration
 
-ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: disabled).
+ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin.
 
 TELEGRAM_BOT_TOKEN: the token you received from BotFather.
 
@@ -80,9 +82,9 @@ If the folder contains images from previous sessions, they will be overwritten.
 
 #### Configuration
 
-ENABLE_STABLE_DIFFUSION_PLUGIN: enable or disable the Stable Diffusion plugin (default: disabled).
+ENABLE_STABLE_DIFFUSION_PLUGIN: enable or disable the Stable Diffusion plugin.
 
-STABLE_DIFFUSION_MODEL: this is the model used to generate images. The text is a path to a Hugging Face model.
+STABLE_DIFFUSION_MODEL: this is the model used to generate images.
 
 STABLE_DIFFUSION_IMAGE_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
 
@@ -90,7 +92,7 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any model supported by llama-cpp-python, as long as it has a context size of at least 8K tokens and adheres to the ChatML prompt format:
+You can use any model supported by llama-cpp-python, as long as it adheres to the ChatML prompt format:
 
 ```
 <|im_start|>system
