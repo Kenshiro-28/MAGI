@@ -2,10 +2,11 @@ import core
 import plugin
 
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
-GET_ORDERS_PROMPT = "\nOmit any introductory phrases or names. Summarize anonymously and in the second person the task assigned to "
-ISSUE_ORDERS_PROMPT_1 = "Give individual orders to each of your soldiers."
+ISSUE_ORDERS_PROMPT_1 = "Compose a mission summary, then structure the mission into three independent tasks. Assign each task to one of your soldiers, in this order: "
 ISSUE_ORDERS_PROMPT_2 = "\nSOLDIERS:\n"
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
+EXECUTE_ORDERS_TEXT = ", COMPLETE THE TASKS SPECIFICALLY ASSIGNED TO YOU AND WRITE A REPORT."
+EXECUTE_ORDERS_ERROR_TEXT = "Only soldiers can execute orders."
 
 # Config file keys
 CAPTAIN_NAME_KEY = "CAPTAIN_NAME"
@@ -26,14 +27,14 @@ class Agent:
 		self.context = []
 
 
-	def executeOrders(self, team_orders, ai_mode):
-		# Get orders
-		dummy_context = []
-		prompt = team_orders + GET_ORDERS_PROMPT + self.name
-		orders = core.send_prompt("", prompt, dummy_context)
-
-		# Execute orders
-		response = self.tag() + plugin.runAction(self.primeDirectives, orders, self.context, ai_mode)
+	def executeOrders(self, squad_orders, ai_mode):
+		if self.name != CAPTAIN_NAME:
+			orders = squad_orders + "\n\n" + captain.tag() + self.name + EXECUTE_ORDERS_TEXT
+			response = plugin.runAction(self.primeDirectives, orders, self.context, ai_mode)
+		else:
+			response = EXECUTE_ORDERS_ERROR_TEXT
+		
+		response = self.tag() + response
 		
 		return response
 
@@ -70,15 +71,15 @@ def displayNervSquad(ai_mode):
 		soldier.display(ai_mode)
 
 
-def runSquadOrders(orders, ai_mode):
-	team_response = ""
+def runSquadOrders(squad_orders, ai_mode):
+	squad_response = ""
 
 	for soldier in soldiers:
 		printAgentTag(soldier, ai_mode)
-		response = soldier.executeOrders(orders + team_response, ai_mode)
-		team_response += "\n" + response
+		response = soldier.executeOrders(squad_orders + squad_response, ai_mode)
+		squad_response += "\n\n" + response
 
-	return team_response
+	return squad_response.strip()
 
 
 def printAgentTag(agent, ai_mode):
