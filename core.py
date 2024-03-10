@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.13"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.14"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -33,7 +33,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 300
+TEXT_BLOCK_WORDS = 500
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
