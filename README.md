@@ -106,11 +106,11 @@ After cloning the repository, save the .gguf file in the root folder.
 
 ### Recommended model
 
-Dolphin 2.6 Mistral 7B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Hermes 2 Pro on Mistral 7B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/TheBloke/dolphin-2.6-mistral-7B-GGUF/blob/main/dolphin-2.6-mistral-7b.Q8_0.gguf
+https://huggingface.co/NousResearch/Hermes-2-Pro-Mistral-7B-GGUF/blob/main/Hermes-2-Pro-Mistral-7B.Q8_0.gguf
 
 ## Docker installation
 
