@@ -2,7 +2,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-TIMEOUT = 10
+TIMEOUT = 30
 
 WEB_SEARCH_TEXT = "https://www.google.com/search?q="
 WEB_SEARCH_ERROR = "\n[ERROR] An exception occurred while trying to do a web search: "
@@ -16,7 +16,7 @@ def search(query, maxUrls):
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
 		}
 
-		response = requests.get(WEB_SEARCH_TEXT + query, headers=headers)
+		response = requests.get(WEB_SEARCH_TEXT + query, headers = headers, timeout = TIMEOUT)
 		response.raise_for_status()
 
 		soup = BeautifulSoup(response.text, 'html.parser')
@@ -40,7 +40,7 @@ def scrape(url):
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
 		}
 
-		response = requests.get(url, headers=headers)
+		response = requests.get(url, headers = headers, timeout = TIMEOUT)
 		response.raise_for_status()
 
 		soup = BeautifulSoup(response.text, 'html.parser')
