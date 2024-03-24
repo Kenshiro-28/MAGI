@@ -2,6 +2,7 @@
 llama-cpp-python
 
 # Web Plugin
+selenium
 beautifulsoup4
 
 # Telegram Plugin
@@ -12,4 +13,3 @@ transformers
 torch
 diffusers
 accelerate
-

@@ -17,7 +17,6 @@ WEB_MAX_SIZE = 30 # Max text blocks per web page
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
-GOOGLE_TRANSLATE_URL_TEXT = "translate.google.com"
 WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_TAG = "\n[WEB SUMMARY] "
@@ -109,10 +108,6 @@ def webSearch(query, ai_mode):
 	urls = web.search(query, WEB_SEARCH_LIMIT)
 
 	for url in urls:
-		# Ignore translated web pages
-		if GOOGLE_TRANSLATE_URL_TEXT in url:
-			continue
-			
 		printSystemText("\n" + url, ai_mode)
 		text = web.scrape(url)
 		blockArray = core.split_text_in_blocks(text)

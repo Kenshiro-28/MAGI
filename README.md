@@ -134,7 +134,7 @@ $ sudo apt install docker.io apparmor-utils
 
 - Clone this repository.
 
-- Save a model in the root folder.
+- Optional: save a model in the root folder if you want to store the model in the Docker image.
 
 - Create a Docker image, you can do it by running this command in the root folder:
 
@@ -144,10 +144,22 @@ $ sudo docker build --no-cache -t magi .
 
 ### Running
 
-Run this command to start MAGI:
+If you have stored the model in the Docker image, run this command:
 
 ```
 $ sudo docker run -it magi
+```
+
+If you have stored the model in a local folder, run this command:
+
+```
+$ sudo docker run -it -v MODEL_PATH:/app/MODEL_NAME magi
+```
+
+Example:
+
+```
+$ sudo docker run -it -v /home/user/models/Hermes-2-Pro-Mistral-7B.Q8_0.gguf:/app/Hermes-2-Pro-Mistral-7B.Q8_0.gguf magi
 ```
 
 Print the log of the last run:
@@ -158,25 +170,15 @@ $ sudo docker logs $(sudo docker ps -l -q)
 
 To exit MAGI, type the command **exit** or press Ctrl + C.
 
-## Local installation
+## Linux installation
 
 ### Prerequisites
-
-#### Linux
 
 - Install the following packages:
 
 ```
-$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils
+$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver
 ```
-
-#### Other systems
-
-- Install Python 3.11 or later.
-
-- Install a C++ compiler.
-
-- Install OpenBLAS.
 
 ### Installation
 
