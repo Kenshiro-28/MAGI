@@ -92,7 +92,7 @@ STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images 
 
 ## Model 
 
-You can use any model supported by llama-cpp-python, as long as it adheres to the ChatML prompt format:
+You can use any GGUF model supported by llama-cpp-python, as long as it adheres to the ChatML prompt format:
 
 ```
 <|im_start|>system
@@ -102,15 +102,13 @@ You can use any model supported by llama-cpp-python, as long as it adheres to th
 <|im_start|>assistant
 ```
 
-After cloning the repository, save the .gguf file in the root folder. 
-
 ### Recommended model
 
-Hermes 2 Pro on Mistral 7B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Dolphin 2.9 Llama 3 8B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/NousResearch/Hermes-2-Pro-Mistral-7B-GGUF/blob/main/Hermes-2-Pro-Mistral-7B.Q8_0.gguf
+https://huggingface.co/cognitivecomputations/dolphin-2.9-llama3-8b-gguf/blob/main/dolphin-2.9-llama3-8b-q8_0.gguf
 
 ## Docker installation
 
@@ -120,7 +118,7 @@ I strongly recommend running MAGI inside a Docker container. This method signifi
 
 #### Linux
 
-- Install the following packages:
+Install the following packages:
 
 ```
 $ sudo apt install docker.io apparmor-utils
@@ -128,32 +126,34 @@ $ sudo apt install docker.io apparmor-utils
 
 #### Other systems
 
-- Install Docker
+Install Docker.
 
-### Installation
+### Install
 
 - Clone this repository.
 
-- Optional: save a model in the root folder if you want to store the model in the Docker image.
+- Optional: place a model in the root folder to include it in the Docker image.
 
-- Create a Docker image, you can do it by running this command in the root folder:
+- To create the Docker image, run the following command in the root folder:
 
 ```
 $ sudo docker build --no-cache -t magi .
 ```
 
-### Running
+### Run a Docker image with a model
 
-If you have stored the model in the Docker image, run this command:
+If you have placed the model in the Docker image, run this command:
 
 ```
 $ sudo docker run -it magi
 ```
 
-If you have stored the model in a local folder, run this command:
+### Run a Docker image without a model
+
+If you have placed the model in a local folder, run this command, replacing MODEL_PATH with the full path to the model file and MODEL_FILE with the name of the model file:
 
 ```
-$ sudo docker run -it -v MODEL_PATH:/app/MODEL_NAME magi
+$ sudo docker run -it -v MODEL_PATH:/app/MODEL_FILE magi
 ```
 
 Example:
@@ -162,44 +162,63 @@ Example:
 $ sudo docker run -it -v /home/user/models/Hermes-2-Pro-Mistral-7B.Q8_0.gguf:/app/Hermes-2-Pro-Mistral-7B.Q8_0.gguf magi
 ```
 
-Print the log of the last run:
+### Exit MAGI
+
+To exit MAGI, type the command **exit** or press Ctrl + C.
+
+If you want to print the log of the last run, use this command:
 
 ```
 $ sudo docker logs $(sudo docker ps -l -q)
 ```
 
-To exit MAGI, type the command **exit** or press Ctrl + C.
-
-## Linux installation
+## Debian installation
 
 ### Prerequisites
 
-- Install the following packages:
+Install the following packages:
 
 ```
-$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver
+$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
 ```
 
-### Installation
+### Install
 
 - Clone this repository.
 
-- Save a model in the root folder.
+- Place a model in the root folder.
 
-- Install Python packages:
+- Run the following commands in the root folder:
 
 ```
+$ python3 -m venv venv --system-site-packages
+$ source venv/bin/activate
 $ CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" pip install --no-cache-dir -r requirements.txt
 ```
 
-### Running
+### Run
 
-Run this command in the root folder to start MAGI:
+- Open a console and navigate to the project root folder.
+
+- If the Python virtual environment is not already active, activate it with the following command:
+
+```
+$ source venv/bin/activate
+```
+
+- To start MAGI, run this command:
 
 ```
 $ python magi.py
 ```
 
-To exit MAGI, type the command **exit** or press Ctrl + C.
+### Exit MAGI
 
+- To exit MAGI, type the command **exit** or press Ctrl + C.
+
+- After running MAGI, deactivate the Python virtual environment with the following command:
+
+```
+$ deactivate
+```
 

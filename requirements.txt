@@ -1,13 +1,6 @@
 # Core
 llama-cpp-python
 
-# Web Plugin
-selenium
-beautifulsoup4
-PyPDF2
-odfpy
-python-docx
-
 # Telegram Plugin
 python-telegram-bot
 
