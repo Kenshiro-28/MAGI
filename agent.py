@@ -5,7 +5,7 @@ NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
 ISSUE_ORDERS_PROMPT_1 = "Compose a mission summary, then structure the mission into three independent tasks. Assign each task to one of your soldiers, in this order: "
 ISSUE_ORDERS_PROMPT_2 = "\nSOLDIERS:\n"
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
-EXECUTE_ORDERS_TEXT = ", COMPLETE THE TASKS SPECIFICALLY ASSIGNED TO YOU AND WRITE A REPORT."
+EXECUTE_ORDERS_TEXT = ", please complete the task assigned to you."
 EXECUTE_ORDERS_ERROR_TEXT = "Only soldiers can execute orders."
 
 # Config file keys

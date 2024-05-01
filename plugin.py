@@ -45,6 +45,7 @@ STABLE_DIFFUSION_TAG = "\n[STABLE DIFFUSION] "
 
 
 # SHARED OPERATIONS
+
 def printMagiText(text, ai_mode):
 	if TELEGRAM_PLUGIN_ACTIVE:
 		send_telegram_bot(text)
