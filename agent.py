@@ -21,69 +21,69 @@ SOLDIER_3_PRIME_DIRECTIVES_KEY = "SOLDIER_3_PRIME_DIRECTIVES"
 
 class Agent:
 
-	def __init__(self, name, primeDirectives):
-		self.name = name
-		self.primeDirectives = primeDirectives
-		self.context = []
+    def __init__(self, name, primeDirectives):
+        self.name = name
+        self.primeDirectives = primeDirectives
+        self.context = []
 
 
-	def executeOrders(self, squad_orders, ai_mode):
-		if self.name != CAPTAIN_NAME:
-			orders = squad_orders + "\n\n" + captain.tag() + self.name + EXECUTE_ORDERS_TEXT
-			response = plugin.runAction(self.primeDirectives, orders, self.context, ai_mode)
-		else:
-			response = EXECUTE_ORDERS_ERROR_TEXT
-		
-		response = self.tag() + response
-		
-		return response
+    def executeOrders(self, squad_orders, ai_mode):
+        if self.name != CAPTAIN_NAME:
+            orders = squad_orders + "\n\n" + captain.tag() + self.name + EXECUTE_ORDERS_TEXT
+            response = plugin.runAction(self.primeDirectives, orders, self.context, ai_mode)
+        else:
+            response = EXECUTE_ORDERS_ERROR_TEXT
+        
+        response = self.tag() + response
+        
+        return response
 
 
-	def issueOrders(self, mission, ai_mode):
-		printAgentTag(self, ai_mode)
-	
-		if self.name == CAPTAIN_NAME:
-			prompt = ISSUE_ORDERS_PROMPT_1 + mission + ISSUE_ORDERS_PROMPT_2 + SOLDIER_1_NAME + "\n" + SOLDIER_2_NAME + "\n" + SOLDIER_3_NAME
-			response = core.send_prompt(self.primeDirectives, prompt, self.context)
-			plugin.printMagiText("\n" + response, ai_mode)
-		else:
-			response = ISSUE_ORDERS_ERROR_TEXT
+    def issueOrders(self, mission, ai_mode):
+        printAgentTag(self, ai_mode)
+    
+        if self.name == CAPTAIN_NAME:
+            prompt = ISSUE_ORDERS_PROMPT_1 + mission + ISSUE_ORDERS_PROMPT_2 + SOLDIER_1_NAME + "\n" + SOLDIER_2_NAME + "\n" + SOLDIER_3_NAME
+            response = core.send_prompt(self.primeDirectives, prompt, self.context)
+            plugin.printMagiText("\n" + response, ai_mode)
+        else:
+            response = ISSUE_ORDERS_ERROR_TEXT
 
-		response = self.tag() + response
+        response = self.tag() + response
 
-		return response
-		
+        return response
+        
 
-	def tag(self):
-		return "[" + self.name + "] "
+    def tag(self):
+        return "[" + self.name + "] "
 
 
-	def display(self, ai_mode):
-		plugin.printSystemText("Name: " + self.name + "\nPrime Directives: " + self.primeDirectives + "\n", ai_mode)
+    def display(self, ai_mode):
+        plugin.printSystemText("Name: " + self.name + "\nPrime Directives: " + self.primeDirectives + "\n", ai_mode)
 
 
 def displayNervSquad(ai_mode):
-	plugin.printSystemText(NERV_SQUAD_TEXT, ai_mode)
+    plugin.printSystemText(NERV_SQUAD_TEXT, ai_mode)
 
-	captain.display(ai_mode)
-	
-	for soldier in soldiers:
-		soldier.display(ai_mode)
+    captain.display(ai_mode)
+    
+    for soldier in soldiers:
+        soldier.display(ai_mode)
 
 
 def runSquadOrders(squad_orders, ai_mode):
-	squad_response = ""
+    squad_response = ""
 
-	for soldier in soldiers:
-		printAgentTag(soldier, ai_mode)
-		response = soldier.executeOrders(squad_orders + squad_response, ai_mode)
-		squad_response += "\n\n" + response
+    for soldier in soldiers:
+        printAgentTag(soldier, ai_mode)
+        response = soldier.executeOrders(squad_orders + squad_response, ai_mode)
+        squad_response += "\n\n" + response
 
-	return squad_response.strip()
+    return squad_response.strip()
 
 
 def printAgentTag(agent, ai_mode):
-	plugin.printSystemText("\n[AGENT] " + agent.name, ai_mode)
+    plugin.printSystemText("\n[AGENT] " + agent.name, ai_mode)
 
 
 # INITIALIZE AGENTS

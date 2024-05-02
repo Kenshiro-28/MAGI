@@ -10,31 +10,31 @@ user = "USER_ID"
 image_path = "image.png"
 
 async def runTasks():
-	messageList = []
+    messageList = []
 
-	try:
-		bot = TelegramBot(token, user) 
-		
-		# Receive message
-		messageList = await bot.receive()
-		await asyncio.sleep(SLEEP_TIME)
-		
-		# Send message		
-		await bot.send("MAGI test")
-		await asyncio.sleep(SLEEP_TIME)
-		
-		# Send image
-		image = Image.open(image_path)
-		await bot.send_image(image)	
-		await asyncio.sleep(SLEEP_TIME)		
-		
-	except Exception as e:
-		print("[ERROR] Telegram Bot exception: " + str(e))
+    try:
+        bot = TelegramBot(token, user) 
+        
+        # Receive message
+        messageList = await bot.receive()
+        await asyncio.sleep(SLEEP_TIME)
+        
+        # Send message        
+        await bot.send("MAGI test")
+        await asyncio.sleep(SLEEP_TIME)
+        
+        # Send image
+        image = Image.open(image_path)
+        await bot.send_image(image)    
+        await asyncio.sleep(SLEEP_TIME)        
+        
+    except Exception as e:
+        print("[ERROR] Telegram Bot exception: " + str(e))
     
-	return messageList
+    return messageList
     
     
 for i in range(2):
-	messageList = asyncio.run(runTasks())
-	print("New message: " + " ".join(messageList))	
+    messageList = asyncio.run(runTasks())
+    print("New message: " + " ".join(messageList))    
 
