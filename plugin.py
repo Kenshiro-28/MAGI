@@ -100,7 +100,7 @@ def runAction(primeDirectives, action, context, ai_mode):
 
 def webSearch(query, ai_mode):
     context = []
-    summary    = ""
+    summary = ""
 
     query = query.replace('"', '')
 
