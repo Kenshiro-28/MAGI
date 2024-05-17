@@ -104,11 +104,11 @@ You can use any GGUF model supported by llama-cpp-python, as long as it adheres 
 
 ### Recommended model
 
-Dolphin 2.9 Llama 3 8B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Dolphin 2.9.1 Llama 3 8B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/cognitivecomputations/dolphin-2.9-llama3-8b-gguf/blob/main/dolphin-2.9-llama3-8b-q8_0.gguf
+https://huggingface.co/LoneStriker/dolphin-2.9.1-llama-3-8b-GGUF/blob/main/dolphin-2.9.1-llama-3-8b-Q8_0.gguf
 
 ## Docker installation
 
