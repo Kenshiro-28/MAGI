@@ -179,7 +179,7 @@ $ sudo docker logs $(sudo docker ps -l -q)
 Install the following packages:
 
 ```
-$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
+$ sudo apt install build-essential pkg-config libopenblas-dev python3-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
 ```
 
 ### Install
