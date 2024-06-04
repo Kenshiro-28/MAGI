@@ -119,7 +119,7 @@ def search(query, maxUrls):
         for result in search_results:
             url = result['href']
             
-            if _is_scraping_allowed(url) and GOOGLE_TRANSLATE_TEXT not in url:
+            if url and _is_scraping_allowed(url) and GOOGLE_TRANSLATE_TEXT not in url:
                 urlArray.append(url)
 
                 if len(urlArray) >= maxUrls:
@@ -129,7 +129,7 @@ def search(query, maxUrls):
 
     except Exception as e:
         print("\n" + WEB_SEARCH_ERROR + str(e))         
-        return [""]
+        return urlArray
 
 
 def scrape(url):
