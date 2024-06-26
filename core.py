@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.23"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.24"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -212,7 +212,7 @@ def read_text_file(path):
 def load_model():
     model = None
 
-    fileArray = os.listdir()
+    fileArray = sorted(os.listdir())
 
     # Filter for model files
     modelFileArray = [f for f in fileArray if f.endswith('.gguf')]
