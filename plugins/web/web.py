@@ -49,6 +49,7 @@ def _selenium_request(url):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument(WEBDRIVER_USER_AGENT)
+        options.add_experimental_option("prefs", {"download.default_directory": "/dev/null"})
 
         service = Service(executable_path = '/usr/bin/chromedriver')
 
