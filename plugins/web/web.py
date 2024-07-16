@@ -1,4 +1,5 @@
 import requests
+import socket
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -159,4 +160,6 @@ def scrape(url):
         print("\n" + WEB_SCRAPE_ERROR + str(e))
         return ""
 
+
+socket.setdefaulttimeout(TIMEOUT)
 

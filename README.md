@@ -104,11 +104,11 @@ You can use any GGUF model supported by llama-cpp-python, as long as it adheres 
 
 ### Recommended model
 
-Dolphin 2.9.1 Llama 3 8B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Hermes 2 Pro 8B is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
 This model is not censored, proceed with caution.
 
-https://huggingface.co/LoneStriker/dolphin-2.9.1-llama-3-8b-GGUF/blob/main/dolphin-2.9.1-llama-3-8b-Q8_0.gguf
+https://huggingface.co/NousResearch/Hermes-2-Pro-Llama-3-8B-GGUF/blob/main/Hermes-2-Pro-Llama-3-8B-Q8_0.gguf
 
 ## Docker installation
 
@@ -179,7 +179,7 @@ $ sudo docker logs $(sudo docker ps -l -q)
 Install the following packages:
 
 ```
-$ sudo apt install build-essential pkg-config libopenblas-dev python3-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
+$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
 ```
 
 ### Install
@@ -193,7 +193,7 @@ $ sudo apt install build-essential pkg-config libopenblas-dev python3-dev python
 ```
 $ python3 -m venv venv --system-site-packages
 $ source venv/bin/activate
-$ CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" pip install --no-cache-dir -r requirements.txt
+$ CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS" pip install --upgrade -r requirements.txt
 ```
 
 ### Run

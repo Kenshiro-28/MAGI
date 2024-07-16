@@ -17,7 +17,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python packages
 COPY requirements.txt .
-RUN CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" pip install -r requirements.txt
+RUN CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS" pip install -r requirements.txt
 
 WORKDIR /app
 COPY . /app
