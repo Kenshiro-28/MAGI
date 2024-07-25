@@ -110,9 +110,9 @@ This model is not censored, proceed with caution.
 
 https://huggingface.co/NousResearch/Hermes-2-Pro-Llama-3-8B-GGUF/blob/main/Hermes-2-Pro-Llama-3-8B-Q8_0.gguf
 
-## Docker installation
+You can use larger models to improve reasoning capabilities. As a rule of thumb, the combined total of RAM and VRAM (if used) should be larger than the size of the GGUF file.
 
-I strongly recommend running MAGI inside a Docker container. This method significantly mitigates potential risks by isolating the application from the host system. 
+## Docker installation (CPU only)
 
 ### Prerequisites
 
@@ -182,18 +182,37 @@ Install the following packages:
 $ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
 ```
 
+If you want to use your NVIDIA graphics card, also install the NVIDIA proprietary driver and CUDA:
+
+```
+$ sudo apt install nvidia-driver firmware-misc-nonfree nvidia-cuda-toolkit
+```
+
+If you have installed the NVIDIA driver, restart your computer.
+
 ### Install
 
 - Clone this repository.
 
-- Place a model in the root folder.
+- Place a GGUF model in the root folder.
 
 - Run the following commands in the root folder:
 
 ```
 $ python3 -m venv venv --system-site-packages
 $ source venv/bin/activate
+```
+
+- To use only the CPU, run the following command:
+
+```
 $ CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS" pip install --upgrade -r requirements.txt
+```
+
+- If you want to use your NVIDIA graphics card, run the following command:
+
+```
+$ CMAKE_ARGS="-DGGML_CUDA=on" pip install --upgrade -r requirements.txt
 ```
 
 ### Run
