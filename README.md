@@ -182,13 +182,11 @@ Install the following packages:
 $ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
 ```
 
-If you want to use your NVIDIA graphics card, also install the NVIDIA proprietary driver and CUDA:
+To use your NVIDIA graphics card, you need to install CUDA:
 
 ```
-$ sudo apt install nvidia-driver firmware-misc-nonfree nvidia-cuda-toolkit
+$ sudo apt install nvidia-cuda-toolkit
 ```
-
-If you have installed the NVIDIA driver, restart your computer.
 
 ### Install
 
