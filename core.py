@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.27"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.28"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -22,7 +22,7 @@ MODEL_TEXT = "\nModel: "
 MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 
-MAX_TOKENS = 8192
+MAX_TOKENS = 32768
 MAX_INPUT_TOKENS = MAX_TOKENS // 2
 MAX_INPUT_TOKENS_ERROR = "[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
@@ -33,7 +33,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 1000
+TEXT_BLOCK_WORDS = 2000
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 

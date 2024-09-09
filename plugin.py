@@ -13,7 +13,7 @@ SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: 
 # WEB PLUGIN
 WEB_PLUGIN_ACTIVE = False
 WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-WEB_MAX_SIZE = 30 # Max text blocks per web page
+WEB_MAX_SIZE = 10 # Max text blocks per web page
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
