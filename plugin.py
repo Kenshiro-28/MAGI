@@ -18,6 +18,7 @@ WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
 WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
+WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_TAG = "\n[WEB SUMMARY] "
 
@@ -117,8 +118,8 @@ def webSearch(query, ai_mode):
 
         summary = core.update_summary(query, context, summary, webSummary)
 
-        if webSummary:            
-            printSystemText("\n" + webSummary, ai_mode)
+        if not webSummary:
+            printSystemText(WEB_SEARCH_ERROR, ai_mode)
             
     return summary
 
