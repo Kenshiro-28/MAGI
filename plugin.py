@@ -17,6 +17,7 @@ WEB_MAX_SIZE = 10 # Max text blocks per web page
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
+WEB_SEARCH_CHECK = "Determine whether the following user request refers specifically to a present or future moment in time and may require access to current information from the internet. Respond ONLY with YES or NO.\n\nUSER REQUEST: "
 WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
@@ -74,20 +75,32 @@ def userInput(ai_mode):
 
 
 def runAction(primeDirectives, action, context, ai_mode):
-    response = core.send_prompt(primeDirectives, action, context)
-
-    printMagiText("\n" + response, ai_mode)
+    # Plugins will use a copy of the main context
+    plugin_context = context[:]
 
     # Search for updated information on the Internet
     if WEB_PLUGIN_ACTIVE:
-        query = core.send_prompt("", WEB_SEARCH_QUERY + action, context) 
-        webSummary = WEB_SUMMARY_TAG + webSearch(query, ai_mode)
-        printMagiText(webSummary, ai_mode)
-        response += webSummary
-    
+        run_web_search = core.send_prompt("", WEB_SEARCH_CHECK + action, plugin_context)
+        run_web_search = run_web_search.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
+
+        if run_web_search == "YES":
+            query = core.send_prompt("", WEB_SEARCH_QUERY + action, plugin_context)
+            webSummary = webSearch(query, ai_mode)
+            response = WEB_SUMMARY_TAG + webSummary
+
+            # Append the response to the main context
+            context.append(response + core.EOS)
+        else:
+            response = core.send_prompt(primeDirectives, action, context)
+    else:
+        response = core.send_prompt(primeDirectives, action, context)
+
+    # Print the response (from model knowledge or web-scraped data)
+    printMagiText("\n" + response, ai_mode)
+
     # Generate Stable Diffusion image
     if STABLE_DIFFUSION_PLUGIN_ACTIVE:
-        image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + response, context)
+        image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + response, plugin_context)
         printSystemText(STABLE_DIFFUSION_TAG + image_prompt + "\n", ai_mode)
         image = generate_image(image_prompt)
         

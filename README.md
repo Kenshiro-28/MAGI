@@ -4,7 +4,7 @@ MAGI is an advanced chatbot powered by open-source large language models, offeri
 
 ## Configuration
 
-The default configuration has all plugins disabled.
+The web plugin is enabled by default.
 
 You can customize MAGI by editing the file **config.cfg**.
 
@@ -48,7 +48,7 @@ You can also add useful information in the file **mission_data.txt**.
 
 ### Web plugin
 
-This plugin allows MAGI to browse the Internet for up-to-date information.
+This plugin allows MAGI to browse the internet for up-to-date information. Even when the plugin is active, MAGI decides when to use it.
 
 #### Configuration
 
