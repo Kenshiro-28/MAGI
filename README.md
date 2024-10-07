@@ -104,11 +104,15 @@ You can use any GGUF model supported by llama-cpp-python, as long as it adheres 
 
 ### Recommended model
 
-Hermes 3 Llama-3.1 8B is a very good general-purpose model that only requires 16 GB of RAM to operate.
+Qwen2.5-7B-Instruct is a very good general-purpose model that only requires 16 GB of RAM to operate.
 
-This model is not censored, proceed with caution.
+Please download all parts into the project's root folder:
 
-https://huggingface.co/NousResearch/Hermes-3-Llama-3.1-8B-GGUF/blob/main/Hermes-3-Llama-3.1-8B.Q8_0.gguf
+https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/blob/main/qwen2.5-7b-instruct-q8_0-00001-of-00003.gguf
+
+https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/blob/main/qwen2.5-7b-instruct-q8_0-00002-of-00003.gguf
+
+https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/blob/main/qwen2.5-7b-instruct-q8_0-00003-of-00003.gguf
 
 You can use larger models to improve reasoning capabilities. As a rule of thumb, the combined total of RAM and VRAM (if used) should be larger than the size of the GGUF file.
 
