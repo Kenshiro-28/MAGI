@@ -17,11 +17,12 @@ WEB_MAX_SIZE = 10 # Max text blocks per web page
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
-WEB_SEARCH_CHECK = "Determine whether the following user request refers specifically to a present or future moment in time and may require access to current information from the internet. Respond ONLY with YES or NO.\n\nUSER REQUEST: "
+WEB_SEARCH_CHECK = "Determine whether the following user request refers specifically to a present or future moment in time and may require access to current information from the Internet. Respond ONLY with YES or NO.\n\nUSER REQUEST: "
 WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_TAG = "\n[WEB SUMMARY] "
+WEB_SUMMARY_REVIEW = "\n\nUse the following information obtained from the Internet:\n\n" 
 
 # TELEGRAM PLUGIN
 TELEGRAM_PLUGIN_ACTIVE = False
@@ -85,11 +86,11 @@ def runAction(primeDirectives, action, context, ai_mode):
 
         if run_web_search == "YES":
             query = core.send_prompt("", WEB_SEARCH_QUERY + action, plugin_context)
-            webSummary = webSearch(query, ai_mode)
-            response = WEB_SUMMARY_TAG + webSummary
-
-            # Append the response to the main context
-            context.append(response + core.EOS)
+            webSummary = WEB_SUMMARY_TAG + webSearch(query, ai_mode)
+            
+            printSystemText(webSummary, ai_mode)
+            
+            response = core.send_prompt(primeDirectives, action + WEB_SUMMARY_REVIEW + webSummary, context)
         else:
             response = core.send_prompt(primeDirectives, action, context)
     else:
