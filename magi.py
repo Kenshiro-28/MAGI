@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 10.31
+Version     : 10.32
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -16,7 +16,9 @@ import re
 SYSTEM_HINT_TEXT = "\n\nHint: to switch AI mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-GENERATE_TASK_LIST_TEXT = "\nBreak down the following mission into a flat list of tasks, with each task described in a single line. Don't write titles or headings. MISSION = "
+DATA_TEXT = "DATA = "
+MISSION_TEXT = "\n\nMISSION = "
+TASK_LIST_SYSTEM_PROMPT = "Your task is to break down the user's prompt provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Do not mention the DATA variable name in your output. Each task must be precise and long enough to convey its purpose fully, but it must fit on a single line without any line breaks. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Only output the task list, no titles, headers, or additional text."
 ACTION_HELPER_TEXT = "Do this: "
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
@@ -37,8 +39,10 @@ def sanitizeTask(task):
     return task
     
 
-def createTaskList(mission, summary, context, header, ai_mode):
-    taskListText = core.send_prompt("", summary + GENERATE_TASK_LIST_TEXT + mission, context)
+def createTaskList(mission, summary, header, ai_mode):
+    context = []
+
+    taskListText = core.send_prompt(TASK_LIST_SYSTEM_PROMPT, DATA_TEXT + summary + MISSION_TEXT + mission, context)
     
     plugin.printSystemText(header + taskListText + "\n", ai_mode)
     
@@ -56,7 +60,7 @@ def runNerv(primeDirectives, mission, context, ai_mode):
         plugin.printSystemText(MISSION_DATA_TEXT + nerv_data, ai_mode)
         agent.displayNervSquad(ai_mode)
 
-    orders = agent.captain.issueOrders("\nDATA = " + nerv_data + "\nMISSION = " + mission, ai_mode)
+    orders = agent.captain.issueOrders(DATA_TEXT + nerv_data + MISSION_TEXT + mission, ai_mode)
     
     team_response = agent.runSquadOrders(orders, ai_mode)
 
@@ -74,7 +78,7 @@ def runMission(primeDirectives, mission, context, ai_mode):
         if summary:            
             plugin.printSystemText(MISSION_DATA_TEXT + summary, ai_mode)
 
-    actionList = createTaskList(mission, summary, context, ACTIONS_TEXT, ai_mode)
+    actionList = createTaskList(mission, summary, ACTIONS_TEXT, ai_mode)
 
     for action in actionList:
         action = sanitizeTask(action)

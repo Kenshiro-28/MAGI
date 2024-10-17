@@ -2,8 +2,8 @@ import core
 import plugin
 
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
-ISSUE_ORDERS_PROMPT_1 = "Compose a mission summary, then structure the mission into three independent tasks. Assign each task to one of your soldiers, in this order: "
-ISSUE_ORDERS_PROMPT_2 = "\nSOLDIERS:\n"
+ISSUE_ORDERS_PROMPT_1 = "Analyze the user's prompt provided in the MISSION section. First, compose a mission summary. Then, structure the mission into three independent tasks. Use the DATA section only if it provides useful information for the MISSION. Do not mention the DATA variable name in your output. Ensure tasks are detailed enough to fully convey their purpose and intent.\n\n"
+ISSUE_ORDERS_PROMPT_2 = "\n\nAssign each task to one of your soldiers. The list of soldiers provided below is in the exact order in which tasks should be assigned.\n\nSOLDIERS:\n\n"
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
 EXECUTE_ORDERS_TEXT = ", please complete the task assigned to you."
 EXECUTE_ORDERS_ERROR_TEXT = "Only soldiers can execute orders."
