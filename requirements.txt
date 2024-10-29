@@ -9,3 +9,5 @@ transformers
 torch
 diffusers
 accelerate
+protobuf
+sentencepiece

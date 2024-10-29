@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an advanced chatbot powered by open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation with Stable Diffusion.
+MAGI is an advanced chatbot powered by open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation.
 
 ## Configuration
 
@@ -58,7 +58,7 @@ ENABLE_WEB_PLUGIN: enable or disable the web plugin.
 
 This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input.
 
-If you have both the Telegram plugin and the Stable Diffusion plugin enabled, you will receive the generated images via Telegram.
+If you have both the Telegram plugin and the image generation plugin enabled, you will receive the generated images via Telegram.
 
 To use this plugin you have to create a Telegram bot with BotFather (username: @BotFather) and save the token assigned to your bot. 
 
@@ -72,23 +72,34 @@ TELEGRAM_BOT_TOKEN: the token you received from BotFather.
 
 TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
-### Stable Diffusion plugin
+### Image generation plugin
 
-This plugin allows MAGI to download a Stable Diffusion model from Hugging Face.
+This plugin allows MAGI to download an image generation model from Hugging Face.
 
 MAGI will use the model to generate context-related images and save them in the folder **workspace**.
 
 If the folder contains images from previous sessions, they will be overwritten.
 
+#### Model Access
+
+Some models require authentication. To access these gated models:
+
+- Visit the model's page on Hugging Face (e.g., https://huggingface.co/black-forest-labs/FLUX.1-dev).
+- Complete the required access agreement and personal information.
+- Generate an access token in your Hugging Face account settings.
+- Authenticate your local environment by running the following command in the project directory (with your Python environment activated):
+
+```
+$ huggingface-cli login
+```
+
 #### Configuration
 
-ENABLE_STABLE_DIFFUSION_PLUGIN: enable or disable the Stable Diffusion plugin.
+ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin.
 
-STABLE_DIFFUSION_MODEL: this is the model used to generate images.
+IMAGE_GENERATION_MODEL: this is the model used to generate images.
 
-STABLE_DIFFUSION_IMAGE_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
-
-STABLE_DIFFUSION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate. This text will be the negative prompt used to generate each image.
+IMAGE_GENERATION_IMAGE_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
 
 ## Model 
 

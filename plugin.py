@@ -4,7 +4,7 @@ import asyncio
 import time
 from plugins.web import web
 from plugins.telegram_bot import telegram_bot
-from plugins.stable_diffusion import stable_diffusion
+from plugins.image_generation import image_generation
 
 PLUGIN_WORKSPACE_FOLDER = "workspace"
 ASYNCIO_ERROR = "\n[ERROR] Asyncio exception: "
@@ -35,16 +35,15 @@ TELEGRAM_BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN"
 TELEGRAM_USER_ID_KEY = "TELEGRAM_USER_ID"
 TELEGRAM_TAG = "\n[TELEGRAM] "
 
-# STABLE DIFFUSION PLUGIN
-STABLE_DIFFUSION_PLUGIN_ACTIVE = False
-STABLE_DIFFUSION_PLUGIN_ENABLED_TEXT = "\nStable Diffusion plugin: enabled"
-STABLE_DIFFUSION_PLUGIN_DISABLED_TEXT = "\nStable Diffusion plugin: disabled"
-ENABLE_STABLE_DIFFUSION_PLUGIN_KEY = "ENABLE_STABLE_DIFFUSION_PLUGIN"
-STABLE_DIFFUSION_MODEL_KEY = "STABLE_DIFFUSION_MODEL"
-STABLE_DIFFUSION_IMAGE_SPECS_KEY = "STABLE_DIFFUSION_IMAGE_SPECS"
-STABLE_DIFFUSION_NEGATIVE_PROMPT_KEY = "STABLE_DIFFUSION_NEGATIVE_PROMPT"
+# IMAGE GENERATION PLUGIN
+IMAGE_GENERATION_PLUGIN_ACTIVE = False
+IMAGE_GENERATION_PLUGIN_ENABLED_TEXT = "\nImage generation plugin: enabled"
+IMAGE_GENERATION_PLUGIN_DISABLED_TEXT = "\nImage generation plugin: disabled"
+ENABLE_IMAGE_GENERATION_PLUGIN_KEY = "ENABLE_IMAGE_GENERATION_PLUGIN"
+IMAGE_GENERATION_MODEL_KEY = "IMAGE_GENERATION_MODEL"
+IMAGE_GENERATION_IMAGE_SPECS_KEY = "IMAGE_GENERATION_IMAGE_SPECS"
 GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Omit any introductory phrases or names. TEXT = "
-STABLE_DIFFUSION_TAG = "\n[STABLE DIFFUSION] "
+IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
 
 # SHARED OPERATIONS
@@ -99,10 +98,10 @@ def runAction(primeDirectives, action, context, ai_mode):
     # Print the response (from model knowledge or web-scraped data)
     printMagiText("\n" + response, ai_mode)
 
-    # Generate Stable Diffusion image
-    if STABLE_DIFFUSION_PLUGIN_ACTIVE:
+    # Generate image
+    if IMAGE_GENERATION_PLUGIN_ACTIVE:
         image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + response, plugin_context)
-        printSystemText(STABLE_DIFFUSION_TAG + image_prompt + "\n", ai_mode)
+        printSystemText(IMAGE_GENERATION_TAG + image_prompt + "\n", ai_mode)
         image = generate_image(image_prompt)
         
         if TELEGRAM_PLUGIN_ACTIVE and image:
@@ -184,20 +183,26 @@ def send_image_telegram_bot(image):
         print(ASYNCIO_ERROR + str(e))
 
 
-# STABLE DIFFUSION OPERATIONS
+# IMAGE GENERATION OPERATIONS
 
-stable_diffusion_counter = 1
+image_generation_counter = 1
 
 def generate_image(prompt):
-    global stable_diffusion_counter
+    global image_generation_counter
+    
+    # Unload main model
+    core.model = None
 
-    image = stable_diffusion.generate_image(prompt, STABLE_DIFFUSION_MODEL, STABLE_DIFFUSION_IMAGE_SPECS, STABLE_DIFFUSION_NEGATIVE_PROMPT)
+    image = image_generation.generate_image(prompt, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_IMAGE_SPECS)
+
+    # Reload main model
+    core.model = core.load_model(startup = False)
 
     try:
         if image:
-            path = PLUGIN_WORKSPACE_FOLDER + "/image_" + str(stable_diffusion_counter) + ".png"        
+            path = PLUGIN_WORKSPACE_FOLDER + "/image_" + str(image_generation_counter) + ".png"        
             image.save(path)
-            stable_diffusion_counter += 1
+            image_generation_counter += 1
 
     except Exception as e:
         print(SAVE_FILE_ERROR + str(e))
@@ -227,14 +232,13 @@ if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
 else:
     core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
 
-# Stable Diffusion plugin
-if core.config.get(ENABLE_STABLE_DIFFUSION_PLUGIN_KEY, '').upper() == "YES":
-    STABLE_DIFFUSION_PLUGIN_ACTIVE = True
-    STABLE_DIFFUSION_MODEL = core.config.get(STABLE_DIFFUSION_MODEL_KEY, '')
-    STABLE_DIFFUSION_IMAGE_SPECS = core.config.get(STABLE_DIFFUSION_IMAGE_SPECS_KEY, '')
-    STABLE_DIFFUSION_NEGATIVE_PROMPT = core.config.get(STABLE_DIFFUSION_NEGATIVE_PROMPT_KEY, '')        
-    core.print_system_text(STABLE_DIFFUSION_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+# Image Generation plugin
+if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
+    IMAGE_GENERATION_PLUGIN_ACTIVE = True
+    IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
+    IMAGE_GENERATION_IMAGE_SPECS = core.config.get(IMAGE_GENERATION_IMAGE_SPECS_KEY, '')
+    core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
 else:
-    core.print_system_text(STABLE_DIFFUSION_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+    core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
 
 

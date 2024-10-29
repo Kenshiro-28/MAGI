@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.32"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.33"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -33,7 +33,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 8000
+TEXT_BLOCK_WORDS = 3000
 
 CONFIG_ERROR = "[ERROR] Config file error: "
 
@@ -209,7 +209,7 @@ def read_text_file(path):
         return ""
     
 
-def load_model():
+def load_model(startup = True):
     model = None
 
     fileArray = sorted(os.listdir())
@@ -231,8 +231,9 @@ def load_model():
 
         model.verbose = False
         
-        print_system_text(SYSTEM_VERSION_TEXT, AiMode.NORMAL)
-        print_system_text(MODEL_TEXT + modelName, AiMode.NORMAL)        
+        if startup:
+            print_system_text(SYSTEM_VERSION_TEXT, AiMode.NORMAL)
+            print_system_text(MODEL_TEXT + modelName, AiMode.NORMAL)        
     else:
         print_system_text(MODEL_NOT_FOUND_ERROR, AiMode.NORMAL)
         exit()        
