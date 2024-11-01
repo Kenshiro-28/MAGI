@@ -99,7 +99,7 @@ ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin.
 
 IMAGE_GENERATION_MODEL: this is the model used to generate images.
 
-IMAGE_GENERATION_IMAGE_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
 
 ## Model 
 

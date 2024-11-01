@@ -41,7 +41,7 @@ IMAGE_GENERATION_PLUGIN_ENABLED_TEXT = "\nImage generation plugin: enabled"
 IMAGE_GENERATION_PLUGIN_DISABLED_TEXT = "\nImage generation plugin: disabled"
 ENABLE_IMAGE_GENERATION_PLUGIN_KEY = "ENABLE_IMAGE_GENERATION_PLUGIN"
 IMAGE_GENERATION_MODEL_KEY = "IMAGE_GENERATION_MODEL"
-IMAGE_GENERATION_IMAGE_SPECS_KEY = "IMAGE_GENERATION_IMAGE_SPECS"
+IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
 GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Omit any introductory phrases or names. TEXT = "
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
@@ -193,7 +193,7 @@ def generate_image(prompt):
     # Unload main model
     core.model = None
 
-    image = image_generation.generate_image(prompt, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_IMAGE_SPECS)
+    image = image_generation.generate_image(prompt, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_SPECS)
 
     # Reload main model
     core.model = core.load_model(startup = False)
@@ -232,11 +232,11 @@ if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
 else:
     core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
 
-# Image Generation plugin
+# Image generation plugin
 if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
     IMAGE_GENERATION_PLUGIN_ACTIVE = True
     IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
-    IMAGE_GENERATION_IMAGE_SPECS = core.config.get(IMAGE_GENERATION_IMAGE_SPECS_KEY, '')
+    IMAGE_GENERATION_SPECS = core.config.get(IMAGE_GENERATION_SPECS_KEY, '')
     core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
 else:
     core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
