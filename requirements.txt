@@ -11,3 +11,4 @@ diffusers
 accelerate
 protobuf
 sentencepiece
+peft

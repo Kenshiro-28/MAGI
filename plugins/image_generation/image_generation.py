@@ -16,7 +16,7 @@ MAX_PROMPT_LENGTH = 256
 GUIDANCE_SCALE = 3.5
 
 
-def generate_image(prompt, model, image_specs):
+def generate_image(prompt, model, lora, image_specs):
     try:
         logging.set_verbosity_error()
         
@@ -27,6 +27,9 @@ def generate_image(prompt, model, image_specs):
         else:
             pipe = FluxPipeline.from_pretrained(model)
             pipe.to("cpu")
+
+        if (lora):
+            pipe.load_lora_weights(lora)
         
         prompt = image_specs + ", " + prompt
         

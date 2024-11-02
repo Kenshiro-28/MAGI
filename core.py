@@ -3,8 +3,9 @@ from enum import Enum
 import os
 import sys
 import time
+import gc
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.33"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.34"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -21,6 +22,7 @@ CONFIG_FILE_PATH = "config.cfg"
 MODEL_TEXT = "\nModel: "
 MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
+MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 
 MAX_TOKENS = 32768
 MAX_INPUT_TOKENS = MAX_TOKENS // 2
@@ -38,6 +40,10 @@ TEXT_BLOCK_WORDS = 3000
 CONFIG_ERROR = "[ERROR] Config file error: "
 
 MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
+
+model = None
+config = None
+
 
 class AiMode(Enum):
     NORMAL  = 0
@@ -210,14 +216,19 @@ def read_text_file(path):
     
 
 def load_model(startup = True):
+    global model
     model = None
 
-    fileArray = sorted(os.listdir())
+    try:
+        fileArray = sorted(os.listdir())
 
-    # Filter for model files
-    modelFileArray = [f for f in fileArray if f.endswith('.gguf')]
+        # Filter for model files
+        modelFileArray = [f for f in fileArray if f.endswith('.gguf')]
 
-    if modelFileArray:
+        if not modelFileArray:
+            print_system_text(MODEL_NOT_FOUND_ERROR, AiMode.NORMAL)
+            exit()
+
         # Get the first model file
         modelFile = modelFileArray[0]
 
@@ -234,14 +245,20 @@ def load_model(startup = True):
         if startup:
             print_system_text(SYSTEM_VERSION_TEXT, AiMode.NORMAL)
             print_system_text(MODEL_TEXT + modelName, AiMode.NORMAL)        
-    else:
-        print_system_text(MODEL_NOT_FOUND_ERROR, AiMode.NORMAL)
-        exit()        
 
-    return model
+    except Exception as e:
+        print_system_text(MODEL_LOAD_ERROR + str(e), AiMode.NORMAL)
+        exit()
+
+
+def unload_model():
+    global model
+    model = None
+    gc.collect()
 
 
 def load_config():
+    global config
     config = {}
 
     try:
@@ -266,11 +283,9 @@ def load_config():
                 
     except Exception as e:
         print_system_text(CONFIG_ERROR + str(e), AiMode.NORMAL)
-        
-    return config
 
     
 # Initialize
-model = load_model()
-config = load_config()
+load_model()
+load_config()
 
