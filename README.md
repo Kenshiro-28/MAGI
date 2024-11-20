@@ -4,9 +4,14 @@ MAGI is an advanced chatbot powered by open-source large language models, offeri
 
 ## Configuration
 
-The web plugin is enabled by default.
-
 You can customize MAGI by editing the file **config.cfg**.
+
+The main options are:
+
+CONTEXT_SIZE: number of tokens in the context window (default: 32768)
+ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: YES)
+ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: NO)
+ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: NO)
 
 ## Prime Directives
 
@@ -50,10 +55,6 @@ You can also add useful information in the file **mission_data.txt**.
 
 This plugin allows MAGI to browse the internet for up-to-date information. Even when the plugin is active, MAGI decides when to use it.
 
-#### Configuration
-
-ENABLE_WEB_PLUGIN: enable or disable the web plugin.
-
 ### Telegram plugin
 
 This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input.
@@ -66,8 +67,6 @@ You must also write to userinfobot (username: @userinfobot) to get your user ID.
 
 #### Configuration
 
-ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin.
-
 TELEGRAM_BOT_TOKEN: the token you received from BotFather.
 
 TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
@@ -75,6 +74,8 @@ TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 ### Image generation plugin
 
 This plugin allows MAGI to download an image generation model from Hugging Face.
+
+Only models using FluxPipeline are compatible.
 
 MAGI will use the model to generate context-related images and save them in the folder **workspace**.
 
@@ -95,13 +96,15 @@ $ huggingface-cli login
 
 #### Configuration
 
-ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin.
-
 IMAGE_GENERATION_MODEL: this is the model used to generate images.
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA.
 
 IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
+
+IMAGE_GENERATION_WIDTH = width of generated images in pixels (default: 576)
+
+IMAGE_GENERATION_HEIGHT = height of generated images in pixels (default: 768)
 
 ## Model 
 

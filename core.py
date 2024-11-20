@@ -5,7 +5,7 @@ import sys
 import time
 import gc
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.34"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.35"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -24,9 +24,14 @@ MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a resp
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 
-MAX_TOKENS = 32768
-MAX_INPUT_TOKENS = MAX_TOKENS // 2
-MAX_INPUT_TOKENS_ERROR = "[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
+CONTEXT_SIZE = 0
+MIN_CONTEXT_SIZE = 2048
+CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
+CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
+CONTEXT_SIZE_INVALID_TEXT = "Invalid context size.\n"
+
+MAX_INPUT_TOKENS = 0
+MAX_INPUT_TOKENS_ERROR = "\n[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
 READ_TEXT_FILE_WARNING = "\n[WARNING] File not found: "
 
@@ -37,7 +42,7 @@ END_COLOR = "\x1b[0m"
 
 TEXT_BLOCK_WORDS = 3000
 
-CONFIG_ERROR = "[ERROR] Config file error: "
+CONFIG_ERROR = "\n[ERROR] Configuration error: "
 
 MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
 
@@ -90,7 +95,7 @@ def get_completion_from_messages(context):
             context.pop(1)
             text, text_tokens = get_context_data(context)
 
-        response = model(text, max_tokens = MAX_TOKENS - text_tokens)
+        response = model(text, max_tokens = CONTEXT_SIZE - text_tokens)
 
         return response['choices'][0]['text'].strip()
         
@@ -238,7 +243,7 @@ def load_model(startup = True):
         print()
         
         # Load model        
-        model = Llama(model_path = modelFile, n_ctx = MAX_TOKENS)
+        model = Llama(model_path = modelFile, n_ctx = CONTEXT_SIZE)
 
         model.verbose = False
         
@@ -282,10 +287,35 @@ def load_config():
                 config[key] = value
                 
     except Exception as e:
-        print_system_text(CONFIG_ERROR + str(e), AiMode.NORMAL)
+        print_system_text(CONFIG_ERROR + str(e) + "\n", AiMode.NORMAL)
 
-    
+
+def configure_model():
+    global CONTEXT_SIZE
+    global MAX_INPUT_TOKENS
+
+    try:
+        context_size = config.get(CONTEXT_SIZE_KEY, '')
+
+        if not context_size:
+            print_system_text(CONFIG_ERROR + CONTEXT_SIZE_NOT_FOUND_TEXT, AiMode.NORMAL)
+            exit()
+
+        CONTEXT_SIZE = int(context_size)
+
+        if CONTEXT_SIZE < MIN_CONTEXT_SIZE:
+            raise ValueError
+
+        MAX_INPUT_TOKENS = CONTEXT_SIZE // 2
+
+    except ValueError:
+        print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT, AiMode.NORMAL)
+        exit()
+
+
 # Initialize
-load_model()
 load_config()
+configure_model()
+load_model()
+
 

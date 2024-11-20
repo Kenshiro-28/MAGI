@@ -41,8 +41,10 @@ IMAGE_GENERATION_PLUGIN_ENABLED_TEXT = "\nImage generation plugin: enabled"
 IMAGE_GENERATION_PLUGIN_DISABLED_TEXT = "\nImage generation plugin: disabled"
 ENABLE_IMAGE_GENERATION_PLUGIN_KEY = "ENABLE_IMAGE_GENERATION_PLUGIN"
 IMAGE_GENERATION_MODEL_KEY = "IMAGE_GENERATION_MODEL"
-IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
 IMAGE_GENERATION_LORA_KEY = "IMAGE_GENERATION_LORA"
+IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
+IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
+IMAGE_GENERATION_HEIGHT_KEY = "IMAGE_GENERATION_HEIGHT"
 GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Omit any introductory phrases or names. TEXT = "
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
@@ -194,7 +196,7 @@ def generate_image(prompt):
     # Unload main model
     core.unload_model()
 
-    image = image_generation.generate_image(prompt, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_LORA, IMAGE_GENERATION_SPECS)
+    image = image_generation.generate_image(prompt, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_LORA, IMAGE_GENERATION_SPECS, IMAGE_GENERATION_WIDTH, IMAGE_GENERATION_HEIGHT)
 
     # Reload main model
     core.load_model(startup = False)
@@ -213,34 +215,42 @@ def generate_image(prompt):
 
 # INITIALIZE PLUGINS
 
-# Workspace
-if not os.path.exists(PLUGIN_WORKSPACE_FOLDER):
-    os.makedirs(PLUGIN_WORKSPACE_FOLDER)
+try:
+    # Workspace
+    if not os.path.exists(PLUGIN_WORKSPACE_FOLDER):
+        os.makedirs(PLUGIN_WORKSPACE_FOLDER)
 
-# Web plugin
-if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
-    WEB_PLUGIN_ACTIVE = True
-    core.print_system_text(WEB_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
-else:
-    core.print_system_text(WEB_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
-    
-# Telegram plugin
-if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
-    TELEGRAM_PLUGIN_ACTIVE = True
-    TELEGRAM_BOT_TOKEN = core.config.get(TELEGRAM_BOT_TOKEN_KEY, '')
-    TELEGRAM_USER_ID = core.config.get(TELEGRAM_USER_ID_KEY, '')
-    core.print_system_text(TELEGRAM_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
-else:
-    core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+    # Web plugin
+    if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
+        WEB_PLUGIN_ACTIVE = True
+        core.print_system_text(WEB_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+    else:
+        core.print_system_text(WEB_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+        
+    # Telegram plugin
+    if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
+        TELEGRAM_PLUGIN_ACTIVE = True
+        TELEGRAM_BOT_TOKEN = core.config.get(TELEGRAM_BOT_TOKEN_KEY, '')
+        TELEGRAM_USER_ID = core.config.get(TELEGRAM_USER_ID_KEY, '')
+        core.print_system_text(TELEGRAM_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+    else:
+        core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
 
-# Image generation plugin
-if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
-    IMAGE_GENERATION_PLUGIN_ACTIVE = True
-    IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
-    IMAGE_GENERATION_SPECS = core.config.get(IMAGE_GENERATION_SPECS_KEY, '')
-    IMAGE_GENERATION_LORA = core.config.get(IMAGE_GENERATION_LORA_KEY, '')
-    core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
-else:
-    core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+    # Image generation plugin
+    if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
+        IMAGE_GENERATION_PLUGIN_ACTIVE = True
+        IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
+        IMAGE_GENERATION_LORA = core.config.get(IMAGE_GENERATION_LORA_KEY, '')
+        IMAGE_GENERATION_SPECS = core.config.get(IMAGE_GENERATION_SPECS_KEY, '')
+        IMAGE_GENERATION_WIDTH = int(core.config.get(IMAGE_GENERATION_WIDTH_KEY, ''))
+        IMAGE_GENERATION_HEIGHT = int(core.config.get(IMAGE_GENERATION_HEIGHT_KEY, ''))
+
+        core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+    else:
+        core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+
+except Exception as e:
+    print(core.CONFIG_ERROR + str(e) + "\n")
+    exit()
 
 

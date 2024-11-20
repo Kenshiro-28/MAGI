@@ -4,9 +4,6 @@ from diffusers import logging
 
 IMAGE_GENERATION_ERROR = "\n[ERROR] An exception occurred while trying to generate an image: "
 
-IMAGE_WIDTH = 768
-IMAGE_HEIGHT = 1024
-
 INFERENCE_STEPS = 30
 
 MIN_VRAM = 8 * 1024 * 1024 * 1024  # 8GB in bytes
@@ -16,7 +13,7 @@ MAX_PROMPT_LENGTH = 256
 GUIDANCE_SCALE = 3.5
 
 
-def generate_image(prompt, model, lora, image_specs):
+def generate_image(prompt, model, lora, image_specs, width, height):
     try:
         logging.set_verbosity_error()
         
@@ -30,10 +27,11 @@ def generate_image(prompt, model, lora, image_specs):
 
         if (lora):
             pipe.load_lora_weights(lora)
+
+        if image_specs:
+            prompt = image_specs + ", " + prompt
         
-        prompt = image_specs + ", " + prompt
-        
-        image = pipe(prompt, width = IMAGE_WIDTH, height = IMAGE_HEIGHT, guidance_scale = GUIDANCE_SCALE, num_inference_steps = INFERENCE_STEPS, max_sequence_length = MAX_PROMPT_LENGTH, generator = torch.Generator("cpu").manual_seed(0)).images[0]
+        image = pipe(prompt, width = width, height = height, guidance_scale = GUIDANCE_SCALE, num_inference_steps = INFERENCE_STEPS, max_sequence_length = MAX_PROMPT_LENGTH, generator = torch.Generator("cpu").manual_seed(0)).images[0]
 
         return image
 
