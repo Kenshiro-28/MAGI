@@ -2,10 +2,13 @@ import core
 import plugin
 
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
-ISSUE_ORDERS_PROMPT_1 = "Analyze the user's prompt provided in the MISSION section. First, compose a mission summary. Then, structure the mission into three independent tasks. Use the DATA section only if it provides useful information for the MISSION. Do not mention the DATA variable name in your output. Ensure tasks are detailed enough to fully convey their purpose and intent.\n\n"
-ISSUE_ORDERS_PROMPT_2 = "\n\nAssign each task to one of your soldiers. The list of soldiers provided below is in the exact order in which tasks should be assigned.\n\nSOLDIERS:\n\n"
+ISSUE_ORDERS_PROMPT_1 = "Analyze the user's prompt provided in the MISSION section. First, compose a mission summary. Then, structure the mission into three independent tasks. Use the DATA section only if it provides useful information for the MISSION. Ensure tasks are detailed enough to fully convey their purpose and intent.\n\n"
+ISSUE_ORDERS_PROMPT_2 = "\n\nAssign each task to one of your soldiers, describing the task in third person. The list of soldiers below shows the order of assignment - first task goes to the first soldier, second task to the second soldier, and third task to the third soldier.\n\nSOLDIERS:\n\n"
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
-EXECUTE_ORDERS_TEXT = ", please complete the task assigned to you."
+GET_ORDERS_PROMPT_1 = "Tell "
+GET_ORDERS_PROMPT_2 = " their orders, starting with their name."
+MISSION_HEADER_TEXT = "=== MISSION CONTEXT ===\n\n"
+ORDERS_HEADER_TEXT = "\n\n=== ORDERS ===\n\n"
 EXECUTE_ORDERS_ERROR_TEXT = "Only soldiers can execute orders."
 
 # Config file keys
@@ -29,13 +32,17 @@ class Agent:
 
     def executeOrders(self, squad_orders, ai_mode):
         if self.name != CAPTAIN_NAME:
-            orders = squad_orders + "\n\n" + captain.tag() + self.name + EXECUTE_ORDERS_TEXT
+            aux_context = captain.context[:]
+            get_orders_prompt = GET_ORDERS_PROMPT_1 + self.name + GET_ORDERS_PROMPT_2
+            orders = core.send_prompt(captain.primeDirectives, get_orders_prompt, aux_context)
+            orders = MISSION_HEADER_TEXT + squad_orders + ORDERS_HEADER_TEXT + captain.tag() + orders
+
             response = plugin.runAction(self.primeDirectives, orders, self.context, ai_mode)
         else:
             response = EXECUTE_ORDERS_ERROR_TEXT
-        
+
         response = self.tag() + response
-        
+
         return response
 
 

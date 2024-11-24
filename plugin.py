@@ -89,9 +89,7 @@ def runAction(primeDirectives, action, context, ai_mode):
         if run_web_search == "YES":
             query = core.send_prompt("", WEB_SEARCH_QUERY + action, plugin_context)
             webSummary = WEB_SUMMARY_TAG + webSearch(query, ai_mode)
-            
-            printSystemText(webSummary, ai_mode)
-            
+
             response = core.send_prompt(primeDirectives, action + WEB_SUMMARY_REVIEW + webSummary, context)
         else:
             response = core.send_prompt(primeDirectives, action, context)

@@ -5,7 +5,7 @@ import sys
 import time
 import gc
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.35"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.36"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -25,13 +25,11 @@ MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 
 CONTEXT_SIZE = 0
+MAX_INPUT_TOKENS = 0
 MIN_CONTEXT_SIZE = 2048
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
 CONTEXT_SIZE_INVALID_TEXT = "Invalid context size.\n"
-
-MAX_INPUT_TOKENS = 0
-MAX_INPUT_TOKENS_ERROR = "\n[ERROR] Your input has more than " + str(MAX_INPUT_TOKENS) + " tokens: "
 
 READ_TEXT_FILE_WARNING = "\n[WARNING] File not found: "
 
