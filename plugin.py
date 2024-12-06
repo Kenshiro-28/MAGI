@@ -45,7 +45,8 @@ IMAGE_GENERATION_LORA_KEY = "IMAGE_GENERATION_LORA"
 IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
 IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
 IMAGE_GENERATION_HEIGHT_KEY = "IMAGE_GENERATION_HEIGHT"
-GENERATE_IMAGE_TEXT = "Write an image description of no more than 100 words that captures the essence of the following text. Omit any introductory phrases or names. TEXT = "
+IMAGE_GENERATION_SYSTEM_PROMPT = "Write image generation prompts, emphasize key visual elements in priority order: main details, exact pose/action/expression, environmental context, composition and framing, lighting conditions and atmosphere, textures and materials, artistic style and medium. Use commas to separate elements. Start with the most important aspect and build detail progressively."
+GENERATE_IMAGE_TEXT = "Write an image generation prompt from the following text (max 150 words). Don't write titles or headings. Don't start with command verbs like 'create', 'make', or 'generate'. TEXT = "
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
 
@@ -101,7 +102,7 @@ def runAction(primeDirectives, action, context, ai_mode):
 
     # Generate image
     if IMAGE_GENERATION_PLUGIN_ACTIVE:
-        image_prompt = core.send_prompt("", GENERATE_IMAGE_TEXT + response, plugin_context)
+        image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + response, plugin_context)
         printSystemText(IMAGE_GENERATION_TAG + image_prompt + "\n", ai_mode)
         image = generate_image(image_prompt)
         
