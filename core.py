@@ -5,7 +5,7 @@ import sys
 import time
 import gc
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.37"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v10.38"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"

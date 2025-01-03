@@ -89,7 +89,7 @@ If the folder contains images from previous sessions, they will be overwritten.
 Some models require authentication. To access these gated models:
 
 - Visit the model's page on Hugging Face (e.g., https://huggingface.co/black-forest-labs/FLUX.1-dev).
-- Complete the required access agreement and personal information.
+- Complete the required access agreement.
 - Generate an access token in your Hugging Face account settings.
 - Authenticate your local environment by running the following command in the project directory (with your Python environment activated):
 
