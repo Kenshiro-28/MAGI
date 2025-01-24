@@ -6,15 +6,15 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 from urllib.robotparser import RobotFileParser
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, parse_qs
 from io import BytesIO
+from odf.opendocument import load
 from odf import text as odf_text, teletype
 from docx import Document
 from PyPDF2 import PdfReader
 
 TIMEOUT = 30
-WEB_SEARCH_TEXT = "https://www.google.com/search?q="
-GOOGLE_TRANSLATE_TEXT = "translate.google.com"
+WEB_SEARCH_TEXT = "https://duckduckgo.com/html/?q="
 HEADERS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
 REQUESTS_USER_AGENT = {"User-Agent": HEADERS}
 WEBDRIVER_USER_AGENT = "user-agent=" + HEADERS
@@ -41,7 +41,7 @@ def _is_scraping_allowed(url):
         return False
 
 
-def _selenium_request(url):
+def _selenium_request_raw(url):
     try:
         browser = None
 
@@ -62,7 +62,25 @@ def _selenium_request(url):
 
         WebDriverWait(browser, TIMEOUT).until(lambda d: d.execute_script('return document.readyState') == 'complete')
 
-        soup = BeautifulSoup(browser.page_source, 'html.parser')
+        return browser.page_source
+
+    except Exception as e:
+        print("\n" + WEB_SCRAPE_ERROR + str(e))
+        return ""
+
+    finally:
+        if browser:
+            browser.quit()
+
+
+def _selenium_request(url):
+    try:
+        response = _selenium_request_raw(url)
+
+        if not response:
+            return ""
+
+        soup = BeautifulSoup(response, 'html.parser')
 
         for script in soup(["script", "style"]):
             script.extract()
@@ -78,10 +96,6 @@ def _selenium_request(url):
         print("\n" + WEB_SCRAPE_ERROR + str(e))
         return ""
 
-    finally:
-        if browser:
-            browser.quit()
-
 
 def _scrape_pdf(url):
     response = requests.get(url, headers = REQUESTS_USER_AGENT, timeout = TIMEOUT)
@@ -95,7 +109,7 @@ def _scrape_pdf(url):
 
 def _scrape_odt(url):
     response = requests.get(url, headers = REQUESTS_USER_AGENT, timeout = TIMEOUT)
-    odt_file = odf_text.load(BytesIO(response.content))
+    odt_file = load(BytesIO(response.content))
     all_paragraphs = odt_file.getElementsByType(odf_text.P)
     text = "\n".join(teletype.extractText(p) for p in all_paragraphs)
 
@@ -114,20 +128,39 @@ def search(query, maxUrls):
     try:
         urlArray = []
 
-        response = requests.get(WEB_SEARCH_TEXT + query, headers = REQUESTS_USER_AGENT, timeout = TIMEOUT)
-        response.raise_for_status()
+        response = _selenium_request_raw(WEB_SEARCH_TEXT + query)
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        search_results = soup.select(".g .yuRUbf a")
+        soup = BeautifulSoup(response, 'html.parser')
+        search_results = soup.select("a.result__a")
 
         for result in search_results:
-            url = result['href']
-            
-            if url and _is_scraping_allowed(url) and GOOGLE_TRANSLATE_TEXT not in url:
-                urlArray.append(url)
+            ad_container = result.find_parent("div", class_=lambda classes: classes and "result--ad" in classes)
 
-                if len(urlArray) >= maxUrls:
-                    break
+            # If it's an ad, ignore it
+            if ad_container:
+                continue        
+        
+            relative_link = result['href']
+
+            # Make sure it's a full link
+            if relative_link.startswith('//'):
+                full_link = 'https:' + relative_link
+            else:
+                full_link = relative_link
+
+            # Parse the 'uddg' query param to get the real URL
+            parsed = urlparse(full_link)
+            qs = parse_qs(parsed.query)
+            url_list = qs.get('uddg', [])
+
+            if url_list:
+                url = url_list[0]
+
+                if url and _is_scraping_allowed(url):
+                    urlArray.append(url)
+
+                    if len(urlArray) >= maxUrls:
+                        break
 
         return urlArray
 
