@@ -4,13 +4,14 @@ import os
 import sys
 import time
 import gc
+import re
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v10.39"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.00"
 
-SYSTEM_TEXT = "<|im_start|>system\n"
-USER_TEXT = "<|im_start|>user\n"
-ASSISTANT_TEXT = "<|im_start|>assistant\n"
-EOS = "<|im_end|>\n"
+SYSTEM_TEXT = ""
+USER_TEXT = "<｜User｜>"
+ASSISTANT_TEXT = "<｜Assistant｜>"
+EOS = ""
 
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
@@ -26,6 +27,7 @@ MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
+MAX_INPUT_TOKENS_ERROR = "\n[ERROR] You have entered too many tokens: "
 MIN_CONTEXT_SIZE = 2048
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
@@ -43,6 +45,8 @@ TEXT_BLOCK_WORDS = 3000
 CONFIG_ERROR = "\n[ERROR] Configuration error: "
 
 MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
+
+THINK_PATTERN = re.compile(r'<think>.*?</think>', flags=re.DOTALL)
 
 model = None
 config = None
@@ -102,18 +106,30 @@ def get_completion_from_messages(context):
         return ""
 
 
-def send_prompt(primeDirectives, prompt, context):
+def remove_reasoning(response):
+    # Remove complete <think>...</think> blocks
+    response = THINK_PATTERN.sub('', response)
+
+    # Clean up any stray <think> or </think> tags
+    response = response.replace('<think>', '').replace('</think>', '')
+
+    return response.strip()
+
+
+def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
     if not context:
         primeDirectives = SYSTEM_TEXT + primeDirectives + EOS
         context.append(primeDirectives)
 
     command = USER_TEXT + prompt + EOS + ASSISTANT_TEXT
-
     context.append(command)
 
-    response = get_completion_from_messages(context) 
+    response = get_completion_from_messages(context)
 
     context.append(response + EOS)
+
+    if hide_reasoning:
+        response = remove_reasoning(response)
 
     return response
 
@@ -155,7 +171,7 @@ def user_input(ai_mode):
 
 
 def summarize(topic, context, text):
-    summary = send_prompt("", text + SUMMARIZE_TEXT + topic, context) 
+    summary = send_prompt("", text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True) 
     
     return summary
     
@@ -192,20 +208,6 @@ def load_mission_data(prompt):
         
     return summary            
 
-    
-def is_prompt_completed(prompt, context):
-    answer = False
-
-    response = send_prompt("", prompt, context)
-
-    if response:    
-        response = response.split()[0].replace(".", "").replace(",", "").strip().upper()
-    
-    if response == "YES":
-        answer = True
-        
-    return answer
-    
 
 def read_text_file(path):
     try:

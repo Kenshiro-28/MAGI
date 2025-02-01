@@ -111,89 +111,25 @@ IMAGE_GENERATION_HEIGHT = height of generated images in pixels (default: 768)
 
 ## Model 
 
-You can use any GGUF model supported by llama-cpp-python, as long as it adheres to the ChatML prompt format:
+You can use any GGUF model supported by llama-cpp-python, as long as it adheres to the DeepSeek prompt format:
 
 ```
-<|im_start|>system
-{system_message}<|im_end|>
-<|im_start|>user
-{prompt}<|im_end|>
-<|im_start|>assistant
+<｜User｜>Who was Sun Tzu?<｜Assistant｜>
+```
+
+It also must enclose its internal reasoning between <think> tags:
+
+```
+<think>Okay, so I need to explain who was Sun Tzu.</think>
 ```
 
 ### Recommended model
 
-Qwen2.5-7B-Instruct is a very good general-purpose model that only requires 16 GB of RAM to operate.
+DeepSeek-R1-Distill-Qwen-32B is a model with advanced reasoning capabilities that requires only 32 GB of RAM to run.
 
-Please download all parts into the project's root folder:
-
-https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/blob/main/qwen2.5-7b-instruct-q8_0-00001-of-00003.gguf
-
-https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/blob/main/qwen2.5-7b-instruct-q8_0-00002-of-00003.gguf
-
-https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/blob/main/qwen2.5-7b-instruct-q8_0-00003-of-00003.gguf
+https://huggingface.co/mradermacher/DeepSeek-R1-Distill-Qwen-32B-GGUF/blob/main/DeepSeek-R1-Distill-Qwen-32B.Q4_K_M.gguf
 
 You can use larger models to improve reasoning capabilities. As a rule of thumb, the combined total of RAM and VRAM (if used) should be larger than the size of the GGUF file.
-
-## Docker installation (CPU only)
-
-### Prerequisites
-
-#### Linux
-
-Install the following packages:
-
-```
-$ sudo apt install docker.io apparmor-utils
-```
-
-#### Other systems
-
-Install Docker.
-
-### Install
-
-- Clone this repository.
-
-- Optional: place a model in the root folder to include it in the Docker image.
-
-- To create the Docker image, run the following command in the root folder:
-
-```
-$ sudo docker build --no-cache -t magi .
-```
-
-### Run a Docker image with a model
-
-If you have placed the model in the Docker image, run this command:
-
-```
-$ sudo docker run -it magi
-```
-
-### Run a Docker image without a model
-
-If you have placed the model in a local folder, run this command, replacing MODEL_PATH with the full path to the model file and MODEL_FILE with the name of the model file:
-
-```
-$ sudo docker run -it -v MODEL_PATH:/app/MODEL_FILE magi
-```
-
-Example:
-
-```
-$ sudo docker run -it -v /home/user/models/Hermes-2-Pro-Mistral-7B.Q8_0.gguf:/app/Hermes-2-Pro-Mistral-7B.Q8_0.gguf magi
-```
-
-### Exit MAGI
-
-To exit MAGI, type the command **exit** or press Ctrl + C.
-
-If you want to print the log of the last run, use this command:
-
-```
-$ sudo docker logs $(sudo docker ps -l -q)
-```
 
 ## Debian installation
 
@@ -260,5 +196,65 @@ $ python magi.py
 
 ```
 $ deactivate
+```
+
+## Docker installation (CPU only)
+
+### Prerequisites
+
+#### Linux
+
+Install the following packages:
+
+```
+$ sudo apt install docker.io apparmor-utils
+```
+
+#### Other systems
+
+Install Docker.
+
+### Install
+
+- Clone this repository.
+
+- Optional: place a model in the root folder to include it in the Docker image.
+
+- To create the Docker image, run the following command in the root folder:
+
+```
+$ sudo docker build --no-cache -t magi .
+```
+
+### Run a Docker image with a model
+
+If you have placed the model in the Docker image, run this command:
+
+```
+$ sudo docker run -it magi
+```
+
+### Run a Docker image without a model
+
+If you have placed the model in a local folder, run this command, replacing MODEL_PATH with the full path to the model file and MODEL_FILE with the name of the model file:
+
+```
+$ sudo docker run -it -v MODEL_PATH:/app/MODEL_FILE magi
+```
+
+Example:
+
+```
+$ sudo docker run -it -v /home/user/models/Hermes-2-Pro-Mistral-7B.Q8_0.gguf:/app/Hermes-2-Pro-Mistral-7B.Q8_0.gguf magi
+```
+
+### Exit MAGI
+
+To exit MAGI, type the command **exit** or press Ctrl + C.
+
+If you want to print the log of the last run, use this command:
+
+```
+$ sudo docker logs $(sudo docker ps -l -q)
 ```
 

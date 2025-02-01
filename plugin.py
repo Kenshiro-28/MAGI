@@ -84,11 +84,11 @@ def runAction(primeDirectives, action, context, ai_mode):
 
     # Search for updated information on the Internet
     if WEB_PLUGIN_ACTIVE:
-        run_web_search = core.send_prompt("", WEB_SEARCH_CHECK + action, plugin_context)
+        run_web_search = core.send_prompt(primeDirectives, WEB_SEARCH_CHECK + action, plugin_context, hide_reasoning = True)
         run_web_search = run_web_search.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
 
         if run_web_search == "YES":
-            query = core.send_prompt("", WEB_SEARCH_QUERY + action, plugin_context)
+            query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, plugin_context, hide_reasoning = True)
             webSummary = WEB_SUMMARY_TAG + webSearch(query, ai_mode)
 
             response = core.send_prompt(primeDirectives, action + WEB_SUMMARY_REVIEW + webSummary, context)
@@ -102,7 +102,8 @@ def runAction(primeDirectives, action, context, ai_mode):
 
     # Generate image
     if IMAGE_GENERATION_PLUGIN_ACTIVE:
-        image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + response, plugin_context)
+        aux_context = []
+        image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + response, aux_context, hide_reasoning = True)
         printSystemText(IMAGE_GENERATION_TAG + image_prompt + "\n", ai_mode)
         image = generate_image(image_prompt)
         

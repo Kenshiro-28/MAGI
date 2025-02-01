@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 10.39
+Version     : 11.00
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -42,7 +42,7 @@ def sanitizeTask(task):
 def createTaskList(mission, summary, header, ai_mode):
     context = []
 
-    taskListText = core.send_prompt(TASK_LIST_SYSTEM_PROMPT, DATA_TEXT + summary + MISSION_TEXT + mission, context)
+    taskListText = core.send_prompt(TASK_LIST_SYSTEM_PROMPT, DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
     
     plugin.printSystemText(header + taskListText + "\n", ai_mode)
     
