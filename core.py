@@ -6,7 +6,7 @@ import time
 import gc
 import re
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.00"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.01"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
@@ -40,7 +40,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 3000
+TEXT_BLOCK_WORDS = 2000
 
 CONFIG_ERROR = "\n[ERROR] Configuration error: "
 
