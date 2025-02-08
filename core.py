@@ -6,12 +6,14 @@ import time
 import gc
 import re
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.01"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.02"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
 ASSISTANT_TEXT = "<｜Assistant｜>"
 EOS = ""
+
+TEMPERATURE = 1
 
 SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
 
@@ -97,7 +99,7 @@ def get_completion_from_messages(context):
             context.pop(1)
             text, text_tokens = get_context_data(context)
 
-        response = model(text, max_tokens = CONTEXT_SIZE - text_tokens)
+        response = model(text, max_tokens = CONTEXT_SIZE - text_tokens, temperature = TEMPERATURE)
 
         return response['choices'][0]['text'].strip()
         

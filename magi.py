@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.01
+Version     : 11.02
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -18,7 +18,7 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 DATA_TEXT = "DATA = "
 MISSION_TEXT = "\n\nMISSION = "
-TASK_LIST_SYSTEM_PROMPT = "Your task is to break down the user's prompt provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Each task must be precise and long enough to convey its purpose fully, but it must fit on a single paragraph. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Only output the task list, no titles, headers, or additional text."
+TASK_LIST_SYSTEM_PROMPT = "Your task is to break down the user's prompt provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Only output the task list, no titles, headers, or additional text. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph."
 ACTION_HELPER_TEXT = "Do this: "
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
