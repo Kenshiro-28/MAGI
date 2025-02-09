@@ -6,7 +6,7 @@ import time
 import gc
 import re
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.02"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.03"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
@@ -172,16 +172,18 @@ def user_input(ai_mode):
     return prompt
 
 
-def summarize(topic, context, text):
-    summary = send_prompt("", text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True) 
-    
-    return summary
-    
+def summarize(topic, text):
+    context = []
 
-def update_summary(topic, context, summary, text):
+    summary = send_prompt("", text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True) 
+
+    return summary
+
+
+def update_summary(topic, summary, text):
     if text:
         if summary:
-            summary = summarize(topic, context, summary + "\n" + text)
+            summary = summarize(topic, summary + "\n" + text)
         else:
             summary = text
 
@@ -189,12 +191,11 @@ def update_summary(topic, context, summary, text):
 
 
 def summarize_block_array(topic, blockArray):
-    context = []
     summary = ""
 
     # Summarize
     for block in blockArray:
-        summary = update_summary(topic, context, summary, block)
+        summary = update_summary(topic, summary, block)
 
     return summary        
 

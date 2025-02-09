@@ -132,7 +132,7 @@ def webSearch(query, ai_mode):
 
         webSummary = core.summarize_block_array(query, blockArray[:WEB_MAX_SIZE])
 
-        summary = core.update_summary(query, context, summary, webSummary)
+        summary = core.update_summary(query, summary, webSummary)
 
         if not webSummary:
             printSystemText(WEB_SEARCH_ERROR, ai_mode)

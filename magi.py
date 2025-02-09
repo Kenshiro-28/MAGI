@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.02
+Version     : 11.03
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -64,7 +64,7 @@ def runNerv(primeDirectives, mission, context, ai_mode):
     
     team_response = agent.runSquadOrders(orders, ai_mode)
 
-    nerv_data = core.update_summary(mission, context, nerv_data, team_response)
+    nerv_data = core.update_summary(mission, nerv_data, team_response)
     
     plugin.printSystemText(PROGRESS_REPORT_TEXT + nerv_data + "\n", ai_mode)
 
@@ -89,11 +89,9 @@ def runMission(primeDirectives, mission, context, ai_mode):
 
         actionSummary = plugin.runAction(primeDirectives, action, context, ai_mode)
         
-        summary = core.update_summary(mission, context, summary, actionSummary)
+        summary = core.update_summary(mission, summary, actionSummary)
     
     plugin.printMagiText(SUMMARY_TEXT + summary, ai_mode)
-    
-    return summary    
 
 
 def checkPrompt(primeDirectives, prompt, context, ai_mode):    
