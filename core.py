@@ -6,7 +6,7 @@ import time
 import gc
 import re
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.03"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.04"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
@@ -58,6 +58,7 @@ class AiMode(Enum):
     NORMAL  = 0
     MISSION = 1
     NERV    = 2
+    MAGI    = 3
 
 
 def split_text_in_blocks(text):

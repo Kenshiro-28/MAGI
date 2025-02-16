@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.03
+Version     : 11.04
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -24,9 +24,11 @@ SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
 PROGRESS_REPORT_TEXT = "\n\n----- Progress Report -----\n\n"
 ACTION_TAG = "\n[ACTION] "
-NORMAL_MODE_TEXT = "\nNormal mode enabled"
-MISSION_MODE_TEXT = "\nMission mode enabled"
-NERV_MODE_TEXT = "\nNERV mode enabled"
+NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
+MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
+NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
+MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
+MAGI_ACTION_PROMPT = "\n\nReview your previous answer carefully. Identify any errors, logical inconsistencies, or areas where clarity, detail, or accuracy can be enhanced. Revise your answer accordingly, then continue with your mission."
 
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
@@ -52,6 +54,13 @@ def createTaskList(mission, summary, header, ai_mode):
     return taskList
     
 
+def runMagi(primeDirectives, action, context, ai_mode):
+    plugin.runAction(primeDirectives, action, context, ai_mode)
+
+    while True:
+        plugin.runAction(primeDirectives, action + MAGI_ACTION_PROMPT, context, ai_mode)
+
+
 def runNerv(primeDirectives, mission, context, ai_mode):
     global nerv_data
 
@@ -70,13 +79,10 @@ def runNerv(primeDirectives, mission, context, ai_mode):
 
 
 def runMission(primeDirectives, mission, context, ai_mode):
-    summary = ""
+    summary = core.load_mission_data(mission)
 
-    if ai_mode == core.AiMode.MISSION:    
-        summary = core.load_mission_data(mission)
-    
-        if summary:            
-            plugin.printSystemText(MISSION_DATA_TEXT + summary, ai_mode)
+    if summary:
+        plugin.printSystemText(MISSION_DATA_TEXT + summary, ai_mode)
 
     actionList = createTaskList(mission, summary, ACTIONS_TEXT, ai_mode)
 
@@ -87,9 +93,9 @@ def runMission(primeDirectives, mission, context, ai_mode):
 
         action = ACTION_HELPER_TEXT + action
 
-        actionSummary = plugin.runAction(primeDirectives, action, context, ai_mode)
+        response = plugin.runAction(primeDirectives, action, context, ai_mode)
         
-        summary = core.update_summary(mission, summary, actionSummary)
+        summary = core.update_summary(mission, summary, response)
     
     plugin.printMagiText(SUMMARY_TEXT + summary, ai_mode)
 
@@ -99,6 +105,8 @@ def checkPrompt(primeDirectives, prompt, context, ai_mode):
         runMission(primeDirectives, prompt, context, ai_mode)
     elif ai_mode == core.AiMode.NERV:        
         runNerv(primeDirectives, prompt, context, ai_mode)
+    elif ai_mode == core.AiMode.MAGI:
+        runMagi(primeDirectives, prompt, context, ai_mode)
     else:
         plugin.runAction(primeDirectives, prompt, context, ai_mode)
 
@@ -110,6 +118,9 @@ def switchAiMode(ai_mode):
     elif ai_mode == core.AiMode.MISSION:
         ai_mode = core.AiMode.NERV
         plugin.printSystemText(NERV_MODE_TEXT, ai_mode)
+    elif ai_mode == core.AiMode.NERV:
+        ai_mode = core.AiMode.MAGI
+        plugin.printSystemText(MAGI_MODE_TEXT, ai_mode)
     else:
         ai_mode = core.AiMode.NORMAL
         plugin.printSystemText(NORMAL_MODE_TEXT, ai_mode)        

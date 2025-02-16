@@ -52,6 +52,14 @@ MAGI will save a log in the file **mission_log.txt**.
 
 You can also add useful information in the file **mission_data.txt**.
 
+### MAGI mode
+
+This is a fully autonomous mode.
+
+It will run continuously until you manually stop the program by pressing Ctrl + C.
+
+MAGI will save a log in the file **mission_log.txt**.
+
 ## Plugins
 
 ### Web plugin
