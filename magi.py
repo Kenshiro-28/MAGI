@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.04
+Version     : 11.05
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -28,8 +28,7 @@ NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
 MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
-MAGI_ACTION_PROMPT = "\n\nReview your previous answer carefully. Identify any errors, logical inconsistencies, or areas where clarity, detail, or accuracy can be enhanced. Revise your answer accordingly, then continue with your mission."
-
+MAGI_ACTION_PROMPT = "Critically evaluate your previous response for accuracy, completeness, and clarity. Identify any gaps, inconsistencies, or areas where further detail could improve understanding. Ensure that your new response builds upon the previous answer by incorporating additional context, refining explanations, and correcting any oversights. Your goal is to produce an answer that is progressively more comprehensive and refined over each iteration."
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
 
@@ -58,7 +57,7 @@ def runMagi(primeDirectives, action, context, ai_mode):
     plugin.runAction(primeDirectives, action, context, ai_mode)
 
     while True:
-        plugin.runAction(primeDirectives, action + MAGI_ACTION_PROMPT, context, ai_mode)
+        plugin.runAction(primeDirectives, MAGI_ACTION_PROMPT, context, ai_mode)
 
 
 def runNerv(primeDirectives, mission, context, ai_mode):

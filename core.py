@@ -6,7 +6,7 @@ import time
 import gc
 import re
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.04"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.05"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
