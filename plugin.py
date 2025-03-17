@@ -116,7 +116,6 @@ def runAction(primeDirectives, action, context, ai_mode):
 # WEB PLUGIN OPERATIONS
 
 def webSearch(query, ai_mode):
-    context = []
     summary = ""
 
     query = query.replace('"', '')

@@ -52,7 +52,7 @@ class TelegramBot:
         update_id = await self.getUpdateId()
 
         # Get the pending messages
-        while update_id != None:
+        while update_id is not None:
             try:
                 next_update_id = update_id
             

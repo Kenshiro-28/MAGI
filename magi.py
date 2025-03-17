@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.05
+Version     : 11.06
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -28,7 +28,7 @@ NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
 MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
-MAGI_ACTION_PROMPT = "Critically evaluate your previous response for accuracy, completeness, and clarity. Identify any gaps, inconsistencies, or areas where further detail could improve understanding. Ensure that your new response builds upon the previous answer by incorporating additional context, refining explanations, and correcting any oversights. Your goal is to produce an answer that is progressively more comprehensive and refined over each iteration."
+MAGI_ACTION_PROMPT = "Create one specific prompt to improve your previous answer. Focus on the most important enhancement needed. Return only this prompt."
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
 
@@ -51,13 +51,14 @@ def createTaskList(mission, summary, header, ai_mode):
     taskList = [line for line in taskListText.splitlines() if line.strip()]
 
     return taskList
-    
+
 
 def runMagi(primeDirectives, action, context, ai_mode):
-    plugin.runAction(primeDirectives, action, context, ai_mode)
-
     while True:
-        plugin.runAction(primeDirectives, MAGI_ACTION_PROMPT, context, ai_mode)
+        plugin.runAction(primeDirectives, action, context, ai_mode)
+        aux_context = context[:]
+        action = core.send_prompt(primeDirectives, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
+        plugin.printSystemText(ACTION_TAG + action, ai_mode)
 
 
 def runNerv(primeDirectives, mission, context, ai_mode):

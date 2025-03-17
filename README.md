@@ -113,9 +113,9 @@ IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must b
 
 IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
 
-IMAGE_GENERATION_WIDTH = width of generated images in pixels (default: 576)
+IMAGE_GENERATION_WIDTH = width of generated images in pixels (default: 1024)
 
-IMAGE_GENERATION_HEIGHT = height of generated images in pixels (default: 768)
+IMAGE_GENERATION_HEIGHT = height of generated images in pixels (default: 1024)
 
 ## Model 
 
@@ -125,7 +125,7 @@ You can use any GGUF model supported by llama-cpp-python, as long as it adheres 
 <｜User｜>Who was Sun Tzu?<｜Assistant｜>
 ```
 
-It also must enclose its internal reasoning between <think> tags:
+If the model has extended reasoning, it must enclose it between `<think>` tags:
 
 ```
 <think>Okay, so I need to explain who was Sun Tzu.</think>

@@ -6,7 +6,7 @@ import time
 import gc
 import re
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.05"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.06"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
@@ -30,7 +30,8 @@ MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
 MAX_INPUT_TOKENS_ERROR = "\n[ERROR] You have entered too many tokens: "
-MIN_CONTEXT_SIZE = 2048
+MAX_RESPONSE_SIZE = 8192
+MIN_CONTEXT_SIZE = MAX_RESPONSE_SIZE * 2
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
 CONTEXT_SIZE_INVALID_TEXT = "Invalid context size.\n"
@@ -100,7 +101,9 @@ def get_completion_from_messages(context):
             context.pop(1)
             text, text_tokens = get_context_data(context)
 
-        response = model(text, max_tokens = CONTEXT_SIZE - text_tokens, temperature = TEMPERATURE)
+        max_tokens = min(CONTEXT_SIZE - text_tokens, MAX_RESPONSE_SIZE)
+
+        response = model(text, max_tokens = max_tokens, temperature = TEMPERATURE)
 
         return response['choices'][0]['text'].strip()
         
@@ -310,7 +313,7 @@ def configure_model():
         if CONTEXT_SIZE < MIN_CONTEXT_SIZE:
             raise ValueError
 
-        MAX_INPUT_TOKENS = CONTEXT_SIZE // 2
+        MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
 
     except ValueError:
         print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT, AiMode.NORMAL)
