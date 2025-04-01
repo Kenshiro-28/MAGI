@@ -1,7 +1,7 @@
 FROM debian:stable-slim
 
 RUN apt-get update && \
-    apt-get install -y build-essential pkg-config libopenblas-dev python3-venv python3-pip \
+    apt-get install -y build-essential git pkg-config libopenblas-dev python3-venv python3-pip \
       apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf \
       python3-pypdf2 && \
     rm -rf /var/lib/apt/lists/*
