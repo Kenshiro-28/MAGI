@@ -8,13 +8,15 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-CONTEXT_SIZE: number of tokens in the context window (default: 32768)
+CONTEXT_SIZE: number of tokens in the context window (default: 16384)
 
 ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: YES)
 
 ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: NO)
 
 ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: NO)
+
+ENABLE_LOG = enable or disable logging to the file **mission_log.txt** (default: NO)
 
 ## Prime Directives
 
@@ -36,9 +38,7 @@ This is the default mode when the program starts.
 
 MAGI will generate a more elaborate response based on an action list.
 
-It will save a log in the file **mission_log.txt**.
-
-You can also add useful information in the file **mission_data.txt**.
+The system will extract useful information from the file **mission_data.txt**.
 
 ### NERV mode
 
@@ -48,17 +48,13 @@ Each agent has its own memory and remembers the ongoing conversation.
 
 You can configure each agent to behave like a fictional character or follow a set of rules.
 
-MAGI will save a log in the file **mission_log.txt**.
-
-You can also add useful information in the file **mission_data.txt**.
+The system will extract useful information from the file **mission_data.txt**.
 
 ### MAGI mode
 
 This is a fully autonomous mode.
 
 It will run continuously until you manually stop the program by pressing Ctrl + C.
-
-MAGI will save a log in the file **mission_log.txt**.
 
 ## Plugins
 

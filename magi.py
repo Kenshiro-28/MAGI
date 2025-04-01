@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.06
+Version     : 11.07
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -12,6 +12,7 @@ import core
 import plugin
 import agent
 import re
+from enum import Enum
 
 SYSTEM_HINT_TEXT = "\n\nHint: to switch AI mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
@@ -28,9 +29,22 @@ NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
 MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
-MAGI_ACTION_PROMPT = "Create one specific prompt to improve your previous answer. Focus on the most important enhancement needed. Return only this prompt."
+MAGI_ACTION_PROMPT = """Analyze your previous answer and choose ONE of these two actions:
+
+1. IMPROVE MODE: If your previous answer has any significant gaps, inaccuracies, or could be enhanced, create a specific prompt targeting the single most important improvement needed.
+
+2. CREATIVE MODE: If your previous answer is already comprehensive and accurate, create a prompt that continues the conversation by exploring a new angle, asking an insightful follow-up question, or introducing a valuable related concept.
+
+Write only your chosen prompt without explaining your reasoning or including labels."""
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
+
+
+class AiMode(Enum):
+    NORMAL  = 0
+    MISSION = 1
+    NERV    = 2
+    MAGI    = 3
 
 
 def sanitizeTask(task):
@@ -40,12 +54,12 @@ def sanitizeTask(task):
     return task
     
 
-def createTaskList(mission, summary, header, ai_mode):
+def createTaskList(mission, summary, header):
     context = []
 
     taskListText = core.send_prompt(TASK_LIST_SYSTEM_PROMPT, DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
     
-    plugin.printSystemText(header + taskListText + "\n", ai_mode)
+    plugin.printSystemText(header + taskListText + "\n")
     
     # Remove blank lines and create the task list
     taskList = [line for line in taskListText.splitlines() if line.strip()]
@@ -53,77 +67,77 @@ def createTaskList(mission, summary, header, ai_mode):
     return taskList
 
 
-def runMagi(primeDirectives, action, context, ai_mode):
+def runMagi(primeDirectives, action, context):
     while True:
-        plugin.runAction(primeDirectives, action, context, ai_mode)
+        plugin.runAction(primeDirectives, action, context)
         aux_context = context[:]
         action = core.send_prompt(primeDirectives, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
-        plugin.printSystemText(ACTION_TAG + action, ai_mode)
+        plugin.printSystemText(ACTION_TAG + action)
 
 
-def runNerv(primeDirectives, mission, context, ai_mode):
+def runNerv(primeDirectives, mission, context):
     global nerv_data
 
     if not nerv_data:
         nerv_data = core.load_mission_data(mission)
-        plugin.printSystemText(MISSION_DATA_TEXT + nerv_data, ai_mode)
-        agent.displayNervSquad(ai_mode)
+        plugin.printSystemText(MISSION_DATA_TEXT + nerv_data)
+        agent.displayNervSquad()
 
-    orders = agent.captain.issueOrders(DATA_TEXT + nerv_data + MISSION_TEXT + mission, ai_mode)
+    orders = agent.captain.issueOrders(DATA_TEXT + nerv_data + MISSION_TEXT + mission)
     
-    team_response = agent.runSquadOrders(orders, ai_mode)
+    team_response = agent.runSquadOrders(orders)
 
     nerv_data = core.update_summary(mission, nerv_data, team_response)
     
-    plugin.printSystemText(PROGRESS_REPORT_TEXT + nerv_data + "\n", ai_mode)
+    plugin.printSystemText(PROGRESS_REPORT_TEXT + nerv_data + "\n")
 
 
-def runMission(primeDirectives, mission, context, ai_mode):
+def runMission(primeDirectives, mission, context):
     summary = core.load_mission_data(mission)
 
     if summary:
-        plugin.printSystemText(MISSION_DATA_TEXT + summary, ai_mode)
+        plugin.printSystemText(MISSION_DATA_TEXT + summary)
 
-    actionList = createTaskList(mission, summary, ACTIONS_TEXT, ai_mode)
+    actionList = createTaskList(mission, summary, ACTIONS_TEXT)
 
     for action in actionList:
         action = sanitizeTask(action)
     
-        plugin.printSystemText(ACTION_TAG + action, ai_mode)
+        plugin.printSystemText(ACTION_TAG + action)
 
         action = ACTION_HELPER_TEXT + action
 
-        response = plugin.runAction(primeDirectives, action, context, ai_mode)
+        response = plugin.runAction(primeDirectives, action, context)
         
         summary = core.update_summary(mission, summary, response)
     
-    plugin.printMagiText(SUMMARY_TEXT + summary, ai_mode)
+    plugin.printMagiText(SUMMARY_TEXT + summary)
 
 
 def checkPrompt(primeDirectives, prompt, context, ai_mode):    
-    if ai_mode == core.AiMode.MISSION:
-        runMission(primeDirectives, prompt, context, ai_mode)
-    elif ai_mode == core.AiMode.NERV:        
-        runNerv(primeDirectives, prompt, context, ai_mode)
-    elif ai_mode == core.AiMode.MAGI:
-        runMagi(primeDirectives, prompt, context, ai_mode)
+    if ai_mode == AiMode.MISSION:
+        runMission(primeDirectives, prompt, context)
+    elif ai_mode == AiMode.NERV:        
+        runNerv(primeDirectives, prompt, context)
+    elif ai_mode == AiMode.MAGI:
+        runMagi(primeDirectives, prompt, context)
     else:
-        plugin.runAction(primeDirectives, prompt, context, ai_mode)
+        plugin.runAction(primeDirectives, prompt, context)
 
 
 def switchAiMode(ai_mode):
-    if ai_mode == core.AiMode.NORMAL:
-        ai_mode = core.AiMode.MISSION
-        plugin.printSystemText(MISSION_MODE_TEXT, ai_mode)
-    elif ai_mode == core.AiMode.MISSION:
-        ai_mode = core.AiMode.NERV
-        plugin.printSystemText(NERV_MODE_TEXT, ai_mode)
-    elif ai_mode == core.AiMode.NERV:
-        ai_mode = core.AiMode.MAGI
-        plugin.printSystemText(MAGI_MODE_TEXT, ai_mode)
+    if ai_mode == AiMode.NORMAL:
+        ai_mode = AiMode.MISSION
+        plugin.printSystemText(MISSION_MODE_TEXT)
+    elif ai_mode == AiMode.MISSION:
+        ai_mode = AiMode.NERV
+        plugin.printSystemText(NERV_MODE_TEXT)
+    elif ai_mode == AiMode.NERV:
+        ai_mode = AiMode.MAGI
+        plugin.printSystemText(MAGI_MODE_TEXT)
     else:
-        ai_mode = core.AiMode.NORMAL
-        plugin.printSystemText(NORMAL_MODE_TEXT, ai_mode)        
+        ai_mode = AiMode.NORMAL
+        plugin.printSystemText(NORMAL_MODE_TEXT)        
         
     return ai_mode
 
@@ -132,37 +146,37 @@ def switchAiMode(ai_mode):
 if __name__ == "__main__":
     context = []
     nerv_data = ""
-    ai_mode = core.AiMode.NORMAL
+    ai_mode = AiMode.NORMAL
 
     primeDirectives = core.read_text_file(core.PRIME_DIRECTIVES_FILE_PATH)
 
     if primeDirectives:
-        plugin.printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives, ai_mode)
+        plugin.printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives)
 
-    plugin.printSystemText(SYSTEM_HINT_TEXT, ai_mode)
+    plugin.printSystemText(SYSTEM_HINT_TEXT)
             
     # Main loop
     while True:
-        prompt = plugin.userInput(ai_mode)
+        prompt = plugin.userInput()
 
         if prompt == "" or prompt.isspace():
             continue
-            
+
         prompt_tokens = core.get_number_of_tokens(prompt)
-        
+
         if prompt_tokens > core.MAX_INPUT_TOKENS:
-            plugin.printSystemText(core.MAX_INPUT_TOKENS_ERROR + str(prompt_tokens), ai_mode)
+            plugin.printSystemText(core.MAX_INPUT_TOKENS_ERROR + str(prompt_tokens))
             continue
-        
+
         command = prompt.split()[0]
-        
+
         if command.upper() == EXIT_COMMAND:
             break
-        
+
         if command.upper() == SWITCH_AI_MODE_COMMAND:
             ai_mode = switchAiMode(ai_mode)
         else:
             checkPrompt(primeDirectives, prompt, context, ai_mode)
         
-    plugin.printSystemText("\n", ai_mode)
+    plugin.printSystemText("\n")
 

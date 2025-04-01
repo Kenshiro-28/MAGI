@@ -1,12 +1,12 @@
 from llama_cpp import Llama
-from enum import Enum
 import os
 import sys
 import time
 import gc
 import re
+import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.06"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.07"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
@@ -51,15 +51,11 @@ MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
 
 THINK_PATTERN = re.compile(r'<think>.*?</think>', flags=re.DOTALL)
 
+LOG_ENABLED = False
+ENABLE_LOG_KEY = "ENABLE_LOG"
+
 model = None
 config = None
-
-
-class AiMode(Enum):
-    NORMAL  = 0
-    MISSION = 1
-    NERV    = 2
-    MAGI    = 3
 
 
 def split_text_in_blocks(text):
@@ -108,7 +104,7 @@ def get_completion_from_messages(context):
         return response['choices'][0]['text'].strip()
         
     except Exception as e:
-        print_system_text(MODEL_ERROR_TEXT + str(e), AiMode.NORMAL) 
+        print_system_text(MODEL_ERROR_TEXT + str(e)) 
         return ""
 
 
@@ -140,14 +136,14 @@ def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
     return response
 
 
-def print_system_text(text, ai_mode):
+def print_system_text(text):
     print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)
     
-    if ai_mode != AiMode.NORMAL:
+    if LOG_ENABLED:
         save_mission_log(text)    
 
-    
-def print_magi_text(text, ai_mode):
+
+def print_magi_text(text):
     print(END_COLOR + MAGI_COLOR, end='')
     
     for char in text:
@@ -156,21 +152,26 @@ def print_magi_text(text, ai_mode):
         
     print(END_COLOR)
     
-    if ai_mode != AiMode.NORMAL:
+    if LOG_ENABLED:
         save_mission_log(text)    
 
 
 def save_mission_log(text):
-    with open(MISSION_LOG_FILE_PATH, 'a') as missionFile:
-        missionFile.write(text + "\n")
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
+    # Use regex to insert timestamp after any leading newlines
+    log_entry = re.sub(r'^(\n*)', r'\1[{}] '.format(timestamp), text)
     
-def user_input(ai_mode):
+    with open(MISSION_LOG_FILE_PATH, 'a') as missionFile:
+        missionFile.write(log_entry + "\n")
+
+
+def user_input():
     sys.stdin.flush()
 
     prompt = input(USER_COLOR + "\n$ ")
     
-    if ai_mode != AiMode.NORMAL:
+    if LOG_ENABLED:
         save_mission_log("\n" + prompt)    
     
     return prompt
@@ -223,7 +224,7 @@ def read_text_file(path):
             return text    
     
     except FileNotFoundError:
-        print_system_text(READ_TEXT_FILE_WARNING + str(path), AiMode.NORMAL)
+        print_system_text(READ_TEXT_FILE_WARNING + str(path))
         return ""
     
 
@@ -238,7 +239,7 @@ def load_model(startup = True):
         modelFileArray = [f for f in fileArray if f.endswith('.gguf')]
 
         if not modelFileArray:
-            print_system_text(MODEL_NOT_FOUND_ERROR, AiMode.NORMAL)
+            print_system_text(MODEL_NOT_FOUND_ERROR)
             exit()
 
         # Get the first model file
@@ -255,11 +256,11 @@ def load_model(startup = True):
         model.verbose = False
         
         if startup:
-            print_system_text(SYSTEM_VERSION_TEXT, AiMode.NORMAL)
-            print_system_text(MODEL_TEXT + modelName, AiMode.NORMAL)        
+            print_system_text(SYSTEM_VERSION_TEXT)
+            print_system_text(MODEL_TEXT + modelName)        
 
     except Exception as e:
-        print_system_text(MODEL_LOAD_ERROR + str(e), AiMode.NORMAL)
+        print_system_text(MODEL_LOAD_ERROR + str(e))
         exit()
 
 
@@ -294,18 +295,20 @@ def load_config():
                 config[key] = value
                 
     except Exception as e:
-        print_system_text(CONFIG_ERROR + str(e) + "\n", AiMode.NORMAL)
+        print_system_text(CONFIG_ERROR + str(e) + "\n")
 
 
 def configure_model():
     global CONTEXT_SIZE
     global MAX_INPUT_TOKENS
+    global LOG_ENABLED
 
     try:
+        # Set context size
         context_size = config.get(CONTEXT_SIZE_KEY, '')
 
         if not context_size:
-            print_system_text(CONFIG_ERROR + CONTEXT_SIZE_NOT_FOUND_TEXT, AiMode.NORMAL)
+            print_system_text(CONFIG_ERROR + CONTEXT_SIZE_NOT_FOUND_TEXT)
             exit()
 
         CONTEXT_SIZE = int(context_size)
@@ -314,9 +317,12 @@ def configure_model():
             raise ValueError
 
         MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
+        
+        # Set logging configuration
+        LOG_ENABLED = config.get(ENABLE_LOG_KEY, "NO").upper() == "YES"
 
     except ValueError:
-        print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT, AiMode.NORMAL)
+        print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT)
         exit()
 
 
@@ -324,5 +330,4 @@ def configure_model():
 load_config()
 configure_model()
 load_model()
-
 

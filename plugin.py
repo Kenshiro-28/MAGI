@@ -52,33 +52,33 @@ IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
 # SHARED OPERATIONS
 
-def printMagiText(text, ai_mode):
+def printMagiText(text):
     if TELEGRAM_PLUGIN_ACTIVE:
         send_telegram_bot(text)
         
-    core.print_magi_text(text, ai_mode)
+    core.print_magi_text(text)
 
 
-def printSystemText(text, ai_mode):
+def printSystemText(text):
     if TELEGRAM_PLUGIN_ACTIVE:
         send_telegram_bot(text)
         
-    core.print_system_text(text, ai_mode)
+    core.print_system_text(text)
 
 
-def userInput(ai_mode):
+def userInput():
     if TELEGRAM_PLUGIN_ACTIVE:
         prompt = receive_telegram_bot()
         
         if prompt:
-            core.print_system_text(TELEGRAM_TAG + prompt, ai_mode)        
+            core.print_system_text(TELEGRAM_TAG + prompt)        
     else:
-        prompt = core.user_input(ai_mode)
+        prompt = core.user_input()
         
     return prompt.strip()
 
 
-def runAction(primeDirectives, action, context, ai_mode):
+def runAction(primeDirectives, action, context):
     # Plugins will use a copy of the main context
     plugin_context = context[:]
 
@@ -89,7 +89,7 @@ def runAction(primeDirectives, action, context, ai_mode):
 
         if run_web_search == "YES":
             query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, plugin_context, hide_reasoning = True)
-            webSummary = WEB_SUMMARY_TAG + webSearch(query, ai_mode)
+            webSummary = WEB_SUMMARY_TAG + webSearch(query)
 
             response = core.send_prompt(primeDirectives, action + WEB_SUMMARY_REVIEW + webSummary, context)
         else:
@@ -98,13 +98,13 @@ def runAction(primeDirectives, action, context, ai_mode):
         response = core.send_prompt(primeDirectives, action, context)
 
     # Print the response (from model knowledge or web-scraped data)
-    printMagiText("\n" + response, ai_mode)
+    printMagiText("\n" + response)
 
     # Generate image
     if IMAGE_GENERATION_PLUGIN_ACTIVE:
         aux_context = []
         image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + response, aux_context, hide_reasoning = True)
-        printSystemText(IMAGE_GENERATION_TAG + image_prompt + "\n", ai_mode)
+        printSystemText(IMAGE_GENERATION_TAG + image_prompt + "\n")
         image = generate_image(image_prompt)
         
         if TELEGRAM_PLUGIN_ACTIVE and image:
@@ -115,17 +115,17 @@ def runAction(primeDirectives, action, context, ai_mode):
 
 # WEB PLUGIN OPERATIONS
 
-def webSearch(query, ai_mode):
+def webSearch(query):
     summary = ""
 
     query = query.replace('"', '')
 
-    printSystemText(WEB_SEARCH_TAG + query, ai_mode)
+    printSystemText(WEB_SEARCH_TAG + query)
 
     urls = web.search(query, WEB_SEARCH_LIMIT)
 
     for url in urls:
-        printSystemText("\n" + url, ai_mode)
+        printSystemText("\n" + url)
         text = web.scrape(url)
         blockArray = core.split_text_in_blocks(text)
 
@@ -134,7 +134,7 @@ def webSearch(query, ai_mode):
         summary = core.update_summary(query, summary, webSummary)
 
         if not webSummary:
-            printSystemText(WEB_SEARCH_ERROR, ai_mode)
+            printSystemText(WEB_SEARCH_ERROR)
             
     return summary
 
@@ -222,18 +222,18 @@ try:
     # Web plugin
     if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
         WEB_PLUGIN_ACTIVE = True
-        core.print_system_text(WEB_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+        core.print_system_text(WEB_PLUGIN_ENABLED_TEXT)
     else:
-        core.print_system_text(WEB_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+        core.print_system_text(WEB_PLUGIN_DISABLED_TEXT)
         
     # Telegram plugin
     if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
         TELEGRAM_PLUGIN_ACTIVE = True
         TELEGRAM_BOT_TOKEN = core.config.get(TELEGRAM_BOT_TOKEN_KEY, '')
         TELEGRAM_USER_ID = core.config.get(TELEGRAM_USER_ID_KEY, '')
-        core.print_system_text(TELEGRAM_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+        core.print_system_text(TELEGRAM_PLUGIN_ENABLED_TEXT)
     else:
-        core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+        core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT)
 
     # Image generation plugin
     if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
@@ -244,9 +244,9 @@ try:
         IMAGE_GENERATION_WIDTH = int(core.config.get(IMAGE_GENERATION_WIDTH_KEY, ''))
         IMAGE_GENERATION_HEIGHT = int(core.config.get(IMAGE_GENERATION_HEIGHT_KEY, ''))
 
-        core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT, core.AiMode.NORMAL)
+        core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT)
     else:
-        core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT, core.AiMode.NORMAL)
+        core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT)
 
 except Exception as e:
     print(core.CONFIG_ERROR + str(e) + "\n")
