@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.07
+Version     : 11.08
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -29,13 +29,11 @@ NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
 MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
-MAGI_ACTION_PROMPT = """Analyze your previous answer and choose ONE of these two actions:
+MAGI_ACTION_PROMPT = """Review your previous response. Based on that review, choose one action:
 
-1. IMPROVE MODE: If your previous answer has any significant gaps, inaccuracies, or could be enhanced, create a specific prompt targeting the single most important improvement needed.
+1. IMPROVE: If the response needs correction, clarification, or more detail, formulate a command specifying the single most important improvement. Your entire output must be only the command itself, written in the second person.
 
-2. CREATIVE MODE: If your previous answer is already comprehensive and accurate, create a prompt that continues the conversation by exploring a new angle, asking an insightful follow-up question, or introducing a valuable related concept.
-
-Write only your chosen prompt without explaining your reasoning or including labels."""
+2. EXPLORE: If the response is accurate and comprehensive, formulate a command to explore a relevant new direction, ask a follow-up question, or suggest a related task. Your entire output must be only the command itself, written in the second person."""
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
 
