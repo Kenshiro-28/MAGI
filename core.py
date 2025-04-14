@@ -6,7 +6,7 @@ import gc
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.08"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v11.09"
 
 SYSTEM_TEXT = ""
 USER_TEXT = "<｜User｜>"
@@ -30,7 +30,7 @@ MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
 MAX_INPUT_TOKENS_ERROR = "\n[ERROR] You have entered too many tokens: "
-MAX_RESPONSE_SIZE = 8192
+MAX_RESPONSE_SIZE = 16384
 MIN_CONTEXT_SIZE = MAX_RESPONSE_SIZE * 2
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
@@ -119,8 +119,11 @@ def remove_reasoning(response):
 
 
 def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
-    if not context:
-        primeDirectives = SYSTEM_TEXT + primeDirectives + EOS
+    primeDirectives = SYSTEM_TEXT + primeDirectives + EOS
+
+    if context:
+        context[0] = primeDirectives
+    else:
         context.append(primeDirectives)
 
     command = USER_TEXT + prompt + EOS + ASSISTANT_TEXT

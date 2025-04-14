@@ -77,35 +77,35 @@ class TestCore(unittest.TestCase):
         self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
     
     def test_existing_context(self):
-        """Test send_prompt with existing context - should not add prime directives"""
+        """Test send_prompt with existing context - should overwrite prime directives"""
         # Context already has some messages
         context = [
             core.SYSTEM_TEXT + PREVIOUS_PRIME_DIRECTIVES + core.EOS,
             core.USER_TEXT + PREVIOUS_PROMPT + core.EOS + core.ASSISTANT_TEXT,
             PREVIOUS_RESPONSE + core.EOS
         ]
-        
+
         # Execute
         response = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context)
-        
+
         # Check response
         self.assertEqual(response, NORMAL_RESPONSE)
 
         # Check context size
         self.assertEqual(len(context), 5)
-        
-        # First element should remain unchanged
+
+        # First element should contain the new prime directives
         self.assertEqual(
-            context[0], 
-            core.SYSTEM_TEXT + PREVIOUS_PRIME_DIRECTIVES + core.EOS
+            context[0],
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS
         )
-        
+
         # New user prompt should be appended
         self.assertEqual(
-            context[3], 
+            context[3],
             core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
         )
-        
+
         # New response should be appended with full content
         self.assertEqual(context[4], NORMAL_RESPONSE + core.EOS)
     

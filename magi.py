@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 11.08
+Version     : 11.09
 Copyright   : GNU General Public License (GPLv3)
 Description : Advanced Chatbot
 =====================================================================================
@@ -34,6 +34,7 @@ MAGI_ACTION_PROMPT = """Review your previous response. Based on that review, cho
 1. IMPROVE: If the response needs correction, clarification, or more detail, formulate a command specifying the single most important improvement. Your entire output must be only the command itself, written in the second person.
 
 2. EXPLORE: If the response is accurate and comprehensive, formulate a command to explore a relevant new direction, ask a follow-up question, or suggest a related task. Your entire output must be only the command itself, written in the second person."""
+MAGI_ACTION_SYSTEM_PROMPT = "You are a logical AI assistant. Your task is to analyze the conversation history and the last response, then follow the user's instructions precisely."
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
 
@@ -69,7 +70,7 @@ def runMagi(primeDirectives, action, context):
     while True:
         plugin.runAction(primeDirectives, action, context)
         aux_context = context[:]
-        action = core.send_prompt(primeDirectives, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
+        action = core.send_prompt(MAGI_ACTION_SYSTEM_PROMPT, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
         plugin.printSystemText(ACTION_TAG + action)
 
 
