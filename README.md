@@ -8,7 +8,7 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-CONTEXT_SIZE: number of tokens in the context window (default: 16384)
+CONTEXT_SIZE: number of tokens in the context window (default: 32768)
 
 ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: YES)
 
