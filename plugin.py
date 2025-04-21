@@ -79,16 +79,15 @@ def userInput():
 
 
 def runAction(primeDirectives, action, context):
-    # Plugins will use a copy of the main context
-    plugin_context = context[:]
-
     # Search for updated information on the Internet
     if WEB_PLUGIN_ACTIVE:
-        run_web_search = core.send_prompt(primeDirectives, WEB_SEARCH_CHECK + action, plugin_context, hide_reasoning = True)
+        aux_context = context[:]
+        run_web_search = core.send_prompt(primeDirectives, WEB_SEARCH_CHECK + action, aux_context, hide_reasoning = True)
         run_web_search = run_web_search.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
 
         if run_web_search == "YES":
-            query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, plugin_context, hide_reasoning = True)
+            aux_context = context[:]
+            query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, aux_context, hide_reasoning = True)
             webSummary = WEB_SUMMARY_TAG + webSearch(query)
 
             response = core.send_prompt(primeDirectives, action + WEB_SUMMARY_REVIEW + webSummary, context)
@@ -99,6 +98,9 @@ def runAction(primeDirectives, action, context):
 
     # Print the response (from model knowledge or web-scraped data)
     printMagiText("\n" + response)
+
+    # Remove extended reasoning
+    response = core.remove_reasoning(response)
 
     # Generate image
     if IMAGE_GENERATION_PLUGIN_ACTIVE:

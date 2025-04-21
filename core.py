@@ -2,20 +2,27 @@ from llama_cpp import Llama
 import os
 import sys
 import time
-import gc
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v11.09"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v12.00"
 
-SYSTEM_TEXT = ""
-USER_TEXT = "<｜User｜>"
-ASSISTANT_TEXT = "<｜Assistant｜>"
-EOS = ""
+SYSTEM_TEXT = "<|im_start|>system\n"
+USER_TEXT = "<|im_start|>user\n"
+ASSISTANT_TEXT = "<|im_start|>assistant\n"
+EOS = "\n<|im_end|>\n"
 
-TEMPERATURE = 1
+TEMPERATURE = 0.6
 
-SUMMARIZE_TEXT = "\nSummarize the information from the above text that is relevant to this topic: "
+THINK_TEXT = "<think>\n"
+
+SUMMARIZE_SYSTEM_PROMPT = """You are an expert assistant specialized in text summarization. Your task is to generate a concise and accurate summary of the provided text, focusing strictly on the topic specified at the end of the user prompt.
+
+When the provided text includes new information following an earlier summary, integrate the relevant details from the new information, while ensuring all key information relevant to the topic from the earlier text is carried forward and included. Ensure the final summary is comprehensive and accurately reflects all relevant points gathered so far.
+
+Output only the final, unified summary text."""
+
+SUMMARIZE_TEXT = "\n\nSummarize the information from the above text that is relevant to this topic: "
 
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 MISSION_LOG_FILE_PATH = "mission_log.txt"
@@ -36,6 +43,9 @@ CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
 CONTEXT_SIZE_INVALID_TEXT = "Invalid context size.\n"
 
+DISPLAY_EXTENDED_REASONING = True
+DISPLAY_EXTENDED_REASONING_KEY = "DISPLAY_EXTENDED_REASONING"
+
 READ_TEXT_FILE_WARNING = "\n[WARNING] File not found: "
 
 SYSTEM_COLOR = "\033[32m"
@@ -43,13 +53,13 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 2000
+TEXT_BLOCK_WORDS = 4000
 
 CONFIG_ERROR = "\n[ERROR] Configuration error: "
 
 MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
 
-THINK_PATTERN = re.compile(r'<think>.*?</think>', flags=re.DOTALL)
+THINK_PATTERN = re.compile(r'(<think>.*?</think>\n)|(<think>.*?</think>)', flags=re.DOTALL)
 
 LOG_ENABLED = False
 ENABLE_LOG_KEY = "ENABLE_LOG"
@@ -127,16 +137,23 @@ def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
         context.append(primeDirectives)
 
     command = USER_TEXT + prompt + EOS + ASSISTANT_TEXT
-    context.append(command)
 
-    response = get_completion_from_messages(context)
+    # Append THINK_TEXT to trigger extended reasoning
+    context.append(command + THINK_TEXT)
+
+    full_response = THINK_TEXT + get_completion_from_messages(context)
+
+    # Remove THINK_TEXT from the command prompt
+    context[-1] = command
+
+    response = remove_reasoning(full_response)
 
     context.append(response + EOS)
 
-    if hide_reasoning:
-        response = remove_reasoning(response)
-
-    return response
+    if DISPLAY_EXTENDED_REASONING and not hide_reasoning:
+        return full_response
+    else:
+        return response
 
 
 def print_system_text(text):
@@ -183,7 +200,7 @@ def user_input():
 def summarize(topic, text):
     context = []
 
-    summary = send_prompt("", text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True) 
+    summary = send_prompt(SUMMARIZE_SYSTEM_PROMPT, text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True)
 
     return summary
 
@@ -269,8 +286,10 @@ def load_model(startup = True):
 
 def unload_model():
     global model
-    model = None
-    gc.collect()
+
+    if model is not None:
+        model.close()
+        model = None
 
 
 def load_config():
@@ -305,6 +324,7 @@ def configure_model():
     global CONTEXT_SIZE
     global MAX_INPUT_TOKENS
     global LOG_ENABLED
+    global DISPLAY_EXTENDED_REASONING
 
     try:
         # Set context size
@@ -323,6 +343,9 @@ def configure_model():
         
         # Set logging configuration
         LOG_ENABLED = config.get(ENABLE_LOG_KEY, "NO").upper() == "YES"
+
+        # Set extended reasoning configuration
+        DISPLAY_EXTENDED_REASONING = config.get(DISPLAY_EXTENDED_REASONING_KEY, "YES").upper() == "YES"
 
     except ValueError:
         print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT)

@@ -1,1 +1,1 @@
-You are a friendly AI assistant. Reason through the query, then reflect on your reasoning, and finally provide your response.
+You are a friendly AI assistant.

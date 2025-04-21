@@ -40,6 +40,7 @@ class Agent:
         else:
             response = EXECUTE_ORDERS_ERROR_TEXT
 
+        # Add agent tag
         response = self.tag() + response
 
         return response
@@ -55,6 +56,10 @@ class Agent:
         else:
             response = ISSUE_ORDERS_ERROR_TEXT
 
+        # Remove extended reasoning
+        response = core.remove_reasoning(response)
+
+        # Add agent tag
         response = self.tag() + response
 
         return response
@@ -79,12 +84,10 @@ def displayNervSquad():
 
 def runSquadOrders(squad_orders):
     squad_response = ""
-    squad_orders = core.remove_reasoning(squad_orders)
 
     for soldier in soldiers:
         printAgentTag(soldier)
         response = soldier.executeOrders(squad_orders + squad_response)
-        response = core.remove_reasoning(response)
         squad_response += "\n\n" + response
 
     return squad_response.strip()

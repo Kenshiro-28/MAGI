@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is an advanced chatbot powered by open-source large language models, offering an AI solution accessible to everyone. MAGI is designed to run efficiently on consumer-grade hardware and features a plugin system that enables Internet browsing, remote operation through Telegram and image generation.
+MAGI (マギ) is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware. It features a plugin system that enables Internet browsing, remote operation through Telegram and image generation.
 
 ## Configuration
 
@@ -15,6 +15,8 @@ ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: YES)
 ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: NO)
 
 ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: NO)
+
+DISPLAY_EXTENDED_REASONING: display the extended reasoning between <think>...</think> tags (default: YES)
 
 ENABLE_LOG = enable or disable logging to the file **mission_log.txt** (default: NO)
 
@@ -54,6 +56,8 @@ The system will extract useful information from the file **mission_data.txt**.
 
 This is a fully autonomous mode.
 
+Following your initial prompt, MAGI will explore new solutions.
+
 It will run continuously until you manually stop the program by pressing Ctrl + C.
 
 ## Plugins
@@ -88,6 +92,8 @@ MAGI will use the model to generate context-related images and save them in the 
 
 If the folder contains images from previous sessions, they will be overwritten.
 
+To ensure reasonable generation times, an **NVIDIA GPU with at least 8GB VRAM** is strongly recommended. Otherwise, MAGI will use the CPU for image generation, which is extremely slow and may require **over 64GB of system RAM**.
+
 #### Model Access
 
 Some models require authentication. To access these gated models:
@@ -103,37 +109,47 @@ $ huggingface-cli login
 
 #### Configuration
 
-IMAGE_GENERATION_MODEL: this is the model used to generate images.
+IMAGE_GENERATION_MODEL: this is the model used to generate images (default: FLUX.1-dev)
 
-IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA.
+IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: Anti-blur_Flux_Lora)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image.
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image (default: photorealistic)
 
-IMAGE_GENERATION_WIDTH = width of generated images in pixels (default: 1024)
+IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 512)
 
-IMAGE_GENERATION_HEIGHT = height of generated images in pixels (default: 1024)
+IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 512)
 
 ## Model 
 
-You can use any GGUF model supported by llama-cpp-python, as long as it adheres to the DeepSeek prompt format:
+You can use any GGUF model supported by llama-cpp-python, as long as it adheres to the ChatML prompt format:
 
 ```
-<｜User｜>Who was Sun Tzu?<｜Assistant｜>
+<|im_start|>system
+You are a friendly AI assistant.
+<|im_end|>
+<|im_start|>user
+Who was Sun Tzu?
+<|im_end|>
+<|im_start|>assistant
+Sun Tzu was the master strategist of ancient China, renowned as the author of The Art of War.
+<|im_end|>
 ```
 
-If the model has extended reasoning, it must enclose it between `<think>` tags:
+The model must enclose its extended reasoning between `<think>` tags:
 
 ```
-<think>Okay, so I need to explain who was Sun Tzu.</think>
+<think>
+Okay, so I need to explain who was Sun Tzu.
+</think>
 ```
 
 ### Recommended model
 
-DeepSeek-R1-Distill-Qwen-32B is a model with advanced reasoning capabilities that requires only 32 GB of RAM to run.
+QwQ is the extended reasoning model from Alibaba Cloud's Qwen series. By generating explicit reasoning steps, QwQ significantly outperforms standard instruction-tuned models on complex tasks and hard problems requiring deeper analysis.
 
-https://huggingface.co/mradermacher/DeepSeek-R1-Distill-Qwen-32B-GGUF/blob/main/DeepSeek-R1-Distill-Qwen-32B.Q4_K_M.gguf
+https://huggingface.co/Qwen/QwQ-32B-GGUF/blob/main/qwq-32b-q8_0.gguf
 
-You can use larger models to improve reasoning capabilities. As a rule of thumb, the combined total of RAM and VRAM (if used) should be larger than the size of the GGUF file.
+As a rule of thumb, the combined total of RAM and VRAM (if used) should be at least 50% larger than the GGUF file size.
 
 ## Debian installation
 

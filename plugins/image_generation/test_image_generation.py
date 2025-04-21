@@ -4,7 +4,7 @@ model = "black-forest-labs/FLUX.1-dev"
 lora = "0x000001/Anti-blur_Flux_Lora"
 
 prompt = "giant mecha"
-image_specs = "photograph"
+image_specs = "photorealistic"
 
 width = 512
 height = 512
