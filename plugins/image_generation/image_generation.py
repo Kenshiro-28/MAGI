@@ -1,3 +1,4 @@
+import gc
 import torch
 from diffusers import FluxPipeline
 from diffusers import logging
@@ -12,6 +13,8 @@ GUIDANCE_SCALE = 3.5
 
 
 def generate_image(prompt, model, lora, image_specs, width, height):
+    pipe = None
+
     try:
         logging.set_verbosity_error()
 
@@ -36,5 +39,15 @@ def generate_image(prompt, model, lora, image_specs, width, height):
     except Exception as e:
         print(IMAGE_GENERATION_ERROR + str(e))
         return None
+
+    finally:
+        # Cleanup
+        pipe = None
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        gc.collect()
+
 
 
