@@ -18,7 +18,7 @@ ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (d
 
 DISPLAY_EXTENDED_REASONING: display the extended reasoning between `<think>...</think>` tags (default: YES)
 
-ENABLE_LOG = enable or disable logging to the file **mission_log.txt** (default: NO)
+ENABLE_LOG: enable or disable logging to the file **mission_log.txt** (default: NO)
 
 ## Prime Directives
 
@@ -92,7 +92,11 @@ MAGI will use the model to generate context-related images and save them in the 
 
 If the folder contains images from previous sessions, they will be overwritten.
 
-To ensure reasonable generation times, an **NVIDIA GPU with at least 8GB VRAM** is strongly recommended. Otherwise, MAGI will use the CPU for image generation, which is extremely slow and may require **over 64GB of system RAM**.
+*System requirements:*
+
+CPU-only: 64GB of system RAM.
+
+GPU: NVIDIA GPU with at least 8GB VRAM. With the image model primarily loaded into VRAM, system RAM is freed up for other tasks. Aim for a combined RAM + VRAM of at least 32GB.
 
 #### Model Access
 
@@ -143,13 +147,33 @@ Okay, so I need to explain who was Sun Tzu.
 </think>
 ```
 
-### Recommended model
+### Recommended models
 
-QwQ is the extended reasoning model from Alibaba Cloud's Qwen series. By generating explicit reasoning steps, QwQ significantly outperforms standard instruction-tuned models on complex tasks and hard problems requiring deeper analysis.
-
-https://huggingface.co/Qwen/QwQ-32B-GGUF/blob/main/qwq-32b-q8_0.gguf
+Qwen3 is the latest generation of large language models from Alibaba Cloud's Qwen series. Built upon extensive training, Qwen3 delivers groundbreaking advancements in reasoning, instruction-following, agent capabilities, and multilingual support.
 
 As a rule of thumb, the combined total of RAM and VRAM (if used) should be at least 50% larger than the GGUF file size.
+
+#### Qwen3-32B-GGUF
+
+For simple to moderate tasks (general conversation, basic reasoning).
+
+https://huggingface.co/Qwen/Qwen3-32B-GGUF/blob/main/Qwen3-32B-Q4_K_M.gguf
+
+*System requirements:*
+
+CPU-only: 32GB of system RAM.
+
+GPU: NVIDIA GPU with at least 8GB VRAM. System RAM requirements can be lower (e.g., 16-24GB) as layers are offloaded to VRAM. Aim for a combined RAM + VRAM of at least 32GB.
+
+#### Qwen3-235B-A22B-GGUF
+
+For complex tasks (advanced reasoning, coding, in-depth analysis).
+
+https://huggingface.co/unsloth/Qwen3-235B-A22B-GGUF/tree/main/Q4_K_M
+
+*System requirements:*
+
+192GB of system RAM and NVIDIA GPU with at least 32GB VRAM.
 
 ## Debian installation
 

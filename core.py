@@ -5,14 +5,14 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v12.01"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v12.02"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
 EOS = "\n<|im_end|>\n"
 
-TEMPERATURE = 0.6
+TEMPERATURE = 1.0
 
 THINK_TEXT = "<think>\n"
 
