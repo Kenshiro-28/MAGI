@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI (マギ) is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware. It features a plugin system that enables Internet browsing, remote operation through Telegram and image generation.
+MAGI (マギ) is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware. It also features a plugin system that enables Internet browsing, remote operation through Telegram and image generation.
 
 ## Configuration
 
@@ -169,7 +169,7 @@ GPU: NVIDIA GPU with at least 8GB VRAM. System RAM requirements can be lower (e.
 
 For complex tasks (advanced reasoning, coding, in-depth analysis).
 
-https://huggingface.co/unsloth/Qwen3-235B-A22B-GGUF/tree/main/Q4_K_M
+https://huggingface.co/Qwen/Qwen3-235B-A22B-GGUF/tree/main/Q4_K_M
 
 *System requirements:*
 
