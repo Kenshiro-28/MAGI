@@ -173,7 +173,7 @@ https://huggingface.co/Qwen/Qwen3-235B-A22B-GGUF/tree/main/Q4_K_M
 
 *System requirements:*
 
-192GB of system RAM and NVIDIA GPU with at least 32GB VRAM.
+256GB of system RAM and NVIDIA GPU with at least 8GB VRAM.
 
 ## Debian installation
 
