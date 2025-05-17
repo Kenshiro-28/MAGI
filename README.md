@@ -46,9 +46,11 @@ The system will extract useful information from the file **mission_data.txt**.
 
 NERV is a virtual organization composed of AI agents.
 
-Each agent has its own memory and remembers the ongoing conversation.
+The agents are organized following a military structure. The Captain receives the user's prompt, analyzes it, and issues orders to each Soldier.
 
-You can configure each agent to behave like a fictional character or follow a set of rules.
+The Captain will evaluate each Soldier's response and will provide additional guidance when necessary.
+
+Each agent has its own memory and remembers the ongoing conversation.
 
 The system will extract useful information from the file **mission_data.txt**.
 
@@ -96,7 +98,7 @@ If the folder contains images from previous sessions, they will be overwritten.
 
 CPU-only: 64GB of system RAM.
 
-GPU: NVIDIA GPU with at least 8GB VRAM. With the image model primarily loaded into VRAM, system RAM is freed up for other tasks. Aim for a combined RAM + VRAM of at least 32GB.
+GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
 
 #### Model Access
 
@@ -163,7 +165,7 @@ https://huggingface.co/Qwen/Qwen3-32B-GGUF/blob/main/Qwen3-32B-Q4_K_M.gguf
 
 CPU-only: 32GB of system RAM.
 
-GPU: NVIDIA GPU with at least 8GB VRAM. System RAM requirements can be lower (e.g., 16-24GB) as layers are offloaded to VRAM. Aim for a combined RAM + VRAM of at least 32GB.
+GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
 
 #### Qwen3-235B-A22B-GGUF
 
@@ -173,7 +175,9 @@ https://huggingface.co/Qwen/Qwen3-235B-A22B-GGUF/tree/main/Q4_K_M
 
 *System requirements:*
 
-256GB of system RAM and NVIDIA GPU with at least 8GB VRAM.
+CPU-only: 256GB of system RAM.
+
+GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 256GB.
 
 ## Debian installation
 
@@ -242,7 +246,7 @@ $ python magi.py
 $ deactivate
 ```
 
-## Docker installation (CPU only)
+## Docker installation (CPU-only)
 
 ### Prerequisites
 

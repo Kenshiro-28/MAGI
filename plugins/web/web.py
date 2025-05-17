@@ -1,5 +1,6 @@
 import requests
 import socket
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -14,6 +15,7 @@ from docx import Document
 from PyPDF2 import PdfReader
 
 TIMEOUT = 30
+BROWSER_COOLDOWN_TIME = 1
 WEB_SEARCH_TEXT = "https://duckduckgo.com/html/?q="
 HEADERS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
 REQUESTS_USER_AGENT = {"User-Agent": HEADERS}
@@ -50,7 +52,6 @@ def _selenium_request_raw(url):
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
         options.add_argument("--disable-extensions")
-        options.add_argument("--single-process")
         options.add_argument(WEBDRIVER_USER_AGENT)
         options.add_experimental_option("prefs", {"download.default_directory": "/dev/null"})
 
@@ -58,7 +59,9 @@ def _selenium_request_raw(url):
 
         browser = webdriver.Chrome(service = service, options = options)
 
-        browser.get(url) 
+        browser.set_page_load_timeout(TIMEOUT)
+
+        browser.get(url)
 
         WebDriverWait(browser, TIMEOUT).until(lambda d: d.execute_script('return document.readyState') == 'complete')
 
@@ -71,6 +74,7 @@ def _selenium_request_raw(url):
     finally:
         if browser:
             browser.quit()
+            time.sleep(BROWSER_COOLDOWN_TIME)
 
 
 def _selenium_request(url):
