@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.03
+Version     : 12.04
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -74,7 +74,7 @@ def runMagi(primeDirectives, action, context):
         plugin.printSystemText(ACTION_TAG + action)
 
 
-def runNerv(primeDirectives, mission, context):
+def runNerv(mission):
     global nerv_data
 
     if not nerv_data:
@@ -117,7 +117,7 @@ def checkPrompt(primeDirectives, prompt, context, ai_mode):
     if ai_mode == AiMode.MISSION:
         runMission(primeDirectives, prompt, context)
     elif ai_mode == AiMode.NERV:        
-        runNerv(primeDirectives, prompt, context)
+        runNerv(prompt)
     elif ai_mode == AiMode.MAGI:
         runMagi(primeDirectives, prompt, context)
     else:

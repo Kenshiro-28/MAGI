@@ -16,7 +16,7 @@ ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: NO)
 
 ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: NO)
 
-DISPLAY_EXTENDED_REASONING: display the extended reasoning between `<think>...</think>` tags (default: YES)
+DISPLAY_EXTENDED_REASONING: display the extended reasoning between `<think>...</think>` tags (default: NO)
 
 ENABLE_LOG: enable or disable logging to the file **mission_log.txt** (default: NO)
 
