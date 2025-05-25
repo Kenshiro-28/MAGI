@@ -28,6 +28,9 @@ sys.modules['llama_cpp'] = type('llama_cpp', (), {'Llama': MockLlama})
 with patch('os.listdir', return_value=['model.gguf']):
     import core
 
+# Override DISPLAY_EXTENDED_REASONING for all tests
+core.DISPLAY_EXTENDED_REASONING = True
+
 # Test inputs
 PRIME_DIRECTIVES = "You are a friendly AI assistant."
 PROMPT = "Hello, how are you?"
