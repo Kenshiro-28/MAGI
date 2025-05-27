@@ -155,11 +155,11 @@ Qwen3 is the latest generation of large language models from Alibaba Cloud's Qwe
 
 As a rule of thumb, the combined total of RAM and VRAM (if used) should be at least 50% larger than the GGUF file size.
 
-#### Qwen3-32B-GGUF
+#### Qwen3-14B-GGUF
 
-For simple to moderate tasks (general conversation, basic reasoning).
+For simple to moderate tasks (general conversation, basic coding).
 
-https://huggingface.co/Qwen/Qwen3-32B-GGUF/blob/main/Qwen3-32B-Q4_K_M.gguf
+https://huggingface.co/Qwen/Qwen3-14B-GGUF/blob/main/Qwen3-14B-Q8_0.gguf
 
 *System requirements:*
 
@@ -167,17 +167,17 @@ CPU-only: 32GB of system RAM.
 
 GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
 
-#### Qwen3-235B-A22B-GGUF
+#### Qwen3-32B-GGUF
 
-For complex tasks (advanced reasoning, coding, in-depth analysis).
+For complex tasks (advanced reasoning, coding).
 
-https://huggingface.co/Qwen/Qwen3-235B-A22B-GGUF/tree/main/Q4_K_M
+https://huggingface.co/Qwen/Qwen3-32B-GGUF/blob/main/Qwen3-32B-Q8_0.gguf
 
 *System requirements:*
 
-CPU-only: 256GB of system RAM.
+CPU-only: 64GB of system RAM.
 
-GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 256GB.
+GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 64GB.
 
 ## Debian installation
 
