@@ -11,7 +11,7 @@ EVALUATE_TASK_PROMPT_2 = "'s response -----\n\n"
 EVALUATE_TASK_PROMPT_3 = "\n\n----- Evaluation -----\n\nBased on all the above, has "
 EVALUATE_TASK_PROMPT_4 = " fully accomplished their assigned orders for this stage? If yes, your entire response MUST be exactly: YES\n\nIf not, you MUST provide new, detailed instructions for this agent. These instructions should clearly state what is missing or needs correction. Crucially, instruct the agent to provide a new, complete, and self-contained response that incorporates your feedback and comprehensively addresses all aspects of their original task. Address the agent directly by their name using the second person, according to your personality."
 GET_ORDERS_PROMPT_1 = "\n\n----- Action -----\n\nNow, based on this plan, address ONLY "
-GET_ORDERS_PROMPT_2 = " directly by their name using the second person, according to your personality. For coding tasks, ensure your orders explicitly instruct the agent to provide the full code, not just code snippets."
+GET_ORDERS_PROMPT_2 = " directly by their name using the second person, according to your personality. For coding tasks, ensure your orders explicitly instruct the agent to provide the full code, not just code snippets. For coding tasks, also don't provide example code to the agent."
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
 EXECUTE_ORDERS_ERROR_TEXT = "Only soldiers can execute orders."
 
