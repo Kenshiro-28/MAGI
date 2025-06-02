@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.06
+Version     : 12.07
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -21,6 +21,7 @@ DATA_TEXT = "DATA = "
 MISSION_TEXT = "\n\nMISSION = "
 TASK_LIST_SYSTEM_PROMPT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Only output the task list, no titles, headers, or additional text. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph."
 ACTION_HELPER_TEXT = "Do this: "
+EXIT_MAGI_TEXT = "\nまたね。\n"
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
 PROGRESS_REPORT_TEXT = "\n\n----- Progress Report -----\n\n"
@@ -125,6 +126,8 @@ def checkPrompt(primeDirectives, prompt, context, ai_mode):
 
 
 def switchAiMode(ai_mode):
+    plugin.telegram_input_ready = True
+
     if ai_mode == AiMode.NORMAL:
         ai_mode = AiMode.MISSION
         plugin.printSystemText(MISSION_MODE_TEXT)
@@ -177,5 +180,5 @@ if __name__ == "__main__":
         else:
             checkPrompt(primeDirectives, prompt, context, ai_mode)
         
-    plugin.printSystemText("\n")
+    plugin.printSystemText(EXIT_MAGI_TEXT)
 

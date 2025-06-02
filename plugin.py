@@ -18,7 +18,7 @@ WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
 WEB_SEARCH_CHECK = "Determine whether the following user request refers specifically to a present or future moment in time and may require access to current information from the Internet. Respond ONLY with YES or NO.\n\nUSER REQUEST: "
-WEB_SEARCH_QUERY = "Write a single-line Google search query to obtain the most comprehensive and relevant results on the following topic. Don't write titles or headings. TOPIC = "
+WEB_SEARCH_QUERY = "Write a web search query to obtain relevant results on the following topic. Don't write titles, headings or comments. Don't write more than 20 words. TOPIC = "
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_TAG = "\n[WEB SUMMARY] "
@@ -30,6 +30,7 @@ TELEGRAM_PLUGIN_WAIT_TIME = 3
 TELEGRAM_PLUGIN_CHAR_LIMIT = 4096
 TELEGRAM_PLUGIN_ENABLED_TEXT = "\nTelegram plugin: enabled"
 TELEGRAM_PLUGIN_DISABLED_TEXT = "\nTelegram plugin: disabled"
+TELEGRAM_PLUGIN_INPUT_READY_TEXT = "Ready for inquiry."
 ENABLE_TELEGRAM_PLUGIN_KEY = "ENABLE_TELEGRAM_PLUGIN"
 TELEGRAM_BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN"
 TELEGRAM_USER_ID_KEY = "TELEGRAM_USER_ID"
@@ -43,11 +44,15 @@ ENABLE_IMAGE_GENERATION_PLUGIN_KEY = "ENABLE_IMAGE_GENERATION_PLUGIN"
 IMAGE_GENERATION_MODEL_KEY = "IMAGE_GENERATION_MODEL"
 IMAGE_GENERATION_LORA_KEY = "IMAGE_GENERATION_LORA"
 IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
+IMAGE_GENERATION_NEGATIVE_PROMPT_KEY = "IMAGE_GENERATION_NEGATIVE_PROMPT"
 IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
 IMAGE_GENERATION_HEIGHT_KEY = "IMAGE_GENERATION_HEIGHT"
-IMAGE_GENERATION_SYSTEM_PROMPT = "Write image generation prompts, emphasize key visual elements in priority order: main details, exact pose/action/expression, environmental context, composition and framing, lighting conditions and atmosphere, textures and materials, artistic style and medium. Use commas to separate elements. Start with the most important aspect and build detail progressively."
-GENERATE_IMAGE_TEXT = "Write an image generation prompt from the following text (max 150 words). Don't write titles or headings. Don't start with command verbs like 'create', 'make', or 'generate'. TEXT = "
+IMAGE_GENERATION_SYSTEM_PROMPT = "Write image generation prompts for Stable Diffusion. Structure: Start with the medium/style (photo, digital art, oil painting, etc.), then subject with key details, then artistic qualities (lighting, composition, mood), then technical specs if needed (camera, lens, settings). Use comma-separated phrases. Front-load the most important elements. Keep descriptions concrete and visual rather than abstract."
+GENERATE_IMAGE_TEXT = "Write an image generation prompt from the following text. Don't write titles, headings or comments. Don't start with command verbs. Don't write more than 150 words. TEXT = "
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
+
+
+telegram_input_ready = True
 
 
 # SHARED OPERATIONS
@@ -67,14 +72,21 @@ def printSystemText(text):
 
 
 def userInput():
+    global telegram_input_ready
+
     if TELEGRAM_PLUGIN_ACTIVE:
+        if not telegram_input_ready:
+            send_telegram_bot(TELEGRAM_PLUGIN_INPUT_READY_TEXT)
+            telegram_input_ready = True
+
         prompt = receive_telegram_bot()
-        
+
         if prompt:
-            core.print_system_text(TELEGRAM_TAG + prompt)        
+            core.print_system_text(TELEGRAM_TAG + prompt)
+            telegram_input_ready = False
     else:
         prompt = core.user_input()
-        
+
     return prompt.strip()
 
 
@@ -197,7 +209,7 @@ def generate_image(prompt):
     # Unload main model
     core.unload_model()
 
-    image = image_generation.generate_image(prompt, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_LORA, IMAGE_GENERATION_SPECS, IMAGE_GENERATION_WIDTH, IMAGE_GENERATION_HEIGHT)
+    image = image_generation.generate_image(prompt, IMAGE_GENERATION_NEGATIVE_PROMPT, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_LORA, IMAGE_GENERATION_SPECS, IMAGE_GENERATION_WIDTH, IMAGE_GENERATION_HEIGHT)
 
     # Reload main model
     core.load_model(startup = False)
@@ -243,6 +255,7 @@ try:
         IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
         IMAGE_GENERATION_LORA = core.config.get(IMAGE_GENERATION_LORA_KEY, '')
         IMAGE_GENERATION_SPECS = core.config.get(IMAGE_GENERATION_SPECS_KEY, '')
+        IMAGE_GENERATION_NEGATIVE_PROMPT = core.config.get(IMAGE_GENERATION_NEGATIVE_PROMPT_KEY, '')
         IMAGE_GENERATION_WIDTH = int(core.config.get(IMAGE_GENERATION_WIDTH_KEY, ''))
         IMAGE_GENERATION_HEIGHT = int(core.config.get(IMAGE_GENERATION_HEIGHT_KEY, ''))
 

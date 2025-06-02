@@ -1,15 +1,16 @@
 import image_generation
 
-model = "black-forest-labs/FLUX.1-dev"
-lora = "0x000001/Anti-blur_Flux_Lora"
+model = "stabilityai/stable-diffusion-3.5-large"
+lora = ""
+image_specs = "high quality, detailed"
+negative_prompt = "low quality, blurry, bad anatomy, watermark"
 
 prompt = "giant mecha"
-image_specs = "photorealistic"
 
-width = 512
-height = 512
+width = 1024
+height = 1024
 
-image = image_generation.generate_image(prompt, model, lora, image_specs, width, height)
+image = image_generation.generate_image(prompt, negative_prompt, model, lora, image_specs, width, height)
 
 image.save("image.png")
 

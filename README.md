@@ -88,7 +88,7 @@ TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
 This plugin allows MAGI to download an image generation model from Hugging Face.
 
-Only models using FluxPipeline are compatible.
+Only Stable Diffusion 3 checkpoints are supported.
 
 MAGI will use the model to generate context-related images and save them in the folder **workspace**.
 
@@ -115,15 +115,17 @@ $ huggingface-cli login
 
 #### Configuration
 
-IMAGE_GENERATION_MODEL: this is the model used to generate images (default: FLUX.1-dev)
+IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stabilityai/stable-diffusion-3.5-large)
 
-IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: Anti-blur_Flux_Lora)
+IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image (default: photorealistic)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image (default: None)
 
-IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 512)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: blurry)
 
-IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 512)
+IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 1024)
+
+IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 1024)
 
 ## Model 
 
