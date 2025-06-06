@@ -119,9 +119,9 @@ IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stab
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image (default: None)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image (default: Professional photography)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: blurry)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: None)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 1024)
 

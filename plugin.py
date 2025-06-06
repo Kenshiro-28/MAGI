@@ -47,8 +47,8 @@ IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
 IMAGE_GENERATION_NEGATIVE_PROMPT_KEY = "IMAGE_GENERATION_NEGATIVE_PROMPT"
 IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
 IMAGE_GENERATION_HEIGHT_KEY = "IMAGE_GENERATION_HEIGHT"
-IMAGE_GENERATION_SYSTEM_PROMPT = "Write image generation prompts for Stable Diffusion. Structure: Start with the medium/style (photo, digital art, oil painting, etc.), then subject with key details, then artistic qualities (lighting, composition, mood), then technical specs if needed (camera, lens, settings). Use comma-separated phrases. Front-load the most important elements. Keep descriptions concrete and visual rather than abstract."
-GENERATE_IMAGE_TEXT = "Write an image generation prompt from the following text. Don't write titles, headings or comments. Don't start with command verbs. Don't write more than 150 words. TEXT = "
+IMAGE_GENERATION_SYSTEM_PROMPT = "You create image generation prompts."
+GENERATE_IMAGE_TEXT = "Write a single paragraph describing what is visible in this single moment. Use simple, factual language. Describe from general to specific. Describe textures and features as detailed. Don't use metaphors or poetry. Don't describe lighting, photography style, or camera settings. Don't write titles, headings or comments. Don't write more than 120 words. TEXT = "
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
 
