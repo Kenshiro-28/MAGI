@@ -52,7 +52,7 @@ def generate_image(
 
         # Add image specs
         if image_specs:
-            prompt = image_specs + ", " + prompt
+            prompt = image_specs + ". " + prompt
 
         # Generate image
         image = pipe(

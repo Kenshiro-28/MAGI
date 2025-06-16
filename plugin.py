@@ -47,8 +47,37 @@ IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
 IMAGE_GENERATION_NEGATIVE_PROMPT_KEY = "IMAGE_GENERATION_NEGATIVE_PROMPT"
 IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
 IMAGE_GENERATION_HEIGHT_KEY = "IMAGE_GENERATION_HEIGHT"
-IMAGE_GENERATION_SYSTEM_PROMPT = "You create image generation prompts."
-GENERATE_IMAGE_TEXT = "Write a single paragraph describing what is visible in this single moment. Use simple, factual language. Describe from general to specific. Describe textures and features as detailed. Don't use metaphors or poetry. Don't describe lighting, photography style, or camera settings. Don't write titles, headings or comments. Don't write more than 120 words. TEXT = "
+IMAGE_GENERATION_SYSTEM_PROMPT = "You write clear, visual prompts for image generation."
+GENERATE_IMAGE_TEXT = """First, think about what static image best represents TEXT. Then think about the best single composition for that image:
+
+- extreme close-up (isolates a single, small detail of the subject - such as the texture of a surface, or a person's eyes or hands)
+- close-up (subject fills most of the frame - a single, whole object shown in detail, or a person's head and shoulders)
+- medium shot (subject with some space - an object shown with the surface it's on, or a person from the hips to head)
+- full shot (entire subject visible - a complete object in its setting, or a person from head to toe)
+- wide shot (subject small in environment - an object in its room, or a person in a landscape)
+- panoramic (very wide view - a vast scene, landscape, or cityscape)
+
+Use these definitions to understand what would be visible, but don't include the explanations in the image generation prompt you will write later - just use the composition name. Think about what elements would be visible in that image composition.
+
+Here are examples of how to correctly format the final prompt. Notice how lighting and other forbidden elements from the TEXT are removed.
+
+---
+EXAMPLE 1
+TEXT = a beautiful woman in a dark room lit only by a single candle
+CORRECT PROMPT = close-up: A beautiful woman's face, her shoulders framed by her hair.
+
+EXAMPLE 2
+TEXT = a knight in shining armor on a horse, under the bright noon sun
+CORRECT PROMPT = full shot: A knight in shining armor sits on a horse.
+
+EXAMPLE 3
+TEXT = a tall woman in a long flowing dress standing on a beach
+CORRECT PROMPT = full shot: A tall woman in a long flowing dress stands on a sandy beach.
+---
+
+Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements in that image composition.
+
+Don't describe multiple images or compositions. Don't describe photography style or camera settings. Don't move the camera. Don't change the camera zoom. Don't describe lighting. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 90 words. Don't write the number of words.\n\nTEXT = """
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
 
@@ -117,7 +146,7 @@ def runAction(primeDirectives, action, context):
     # Generate image
     if IMAGE_GENERATION_PLUGIN_ACTIVE:
         aux_context = []
-        image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + response, aux_context, hide_reasoning = True)
+        image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + action + " - " + response, aux_context, hide_reasoning = True)
         printSystemText(IMAGE_GENERATION_TAG + image_prompt + "\n")
         image = generate_image(image_prompt)
         

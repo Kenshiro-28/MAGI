@@ -119,9 +119,9 @@ IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stab
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be added to the prompt used to generate each image (default: Professional photography)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 8k, ultra-detailed, tack-sharp focus, maximum acutance, high micro-contrast. A professional photograph shot on a Hasselblad H6D-400c with a 100mm prime macro lens. The lighting is clean and directional, meticulously crafted to reveal intricate surface textures and microscopic detail. The color profile is vibrant and punchy, emulating the rich color science of a Sony professional broadcast monitor)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: None)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: out of focus, soft focus, low resolution, distorted, bad anatomy, bad proportions, unnatural skin, distorted face, asymmetrical eyes, lifeless eyes, misshapen lips, disconnected limbs, bad hands, extra fingers, noisy, grainy, jpeg artifacts)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 1024)
 
