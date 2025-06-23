@@ -21,7 +21,6 @@ WEB_SEARCH_CHECK = "Determine whether the following user request refers specific
 WEB_SEARCH_QUERY = "Write a web search query to obtain relevant results on the following topic. Don't write titles, headings or comments. Don't write more than 20 words. TOPIC = "
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
-WEB_SUMMARY_TAG = "\n[WEB SUMMARY] "
 WEB_SUMMARY_REVIEW = "\n\nUse the following information obtained from the Internet:\n\n" 
 
 # TELEGRAM PLUGIN
@@ -48,36 +47,38 @@ IMAGE_GENERATION_NEGATIVE_PROMPT_KEY = "IMAGE_GENERATION_NEGATIVE_PROMPT"
 IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
 IMAGE_GENERATION_HEIGHT_KEY = "IMAGE_GENERATION_HEIGHT"
 IMAGE_GENERATION_SYSTEM_PROMPT = "You write clear, visual prompts for image generation."
-GENERATE_IMAGE_TEXT = """First, think about what static image best represents TEXT. Then think about the best single composition for that image:
+GENERATE_IMAGE_TEXT = """First, think about what static image best represents TEXT. Then think about the best single composition for that image. Use standard terms like the following examples:
 
-- extreme close-up (isolates a single, small detail of the subject - such as the texture of a surface, or a person's eyes or hands)
-- close-up (subject fills most of the frame - a single, whole object shown in detail, or a person's head and shoulders)
-- medium shot (subject with some space - an object shown with the surface it's on, or a person from the hips to head)
-- full shot (entire subject visible - a complete object in its setting, or a person from head to toe)
-- wide shot (subject small in environment - an object in its room, or a person in a landscape)
-- panoramic (very wide view - a vast scene, landscape, or cityscape)
+- extreme close-up (isolates a single, small detail)
+- close-up (a person's head and shoulders)
+- medium shot (a person from the hips to head)
+- medium long shot (a person from the knees to head)
+- full shot (a person or object fully visible in its setting)
+- wide shot (the subject is small in a large environment)
+- panoramic (a vast landscape or cityscape)
 
-Use these definitions to understand what would be visible, but don't include the explanations in the image generation prompt you will write later - just use the composition name. Think about what elements would be visible in that image composition.
+If none of these are the best fit, you can use other standard compositional terms. The final prompt should be a clear, physical description of the scene. If the TEXT includes a specific artistic style (like "in the style of H.R. Giger" or "gritty"), you should include it.
 
-Here are examples of how to correctly format the final prompt. Notice how lighting and other forbidden elements from the TEXT are removed.
+Crucially, if the TEXT describes a specific, physical light source that is part of the scene (like a 'candle', 'fireplace', 'neon sign', or 'flashlight'), you SHOULD include it.
 
+Here are examples of how to correctly format the final prompt:
 ---
-EXAMPLE 1
+EXAMPLE 1 (Keeping a physical light source)
 TEXT = a beautiful woman in a dark room lit only by a single candle
-CORRECT PROMPT = close-up: A beautiful woman's face, her shoulders framed by her hair.
+CORRECT PROMPT = close-up: A beautiful woman's face, lit by a single candle.
 
-EXAMPLE 2
-TEXT = a knight in shining armor on a horse, under the bright noon sun
-CORRECT PROMPT = full shot: A knight in shining armor sits on a horse.
+EXAMPLE 2 (Removing a stylistic light description)
+TEXT = a knight in shining armor on a horse, under dramatic, moody lighting
+CORRECT PROMPT = full shot: A knight in shining armor on a horse.
 
-EXAMPLE 3
-TEXT = a tall woman in a long flowing dress standing on a beach
-CORRECT PROMPT = full shot: A tall woman in a long flowing dress stands on a sandy beach.
+EXAMPLE 3 (Style Included)
+TEXT = a portrait of a biomechanoid in the style of H.R. Giger
+CORRECT PROMPT = medium shot: A portrait of a biomechanoid in the style of H.R. Giger.
 ---
 
-Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements in that image composition.
+Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements, the requested style, and any physical light sources.
 
-Don't describe multiple images or compositions. Don't describe photography style or camera settings. Don't move the camera. Don't change the camera zoom. Don't describe lighting. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 90 words. Don't write the number of words.\n\nTEXT = """
+Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't describe general atmospheric or stylistic lighting. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 90 words. Don't write the number of words.\n\nTEXT = """
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
 
@@ -129,7 +130,7 @@ def runAction(primeDirectives, action, context):
         if run_web_search == "YES":
             aux_context = context[:]
             query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, aux_context, hide_reasoning = True)
-            webSummary = WEB_SUMMARY_TAG + webSearch(query)
+            webSummary = webSearch(query)
 
             response = core.send_prompt(primeDirectives, action + WEB_SUMMARY_REVIEW + webSummary, context)
         else:

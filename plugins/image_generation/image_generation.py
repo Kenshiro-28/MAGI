@@ -8,7 +8,7 @@ INFERENCE_STEPS = 30
 RECOMMENDED_VRAM = 16 * (1024 ** 3)  # 16GB
 MIN_VRAM = 8 * (1024 ** 3)  # 8GB
 GUIDANCE_SCALE = 3.5
-MAX_SEQUENCE_LENGTH = 256
+MAX_SEQUENCE_LENGTH = 512
 
 
 def _load_pipeline(model: str, lora: str):
