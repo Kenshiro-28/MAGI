@@ -15,7 +15,7 @@ for url in urls:
     print("\n" + text)
 
 # PDF scraping test
-    text = web.scrape(PDF_URL)
-    print("\n\nPDF scraping:\n\n" + text)
+text = web.scrape(PDF_URL)
+print("\n\nPDF scraping:\n\n" + text)
 
 

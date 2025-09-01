@@ -12,7 +12,7 @@ from io import BytesIO
 from odf.opendocument import load
 from odf import text as odf_text, teletype
 from docx import Document
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 
 TIMEOUT = 30
 BROWSER_COOLDOWN_TIME = 1
