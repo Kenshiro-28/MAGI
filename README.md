@@ -188,7 +188,7 @@ GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at leas
 Install the following packages:
 
 ```
-$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf2
+$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf
 ```
 
 To use your NVIDIA graphics card, you need to install CUDA:
