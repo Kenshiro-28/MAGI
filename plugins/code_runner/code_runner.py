@@ -1,3 +1,4 @@
+# ruff: noqa: S603
 import subprocess
 import os
 import sys
