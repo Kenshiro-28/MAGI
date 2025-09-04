@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.11
+Version     : 12.12
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================

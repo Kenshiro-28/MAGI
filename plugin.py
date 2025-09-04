@@ -2,9 +2,6 @@ import os
 import core
 import asyncio
 import time
-from plugins.web import web
-from plugins.telegram_bot import telegram_bot
-from plugins.image_generation import image_generation
 
 PLUGIN_WORKSPACE_FOLDER = "workspace"
 ASYNCIO_ERROR = "\n[ERROR] Asyncio exception: "
@@ -81,6 +78,23 @@ Finally, using these examples as a guide, write an image generation prompt descr
 Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't describe general atmospheric or stylistic lighting. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 90 words. Don't write the number of words.\n\nTEXT = """
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 
+# CODE RUNNER PLUGIN
+CODE_RUNNER_PLUGIN_ACTIVE = False
+CODE_RUNNER_PLUGIN_ENABLED_TEXT = "\nCode Runner plugin: enabled"
+CODE_RUNNER_PLUGIN_DISABLED_TEXT = "\nCode Runner plugin: disabled"
+ENABLE_CODE_RUNNER_PLUGIN_KEY = "ENABLE_CODE_RUNNER_PLUGIN"
+CODE_RUNNER_CHECK = "Determine if you need to write and execute a Python program to fulfill the following MISSION. Respond ONLY with YES or NO.\n\nMISSION: "
+CODE_RUNNER_SYSTEM_PROMPT = "You are a skilled Python programmer that writes clean, efficient, and error-free code to solve specific tasks. Always ensure the code is standalone, uses print() for all outputs, and handles any necessary imports or package installations via comments. Do not use any APIs, web services, or resources that require authentication, API keys, or other credentials unless those exact credentials are explicitly provided. Never use placeholders like 'PUT YOUR API HERE' or assume credentials will be added later. If no suitable service is available without credentials or if credentials are not provided, use alternative methods like local calculations, simulations, or built-in libraries instead. Ensure all printed outputs are detailed, self-explanatory, and fully understandable standalone. Include labels, descriptions, units, and context for results, as if the reader has no access to the code."
+CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION. The program should be text-based, printing all results to the console using print(). Do not create files, GUIs, or non-console outputs. The program must run non-interactively without requiring any user input. Include necessary imports. If packages are needed, list them in a comment like # pip install package1 package2. Make outputs detailed and self-explanatory, with clear labels, explanations, and summaries (e.g., 'Final result: [value] - Explanation: [brief context]'), ensuring they can be understood without seeing the code. Output only the Python code itself, without any markdown, wrappers, or additional text. MISSION: "
+CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Fix the program to correctly solve the MISSION. Output only the improved Python code itself, without any markdown, wrappers, or additional text.\nPrevious program:\n"
+CODE_RUNNER_LINT_OUTPUT_TEXT = "\n\nLint output:\n\n"
+CODE_RUNNER_PROGRAM_OUTPUT_TEXT = "\n\nProgram output:\n\n"
+CODE_RUNNER_MISSION_TEXT = "\nMISSION: "
+CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = "Does the following program output fully and correctly complete the MISSION? Respond ONLY with YES or NO.\nProgram:\n"
+CODE_RUNNER_EXTENDED_ACTION_TEXT = "\nYou previously wrote and executed a Python program for this task, producing the following output. Incorporate it into your response. Program output: "
+CODE_RUNNER_TAG = "\n[CODE RUNNER] "
+CODE_RUNNER_MAX_REVIEWS = 10
+
 
 telegram_input_ready = True
 
@@ -120,25 +134,38 @@ def userInput():
     return prompt.strip()
 
 
+def binary_question(primeDirectives, question, context):
+    aux_context = context[:]
+
+    response = core.send_prompt(primeDirectives, question, aux_context, hide_reasoning = True)
+    response = response.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
+
+    if response == "YES":
+        answer = True
+    else:
+        answer = False
+
+    return answer
+
+
 def runAction(primeDirectives, action, context):
+    extended_action = action
+
     # Search for updated information on the Internet
     if WEB_PLUGIN_ACTIVE:
-        aux_context = context[:]
-        run_web_search = core.send_prompt(primeDirectives, WEB_SEARCH_CHECK + action, aux_context, hide_reasoning = True)
-        run_web_search = run_web_search.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
+        web_summary = web_search(primeDirectives, action, context)
+        
+        if web_summary:
+            extended_action = action + WEB_SUMMARY_REVIEW + web_summary
 
-        if run_web_search == "YES":
-            aux_context = context[:]
-            query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, aux_context, hide_reasoning = True)
-            webSummary = webSearch(query)
+    # Generate and execute code if necessary
+    if CODE_RUNNER_PLUGIN_ACTIVE:
+        extended_action = code_runner_action(primeDirectives, extended_action, context)
 
-            response = core.send_prompt(primeDirectives, action + WEB_SUMMARY_REVIEW + webSummary, context)
-        else:
-            response = core.send_prompt(primeDirectives, action, context)
-    else:
-        response = core.send_prompt(primeDirectives, action, context)
+    # Run action
+    response = core.send_prompt(primeDirectives, extended_action, context)
 
-    # Print the response (from model knowledge or web-scraped data)
+    # Print the response
     printMagiText("\n" + response)
 
     # Remove extended reasoning
@@ -159,26 +186,31 @@ def runAction(primeDirectives, action, context):
 
 # WEB PLUGIN OPERATIONS
 
-def webSearch(query):
+def web_search(primeDirectives, action, context):
     summary = ""
 
-    query = query.replace('"', '')
+    run_web_search = binary_question(primeDirectives, WEB_SEARCH_CHECK + action, context)
 
-    printSystemText(WEB_SEARCH_TAG + query)
+    if run_web_search:
+        aux_context = context[:]
+        query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, aux_context, hide_reasoning = True)
+        query = query.replace('"', '')
 
-    urls = web.search(query, WEB_SEARCH_LIMIT)
+        printSystemText(WEB_SEARCH_TAG + query)
 
-    for url in urls:
-        printSystemText("\n" + url)
-        text = web.scrape(url)
-        blockArray = core.split_text_in_blocks(text)
+        urls = web.search(query, WEB_SEARCH_LIMIT)
 
-        webSummary = core.summarize_block_array(query, blockArray[:WEB_MAX_SIZE])
+        for url in urls:
+            printSystemText("\n" + url)
+            text = web.scrape(url)
+            blockArray = core.split_text_in_blocks(text)
 
-        summary = core.update_summary(query, summary, webSummary)
+            web_summary = core.summarize_block_array(query, blockArray[:WEB_MAX_SIZE])
 
-        if not webSummary:
-            printSystemText(WEB_SEARCH_ERROR)
+            summary = core.update_summary(query, summary, web_summary)
+
+            if not web_summary:
+                printSystemText(WEB_SEARCH_ERROR)
             
     return summary
 
@@ -254,7 +286,60 @@ def generate_image(prompt):
         print(SAVE_FILE_ERROR + str(e))
         
     return image
+
+
+# CODE RUNNER OPERATIONS
+
+def code_runner_action(primeDirectives, action, context):
+    extended_action = action
+
+    write_program = binary_question(primeDirectives, CODE_RUNNER_CHECK + action, context)
+
+    if write_program:
+        review = 0
+        mission_completed = False
+        program = ""
+        lint_output = ""
+        program_output = ""
+
+        while review < CODE_RUNNER_MAX_REVIEWS and not mission_completed:
+            aux_context = context[:]
+
+            if review == 0:
+                prompt = CODE_RUNNER_GENERATION_TEXT + action
+            else:
+                prompt = CODE_RUNNER_FIX_PROGRAM_TEXT + program + CODE_RUNNER_LINT_OUTPUT_TEXT + lint_output + CODE_RUNNER_PROGRAM_OUTPUT_TEXT + program_output + CODE_RUNNER_MISSION_TEXT + action
+
+            # Generate the code
+            response = core.send_prompt(CODE_RUNNER_SYSTEM_PROMPT, prompt, aux_context, hide_reasoning = True)
+
+            # Extract code if wrapped in markdown block
+            if '```python' in response:
+                program = response.split('```python')[1].split('```')[0].strip()
+            elif '```' in response:
+                program = response.split('```')[1].strip()
+            else:
+                program = response
+
+            printSystemText(CODE_RUNNER_TAG + program + "\n")
+
+            lint_output, program_output = code_runner.run_python_code(program)
+
+            # Review the program output
+            if program_output:
+                printSystemText(program_output)
+                prompt = CODE_RUNNER_PROGRAM_OUTPUT_REVIEW + program + CODE_RUNNER_PROGRAM_OUTPUT_TEXT + program_output + CODE_RUNNER_MISSION_TEXT + action
+                mission_completed = binary_question(primeDirectives, prompt, aux_context)
+            else:
+                printSystemText(lint_output)
+
+            review += 1
+
+        if mission_completed:
+            extended_action += CODE_RUNNER_EXTENDED_ACTION_TEXT + program_output
     
+    return extended_action
+
 
 # INITIALIZE PLUGINS
 
@@ -263,15 +348,32 @@ try:
     if not os.path.exists(PLUGIN_WORKSPACE_FOLDER):
         os.makedirs(PLUGIN_WORKSPACE_FOLDER)
 
-    # Web plugin
-    if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
-        WEB_PLUGIN_ACTIVE = True
-        core.print_system_text(WEB_PLUGIN_ENABLED_TEXT)
+    # Code Runner plugin
+    if core.config.get(ENABLE_CODE_RUNNER_PLUGIN_KEY, '').upper() == "YES":
+        from plugins.code_runner import code_runner
+        CODE_RUNNER_PLUGIN_ACTIVE = True
+        core.print_system_text(CODE_RUNNER_PLUGIN_ENABLED_TEXT)
     else:
-        core.print_system_text(WEB_PLUGIN_DISABLED_TEXT)
-        
+        core.print_system_text(CODE_RUNNER_PLUGIN_DISABLED_TEXT)
+
+    # Image generation plugin
+    if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
+        from plugins.image_generation import image_generation
+        IMAGE_GENERATION_PLUGIN_ACTIVE = True
+        IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
+        IMAGE_GENERATION_LORA = core.config.get(IMAGE_GENERATION_LORA_KEY, '')
+        IMAGE_GENERATION_SPECS = core.config.get(IMAGE_GENERATION_SPECS_KEY, '')
+        IMAGE_GENERATION_NEGATIVE_PROMPT = core.config.get(IMAGE_GENERATION_NEGATIVE_PROMPT_KEY, '')
+        IMAGE_GENERATION_WIDTH = int(core.config.get(IMAGE_GENERATION_WIDTH_KEY, '0'))
+        IMAGE_GENERATION_HEIGHT = int(core.config.get(IMAGE_GENERATION_HEIGHT_KEY, '0'))
+
+        core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT)
+    else:
+        core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT)
+
     # Telegram plugin
     if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
+        from plugins.telegram_bot import telegram_bot
         TELEGRAM_PLUGIN_ACTIVE = True
         TELEGRAM_BOT_TOKEN = core.config.get(TELEGRAM_BOT_TOKEN_KEY, '')
         TELEGRAM_USER_ID = core.config.get(TELEGRAM_USER_ID_KEY, '')
@@ -279,19 +381,13 @@ try:
     else:
         core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT)
 
-    # Image generation plugin
-    if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
-        IMAGE_GENERATION_PLUGIN_ACTIVE = True
-        IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
-        IMAGE_GENERATION_LORA = core.config.get(IMAGE_GENERATION_LORA_KEY, '')
-        IMAGE_GENERATION_SPECS = core.config.get(IMAGE_GENERATION_SPECS_KEY, '')
-        IMAGE_GENERATION_NEGATIVE_PROMPT = core.config.get(IMAGE_GENERATION_NEGATIVE_PROMPT_KEY, '')
-        IMAGE_GENERATION_WIDTH = int(core.config.get(IMAGE_GENERATION_WIDTH_KEY, ''))
-        IMAGE_GENERATION_HEIGHT = int(core.config.get(IMAGE_GENERATION_HEIGHT_KEY, ''))
-
-        core.print_system_text(IMAGE_GENERATION_PLUGIN_ENABLED_TEXT)
+    # Web plugin
+    if core.config.get(ENABLE_WEB_PLUGIN_KEY, '').upper() == "YES":
+        from plugins.web import web
+        WEB_PLUGIN_ACTIVE = True
+        core.print_system_text(WEB_PLUGIN_ENABLED_TEXT)
     else:
-        core.print_system_text(IMAGE_GENERATION_PLUGIN_DISABLED_TEXT)
+        core.print_system_text(WEB_PLUGIN_DISABLED_TEXT)
 
 except Exception as e:
     print(core.CONFIG_ERROR + str(e) + "\n")

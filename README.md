@@ -64,25 +64,9 @@ It will run continuously until you manually stop the program by pressing Ctrl + 
 
 ## Plugins
 
-### Web plugin
+### Code Runner plugin
 
-This plugin allows MAGI to browse the internet for up-to-date information. Even when the plugin is active, MAGI decides when to use it.
 
-### Telegram plugin
-
-This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input.
-
-If you have both the Telegram plugin and the image generation plugin enabled, you will receive the generated images via Telegram.
-
-To use this plugin you have to create a Telegram bot with BotFather (username: @BotFather) and save the token assigned to your bot. 
-
-You must also write to userinfobot (username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
-
-#### Configuration
-
-TELEGRAM_BOT_TOKEN: the token you received from BotFather.
-
-TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
 ### Image generation plugin
 
@@ -119,13 +103,33 @@ IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stab
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, shot on Sony A7R V with 50mm prime lens at f/11, ISO 100, 32-bit HDR, razor-sharp focus, award-winning photo, highly detailed, vibrant colors)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, shot on Sony A7R V with 50mm prime lens, ISO 100, 32-bit HDR, razor-sharp focus, deep depth of field, highly detailed, volumetric lighting, vibrant colors)
 
 IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: lowres, blurry, out of focus, soft focus, shallow depth of field, jpeg artifacts, noisy, grainy, worst quality, low quality, deformed, disfigured, bad proportions, bad anatomy, malformed body, unnatural pose, unnatural face, asymmetrical eyes, lifeless eyes, unnatural skin)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 1024)
 
 IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 1024)
+
+### Telegram plugin
+
+This plugin enables you to teleoperate MAGI via Telegram, allowing you to have AI support on the go. When the Telegram plugin is enabled, MAGI only accepts commands via Telegram and ignores keyboard input.
+
+If you have both the Telegram plugin and the image generation plugin enabled, you will receive the generated images via Telegram.
+
+To use this plugin you have to create a Telegram bot with BotFather (username: @BotFather) and save the token assigned to your bot. 
+
+You must also write to userinfobot (username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
+
+#### Configuration
+
+TELEGRAM_BOT_TOKEN: the token you received from BotFather.
+
+TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
+
+### Web plugin
+
+This plugin allows MAGI to browse the internet for up-to-date information. Even when the plugin is active, MAGI decides when to use it.
 
 ## Model 
 
