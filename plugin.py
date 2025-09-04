@@ -153,10 +153,7 @@ def runAction(primeDirectives, action, context):
 
     # Search for updated information on the Internet
     if WEB_PLUGIN_ACTIVE:
-        web_summary = web_search(primeDirectives, action, context)
-        
-        if web_summary:
-            extended_action = action + WEB_SUMMARY_REVIEW + web_summary
+        extended_action = web_search(primeDirectives, action, context)
 
     # Generate and execute code if necessary
     if CODE_RUNNER_PLUGIN_ACTIVE:
@@ -174,7 +171,7 @@ def runAction(primeDirectives, action, context):
     # Generate image
     if IMAGE_GENERATION_PLUGIN_ACTIVE:
         aux_context = []
-        image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + action + " - " + response, aux_context, hide_reasoning = True)
+        image_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + extended_action + " - " + response, aux_context, hide_reasoning = True)
         printSystemText(IMAGE_GENERATION_TAG + image_prompt + "\n")
         image = generate_image(image_prompt)
         
@@ -187,6 +184,8 @@ def runAction(primeDirectives, action, context):
 # WEB PLUGIN OPERATIONS
 
 def web_search(primeDirectives, action, context):
+    extended_action = action
+
     summary = ""
 
     run_web_search = binary_question(primeDirectives, WEB_SEARCH_CHECK + action, context)
@@ -212,7 +211,10 @@ def web_search(primeDirectives, action, context):
             if not web_summary:
                 printSystemText(WEB_SEARCH_ERROR)
             
-    return summary
+    if summary:
+        extended_action += WEB_SUMMARY_REVIEW + web_summary
+
+    return extended_action
 
 
 # TELEGRAM PLUGIN OPERATIONS
