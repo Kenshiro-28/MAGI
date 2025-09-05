@@ -103,7 +103,7 @@ IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stab
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, shot on Sony A7R V with 50mm prime lens, ISO 100, 32-bit HDR, razor-sharp focus, deep depth of field, highly detailed, volumetric lighting, vibrant colors)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, shot on Sony A7R V with 50mm prime lens, ISO 100, 32-bit HDR, razor-sharp focus, deep depth of field, highly detailed, cinematic lighting, vibrant colors)
 
 IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: lowres, blurry, out of focus, soft focus, shallow depth of field, jpeg artifacts, noisy, grainy, worst quality, low quality, deformed, disfigured, bad proportions, bad anatomy, malformed body, unnatural pose, unnatural face, asymmetrical eyes, lifeless eyes, unnatural skin)
 

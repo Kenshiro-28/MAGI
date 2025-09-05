@@ -329,7 +329,7 @@ def code_runner_action(primeDirectives, action, context):
 
             # Review the program output
             if program_output:
-                printSystemText(program_output)
+                printSystemText(CODE_RUNNER_TAG + program_output)
                 prompt = CODE_RUNNER_PROGRAM_OUTPUT_REVIEW + program + CODE_RUNNER_PROGRAM_OUTPUT_TEXT + program_output + CODE_RUNNER_MISSION_TEXT + action
                 mission_completed = binary_question(primeDirectives, prompt, aux_context)
             else:
