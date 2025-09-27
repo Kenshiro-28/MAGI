@@ -5,14 +5,14 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v12.12"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v12.13"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
 EOS = "\n<|im_end|>\n"
 
-TEMPERATURE = 0.6
+TEMPERATURE = 0.8
 
 SUMMARIZE_SYSTEM_PROMPT = """You are an expert assistant specialized in text summarization. Your task is to generate a concise and accurate summary of the provided text, focusing strictly on the topic specified at the end of the user prompt.
 

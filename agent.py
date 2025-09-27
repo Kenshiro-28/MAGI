@@ -4,7 +4,9 @@ import plugin
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
 ISSUE_ORDERS_PROMPT_1 = """\n\nAnalyze the user's prompt provided in the MISSION section.
 
-First, compose a mission summary according to your personality.
+Describe all tasks at a high level, focusing on goals and outcomes without specifying methods, tools, or actions like browsing, coding, or running programs—let the agents determine how to achieve them.
+
+First, compose a mission summary.
 
 Then, structure the mission into three independent tasks by assigning each to one of your agents (scaling the detail level to the mission's complexity and describing the task in third person).
 
@@ -17,11 +19,11 @@ SQUAD_RESPONSE_TEXT = "\n\n----- Squad response -----\n\n"
 AGENT_RESPONSE_TEXT_1 = "\n\n----- "
 AGENT_RESPONSE_TEXT_2 = "'s response -----\n\n"
 EVALUATE_TASK_PROMPT_1 = "\n\n----- Evaluation -----\n\nBased on all the above, has "
-EVALUATE_TASK_PROMPT_2 = " fully accomplished their assigned orders for this stage? Be lenient for simple tasks and consider the response 'good enough' if it addresses the core intent without perfection. For tasks involving tools (e.g., browsing web pages or executing Python code), accept explanations that claim to have performed the action (e.g., 'I browsed the web page', 'I executed the Python code'), even if no actual function call or tool output is evident, as long as a summary, result, or relevant details are provided. Respond ONLY with YES or NO."
+EVALUATE_TASK_PROMPT_2 = " fully accomplished their assigned orders for this stage? For tasks involving tools (e.g., browsing web pages or executing Python code), accept explanations that claim to have performed the action (e.g., 'I browsed the web page', 'I executed the Python code'), even if no actual function call or tool output is evident, as long as a summary, result, or relevant details are provided. Respond ONLY with YES or NO."
 ISSUE_NEW_ORDERS_PROMPT_1 = "\n\n----- Action -----\n\nProvide new, detailed instructions for "
-ISSUE_NEW_ORDERS_PROMPT_2 = ". These instructions should clearly state what is missing or needs correction, but keep them proportional to the task's simplicity. Focus only on essential changes. Crucially, instruct the agent to provide a new, complete, and self-contained response that incorporates your feedback and comprehensively addresses all aspects of their original task, without over-elaborating. Address the agent directly by their name using the second person, according to your personality."
+ISSUE_NEW_ORDERS_PROMPT_2 = ". These instructions should clearly state what is missing or needs correction. Crucially, instruct the agent to provide a new, complete, and self-contained response that incorporates your feedback and comprehensively addresses all aspects of their original task. Address the agent directly by their name using the second person, according to your personality."
 GET_ORDERS_PROMPT_1 = "\n\n----- Action -----\n\nNow, based on this plan, address ONLY "
-GET_ORDERS_PROMPT_2 = " directly by their name using the second person, according to your personality. For coding tasks, ensure your orders explicitly instruct the agent to provide the full code, not just code snippets. For coding tasks, also don't provide example code to the agent."
+GET_ORDERS_PROMPT_2 = " directly by their name using the second person, according to your personality. Remind them to focus exclusively on their assigned task. If this is not the last task, remind them not to solve or expand on subsequent tasks."
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
 EXECUTE_ORDERS_ERROR_TEXT = "Only soldiers can execute orders."
 

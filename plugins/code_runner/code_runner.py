@@ -5,7 +5,7 @@ import sys
 
 PROGRAM_TIMEOUT = 1800
 CODE_RUNNER_ERROR = "\n[ERROR] Code Runner error: "
-
+RUFF_IGNORED_RULES = "D,E501,F541,I,N,PT,W,S105,S106"
 
 def run_python_code(program: str):
     try:
@@ -27,7 +27,13 @@ def run_python_code(program: str):
                 return pip_output, ""
 
         # Lint with ruff using stdin
-        lint_output_data = subprocess.run([RUFF_EXEC_PATH, 'check', '-', '--stdin-filename=program.py'], input = program, capture_output = True, text = True)
+        lint_output_data = subprocess.run(
+            [RUFF_EXEC_PATH, 'check', '-', '--stdin-filename=program.py', '--ignore', RUFF_IGNORED_RULES],
+            input = program,
+            capture_output = True,
+            text = True
+        )
+
         lint_output = lint_output_data.stdout + lint_output_data.stderr
 
         # If there is a lint error, return only the lint output

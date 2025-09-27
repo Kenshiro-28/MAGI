@@ -16,13 +16,26 @@ WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
 WEB_SEARCH_CHECK = """Determine whether the following user request:
 
-- May require access to current information from browsing the web (read-only), OR
+- Requires current or up-to-date information on real-world events, topics, or entities via web browsing (read-only), OR
 - Explicitly instructs to 'browse the web', 'search the internet', or similar actions, OR
-- Involves researching, investigating, or gathering information on a present real-world event or topic.
+- Involves specific real-world factual details that could be outdated, incomplete, or imprecise, such as statistics, addresses, attributes of entities (e.g., biographical details, company metrics), identifiers (e.g., contract addresses, prices, current dates, coordinates), or ongoing/debated topics (e.g., emerging scientific discoveries, policy developments, technological advancements, social trends, economic shifts, or historical facts with scholarly debate/recent findings).
 
 However, if the request explicitly instructs NOT to browse the web, search the internet, or use similar actions (e.g., "don't browse the web", "no internet search", "offline search"), respond NO regardless of the above.
 
-Respond ONLY with YES or NO.
+Reason step-by-step through each condition before responding ONLY with YES or NO. If uncertain after reasoning, default to YES for safety.
+
+Examples:
+USER REQUEST: Please tell me the population of Tokyo. → YES (real-world factual that could be outdated).
+USER REQUEST: Please tell me the population of Tokyo, don't browse the web for this. → NO (explicit instruction not to browse the web, overriding other conditions).
+USER REQUEST: When did Gaius Marius create the professional Roman army? → NO (well-established historical fact, unlikely to be imprecise without new evidence).
+USER REQUEST: When did Gaius Marius create the professional Roman army? Browse the web for this. → YES (explicit instruction to browse the web, overriding other conditions).
+USER REQUEST: Causes of the fall of the Roman Empire? → YES (historical topic with scholarly debate).
+USER REQUEST: Calculate 3 * 9. → NO (pure computation, not real-world factual).
+USER REQUEST: What's the contract address for WOJAK on Solana? → YES (specific identifier that may be incomplete).
+USER REQUEST: Explain the attributes of gravity. → NO (established scientific knowledge, not debated or emerging).
+USER REQUEST: What planets orbit Proxima Centauri? → YES (emerging scientific topic with potentially evolving details).
+USER REQUEST: Evaluate the ethical implications of AI in military drones. → YES (debated technological topic with evolving details).
+USER REQUEST: Write a story about the elves of Rivendell. → NO (creative task, not factual).
 
 USER REQUEST: """
 WEB_SEARCH_QUERY = """Write a web search query (max 20 words) to obtain relevant results on the following topic. Output ONLY the query string.
@@ -34,9 +47,10 @@ TOPIC = japanese festivals → "traditional japanese festivals history celebrati
 TOPIC = """
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
-WEB_SUMMARY_REVIEW = "\n\nUse the following information obtained from the Internet:\n\n" 
-WEB_SEARCH_UNUSED_TEXT = "\n\nYou will not browse the web for this task.\n\n"
-WEB_SEARCH_FAILED_TEXT = "\n\nYou performed a web search but it didn't return any results.\n\n"
+WEB_SUMMARY_REVIEW = "\n\nYou found the following information from browsing the web:\n\n"
+WEB_SEARCH_COMPLETED = "\n\nYou will not browse the web again for this prompt. You may do so in future prompts if the new query requires it.\n\n"
+WEB_SEARCH_UNUSED_TEXT = "\n\nYou will not browse the web for this prompt. You may do so in future prompts if the new query requires it.\n\n"
+WEB_SEARCH_FAILED_TEXT = "\n\nYou performed a web search but it didn't return any results." + WEB_SEARCH_COMPLETED
 
 # TELEGRAM PLUGIN
 TELEGRAM_PLUGIN_ACTIVE = False
@@ -101,7 +115,34 @@ CODE_RUNNER_PLUGIN_ACTIVE = False
 CODE_RUNNER_PLUGIN_ENABLED_TEXT = "\nCode Runner plugin: enabled"
 CODE_RUNNER_PLUGIN_DISABLED_TEXT = "\nCode Runner plugin: disabled"
 ENABLE_CODE_RUNNER_PLUGIN_KEY = "ENABLE_CODE_RUNNER_PLUGIN"
-CODE_RUNNER_CHECK = "Determine whether writing and executing a Python program is necessary and appropriate to accomplish the following MISSION. Respond YES only if the MISSION requires mathematical operations, data analysis, interacting with external systems, or complex logic that benefits from code execution for accuracy and reliability. Respond NO for tasks that involve generating simple text, descriptions, or any task that can be performed without programming. Respond ONLY with YES or NO.\n\nMISSION: "
+CODE_RUNNER_CHECK = """Determine whether writing and executing a Python program is necessary and appropriate to accomplish the following MISSION. Respond YES only if the MISSION:
+
+- Requires mathematical operations, OR
+- Requires data analysis, OR
+- Requires network operations, OR
+- Requires interacting with external systems (e.g., public APIs), OR
+- Requires complex logic that benefits from code execution for accuracy and reliability, OR
+- Explicitly instructs to 'write a program', 'run code', or similar actions.
+
+Respond NO for tasks that involve generating simple text, descriptions, or any task not described above that can be performed without programming.
+
+However, if the request explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming", "no code execution"), respond NO regardless of the above.
+
+Reason step-by-step through each condition before responding ONLY with YES or NO. If uncertain after reasoning, default to YES for safety.
+
+Examples:
+MISSION: Solve a system of linear equations with variables. → YES (mathematical operations benefiting from code).
+MISSION: Solve a system of linear equations with variables, don't run code for this. → NO (explicit instruction not to run code, overriding other conditions).
+MISSION: Write a story about the elves of Rivendell. → NO (simple text generation).
+MISSION: Write a story about the elves of Rivendell, write a program for this. → YES (explicit instruction to write a program, overriding other conditions).
+MISSION: Fetch weather data from a public API. → YES (interacting with external systems).
+MISSION: Get location based on IP using a public API. → YES (interacting with external systems).
+MISSION: Analyze trends in a dataset of 1000 entries. → YES (data analysis).
+MISSION: Explain the concept of gravity. → NO (description, no programming needed).
+MISSION: Simulate a physics experiment. → YES (complex logic requiring accuracy).
+MISSION: What is the capital of Japan? → NO (simple factual recall).
+
+MISSION: """
 CODE_RUNNER_SYSTEM_PROMPT = """You are a skilled Python programmer that writes clean, efficient, and error-free code to solve specific tasks. The code must be text-based, printing all results to the console using print(). Do not create files, GUIs, or non-console outputs. The code must run non-interactively without requiring any user input. If packages are needed, list them in a comment like # pip install package1 package2 at the beginning of the code. Include necessary imports after that. Do not use any APIs, web services, or resources that require authentication, API keys, or other credentials unless those exact credentials are explicitly provided. Never use placeholders like 'PUT YOUR API HERE' or assume credentials will be added later.
 
 Crucially, structure the code for single-pass execution: perform the task once (e.g., fetch data, compute, decide, update state) and terminate immediately after. Do not include infinite loops (e.g., while True:), long-running loops, polling, or any persistent monitoring—assume the script will be relaunched externally if iteration is needed.
@@ -135,8 +176,9 @@ CODE_RUNNER_MISSION_TEXT = "\nMISSION: "
 CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = "Does the following program output fully complete the MISSION, including the 'INTERNAL STATE:' section with relevant variables, proper handling of any prior state, and avoidance of infinite/long-running loops? Respond ONLY with YES or NO.\n\nProgram:\n\n"
 CODE_RUNNER_EXTENDED_ACTION_TEXT_1 = "\n\nYou have written and executed a Python program for this task.\n\nSource code:\n\n"
 CODE_RUNNER_EXTENDED_ACTION_TEXT_2 = "\n\nProgram output:\n\n"
-CODE_RUNNER_FAILED_TEXT = "\n\nYou were not able to write a Python program for this task."
-CODE_RUNNER_UNUSED_TEXT = "\n\nYou will not execute any code for this task."
+CODE_RUNNER_ACTION_COMPLETED = "\n\nYou will not execute any code again for this prompt. You may do so in future prompts if the new query requires it."
+CODE_RUNNER_UNUSED_TEXT = "\n\nYou will not execute any code for this prompt. You may do so in future prompts if the new query requires it."
+CODE_RUNNER_FAILED_TEXT = "\n\nYou were not able to write a Python program for this task." + CODE_RUNNER_UNUSED_TEXT
 CODE_RUNNER_TAG = "\n[CODE RUNNER]\n\n"
 CODE_RUNNER_MAX_REVIEWS = 10
 
@@ -247,7 +289,7 @@ def web_search(primeDirectives, action, context):
                 printSystemText(WEB_SEARCH_ERROR)
 
         if summary:
-            extended_action = action + WEB_SUMMARY_REVIEW + summary
+            extended_action = action + WEB_SUMMARY_REVIEW + summary + WEB_SEARCH_COMPLETED
         else:
             extended_action = action + WEB_SEARCH_FAILED_TEXT
 
@@ -376,7 +418,7 @@ def code_runner_action(primeDirectives, action, context):
             review += 1
 
         if program:
-            extended_action = action + CODE_RUNNER_EXTENDED_ACTION_TEXT_1 + program + CODE_RUNNER_EXTENDED_ACTION_TEXT_2 + program_output
+            extended_action = action + CODE_RUNNER_EXTENDED_ACTION_TEXT_1 + program + CODE_RUNNER_EXTENDED_ACTION_TEXT_2 + program_output + CODE_RUNNER_ACTION_COMPLETED
         else:
             extended_action = action + CODE_RUNNER_FAILED_TEXT
 

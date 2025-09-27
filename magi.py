@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.12
+Version     : 12.13
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -30,13 +30,24 @@ NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
 MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
-MAGI_ACTION_PROMPT = """You can freely use your reasoning, knowledge, and internal capabilities for any task, but be aware that your only means of interacting with the physical world are browsing web pages (read-only) or executing Python code (console output only, no GUIs, file operations, or user input).
+MAGI_ACTION_PROMPT = """You are working autonomously without user interaction.
 
-Review your previous response. Based on that review, choose one action:
+Review your previous response in the context of overall progress. Then select one action:
 
-1. EXPLOIT: If the response can be continued effectively or needs correction, clarification, refinement, or more detail to sustain or enhance progress, formulate a command specifying the single most important step—such as repeating a successful process with updates (e.g., fresh data) or making targeted improvements. Your entire output must be only the command itself, written in the second person.
+1. EXPLOIT: If the previous response can be improved through correction, clarification, refinement, more detail, or updated data to directly advance the current path, create a command for the single most effective action.
+2. EXPLORE: If further exploitation on the current path offers no meaningful value (e.g., it's in a dead end, redundant, or stalled with no clear progress), reflect on the current situation and create a command to explore the most promising direction. If no clear new direction is viable, create a command to brainstorm new ideas and select the best one.
 
-2. EXPLORE: If the response is accurate, comprehensive, and no continuation or refinement is immediately beneficial, formulate a command to explore a relevant new direction, ask a follow-up question, or suggest a related task. Your entire output must be only the command itself, written in the second person."""
+Always choose one action to continue the mission—do not stop or exit.
+
+Output only the mode tag followed by the command in second person (imperative form), as in the examples below.
+
+Examples:
+EXPLOIT: Fix the error in the data processing script.
+EXPLORE: Investigate alternative data sources to bypass the current limitations.
+EXPLOIT: Refine the report by adding key insights from the analysis.
+EXPLORE: Brainstorm new angles for the project and select the best one.
+EXPLOIT: Iterate on the strategy by incorporating updated data.
+EXPLORE: Shift focus to a related sub-problem that could unblock progress."""
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
 
@@ -180,6 +191,6 @@ if __name__ == "__main__":
             ai_mode = switchAiMode(ai_mode)
         else:
             checkPrompt(primeDirectives, prompt, context, ai_mode)
-        
+
     plugin.printSystemText(EXIT_MAGI_TEXT)
 
