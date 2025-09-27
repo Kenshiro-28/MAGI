@@ -1,9 +1,6 @@
 # Core
 llama-cpp-python
 
-# Telegram Plugin
-python-telegram-bot
-
 # Stable Diffusion Plugin
 transformers
 torch

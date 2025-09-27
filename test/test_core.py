@@ -17,7 +17,7 @@ class MockLlama:
     def __call__(self, prompt, max_tokens=100, temperature=1.0, **kwargs):
         return {
             'choices': [
-                {'text': MODEL_OUTPUT}
+                {'text': NORMAL_RESPONSE}
             ]
         }
 
@@ -36,14 +36,18 @@ PRIME_DIRECTIVES = "You are a friendly AI assistant."
 PROMPT = "Hello, how are you?"
 PREVIOUS_PRIME_DIRECTIVES = "Previous prime directives"
 PREVIOUS_PROMPT = "Previous prompt"
+BINARY_QUESTION = "Is this a test?"
 
 # Test responses
 BASIC_RESPONSE = "I'm a helpful assistant."
-MODEL_OUTPUT = "This is a thought.</think>\n" + BASIC_RESPONSE
-NORMAL_RESPONSE = "<think>\n" + MODEL_OUTPUT
+NORMAL_RESPONSE = "<think>This is a thought.</think>" + BASIC_RESPONSE
 BASIC_MULTIPLE_THINKING_RESPONSE = "Hello there!"
-MULTIPLE_THINKING_OUTPUT = "First thought.</think>\nHello<think>\nAnother thought.</think>\n there!"
+MULTIPLE_THINKING_RESPONSE = "<think>First thought.</think>\nHello<think>\nAnother thought.\n</think>\n there!"
 PREVIOUS_RESPONSE = "Previous response"
+YES_RESPONSE = "Yes"
+MULTILINE_YES_RESPONSE = "Reasoning here\nYes"
+MALFORMED_YES_RESPONSE = "\"'Yes."
+NO_RESPONSE = "No"
 
 
 class TestCore(unittest.TestCase):
@@ -138,7 +142,7 @@ class TestCore(unittest.TestCase):
             response = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context)
 
         # Assert
-        self.assertEqual(response, core.THINK_TEXT)
+        self.assertEqual(response, "")
         self.assertEqual(len(context), 3)
 
         # Check third element only has EOS
@@ -185,7 +189,7 @@ class TestCore(unittest.TestCase):
         context = []
 
         # Execute (get_completion_from_messages shouldn't return the first <think> tag)
-        with patch.object(core, 'get_completion_from_messages', return_value=MULTIPLE_THINKING_OUTPUT):
+        with patch.object(core, 'get_completion_from_messages', return_value=MULTIPLE_THINKING_RESPONSE):
             response = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context, hide_reasoning=True)
 
         # Assert - all thinking tags should be removed
@@ -336,6 +340,57 @@ class TestSummary(unittest.TestCase):
             with patch.object(core, 'summarize', return_value=expected_summary):
                 result = core.load_mission_data(prompt)
                 self.assertEqual(result, expected_summary)
+
+
+class TestBinaryQuestion(unittest.TestCase):
+    def setUp(self):
+        # Set up model instance for testing
+        core.model = MockLlama(model_path="model.gguf", n_ctx=core.CONTEXT_SIZE)
+
+    def test_yes_response(self):
+        """Test binary_question with a 'Yes' response"""
+        context = []
+
+        with patch.object(core, 'send_prompt', return_value = YES_RESPONSE) as mock_send:
+            result = core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context)
+            mock_send.assert_called_once()
+            self.assertTrue(result)
+
+    def test_no_response(self):
+        """Test binary_question with a 'No' response"""
+        context = []
+
+        with patch.object(core, 'send_prompt', return_value = NO_RESPONSE) as mock_send:
+            result = core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context)
+            mock_send.assert_called_once()
+            self.assertFalse(result)
+
+    def test_multi_line_yes(self):
+        """Test binary_question with multi-line response ending in 'yes'"""
+        context = []
+
+        with patch.object(core, 'send_prompt', return_value = MULTILINE_YES_RESPONSE) as mock_send:
+            result = core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context)
+            mock_send.assert_called_once()
+            self.assertTrue(result)
+
+    def test_malformed_yes(self):
+        """Test binary_question with malformed 'yes'"""
+        context = []
+
+        with patch.object(core, 'send_prompt', return_value = MALFORMED_YES_RESPONSE) as mock_send:
+            result = core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context)
+            mock_send.assert_called_once()
+            self.assertTrue(result)
+
+    def test_empty_response(self):
+        """Test binary_question with empty response"""
+        context = []
+
+        with patch.object(core, 'send_prompt', return_value="") as mock_send:
+            result = core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context)
+            mock_send.assert_called_once()
+            self.assertFalse(result)
 
 
 if __name__ == '__main__':

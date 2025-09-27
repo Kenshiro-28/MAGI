@@ -5,7 +5,7 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v12.11"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v12.12"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -13,8 +13,6 @@ ASSISTANT_TEXT = "<|im_start|>assistant\n"
 EOS = "\n<|im_end|>\n"
 
 TEMPERATURE = 0.6
-
-THINK_TEXT = "<think>\n"
 
 SUMMARIZE_SYSTEM_PROMPT = """You are an expert assistant specialized in text summarization. Your task is to generate a concise and accurate summary of the provided text, focusing strictly on the topic specified at the end of the user prompt.
 
@@ -37,7 +35,7 @@ MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
 MAX_INPUT_TOKENS_ERROR = "\n[ERROR] You have entered too many tokens: "
-MAX_RESPONSE_SIZE = 16384
+MAX_RESPONSE_SIZE = 32768
 MIN_CONTEXT_SIZE = MAX_RESPONSE_SIZE * 2
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
@@ -53,13 +51,19 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 4000
+TEXT_BLOCK_WORDS = 10000
 
 CONFIG_ERROR = "\n[ERROR] Configuration error: "
 
 MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
 
-THINK_PATTERN = re.compile(r'(<think>.*?</think>\n)|(<think>.*?</think>)', flags=re.DOTALL)
+THINK_START = "<think>"
+THINK_END = "</think>"
+THINK_PATTERN = re.compile(
+    rf'({re.escape(THINK_START)}.*?{re.escape(THINK_END)}\n?)',
+    flags=re.DOTALL
+)
+
 
 LOG_ENABLED = False
 ENABLE_LOG_KEY = "ENABLE_LOG"
@@ -123,7 +127,7 @@ def remove_reasoning(response):
     response = THINK_PATTERN.sub('', response)
 
     # Clean up any stray <think> or </think> tags
-    response = response.replace('<think>', '').replace('</think>', '')
+    response = response.replace(THINK_START, '').replace(THINK_END, '')
 
     return response.strip()
 
@@ -138,13 +142,9 @@ def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
 
     command = USER_TEXT + prompt + EOS + ASSISTANT_TEXT
 
-    # Append THINK_TEXT to trigger extended reasoning
-    context.append(command + THINK_TEXT)
+    context.append(command)
 
-    full_response = THINK_TEXT + get_completion_from_messages(context)
-
-    # Remove THINK_TEXT from the command prompt
-    context[-1] = command
+    full_response = get_completion_from_messages(context)
 
     response = remove_reasoning(full_response)
 
@@ -223,6 +223,25 @@ def summarize_block_array(topic, blockArray):
         summary = update_summary(topic, summary, block)
 
     return summary        
+
+
+def binary_question(primeDirectives, question, context):
+    aux_context = context[:]
+
+    response = send_prompt(primeDirectives, question, aux_context, hide_reasoning = True)
+
+    # Get the last line
+    lines = response.split('\n')
+    last_line = lines[-1]
+
+    # Clean the last line
+    last_line = last_line.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
+
+    # Check answer
+    if "YES" in last_line:
+        return True
+    else:
+        return False
 
 
 def load_mission_data(prompt):

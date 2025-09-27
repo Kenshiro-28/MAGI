@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.11
+Version     : 12.12
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -19,7 +19,7 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 DATA_TEXT = "DATA = "
 MISSION_TEXT = "\n\nMISSION = "
-TASK_LIST_SYSTEM_PROMPT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Only output the task list, no titles, headers, or additional text. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph."
+GENERATE_TASK_LIST_TEXT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Only output the task list, no titles, headers, or additional text. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph.\n"
 ACTION_HELPER_TEXT = "Do this: "
 EXIT_MAGI_TEXT = "\nまたね。\n"
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
@@ -30,12 +30,13 @@ NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
 MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
-MAGI_ACTION_PROMPT = """Review your previous response. Based on that review, choose one action:
+MAGI_ACTION_PROMPT = """You can freely use your reasoning, knowledge, and internal capabilities for any task, but be aware that your only means of interacting with the physical world are browsing web pages (read-only) or executing Python code (console output only, no GUIs, file operations, or user input).
 
-1. IMPROVE: If the response needs correction, clarification, or more detail, formulate a command specifying the single most important improvement. Your entire output must be only the command itself, written in the second person.
+Review your previous response. Based on that review, choose one action:
 
-2. EXPLORE: If the response is accurate and comprehensive, formulate a command to explore a relevant new direction, ask a follow-up question, or suggest a related task. Your entire output must be only the command itself, written in the second person."""
-MAGI_ACTION_SYSTEM_PROMPT = "You are a logical AI assistant. Your task is to analyze the conversation history and the last response, then follow the user's instructions precisely."
+1. EXPLOIT: If the response can be continued effectively or needs correction, clarification, refinement, or more detail to sustain or enhance progress, formulate a command specifying the single most important step—such as repeating a successful process with updates (e.g., fresh data) or making targeted improvements. Your entire output must be only the command itself, written in the second person.
+
+2. EXPLORE: If the response is accurate, comprehensive, and no continuation or refinement is immediately beneficial, formulate a command to explore a relevant new direction, ask a follow-up question, or suggest a related task. Your entire output must be only the command itself, written in the second person."""
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
 
@@ -54,10 +55,10 @@ def sanitizeTask(task):
     return task
     
 
-def createTaskList(mission, summary, header):
+def createTaskList(primeDirectives, mission, summary, header):
     context = []
 
-    taskListText = core.send_prompt(TASK_LIST_SYSTEM_PROMPT, DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
+    taskListText = core.send_prompt(primeDirectives, GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
     
     plugin.printSystemText(header + taskListText + "\n")
     
@@ -71,7 +72,7 @@ def runMagi(primeDirectives, action, context):
     while True:
         plugin.runAction(primeDirectives, action, context)
         aux_context = context[:]
-        action = core.send_prompt(MAGI_ACTION_SYSTEM_PROMPT, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
+        action = core.send_prompt(primeDirectives, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
         plugin.printSystemText(ACTION_TAG + action)
 
 
@@ -98,7 +99,7 @@ def runMission(primeDirectives, mission, context):
     if summary:
         plugin.printSystemText(MISSION_DATA_TEXT + summary)
 
-    actionList = createTaskList(mission, summary, ACTIONS_TEXT)
+    actionList = createTaskList(primeDirectives, mission, summary, ACTIONS_TEXT)
 
     for action in actionList:
         action = sanitizeTask(action)

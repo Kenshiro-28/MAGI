@@ -2,14 +2,24 @@ import core
 import plugin
 
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
-ISSUE_ORDERS_PROMPT_1 = "\n\nAnalyze the user's prompt provided in the MISSION section. First, compose a mission summary. Then, structure the mission into three independent tasks. Use the DATA section only if it provides useful information for the MISSION. Ensure tasks are detailed enough to fully convey their purpose and intent.\n\nAssign each task to one of your agents, describing the task in third person.\n\nAGENTS:\n\n"
+ISSUE_ORDERS_PROMPT_1 = """\n\nAnalyze the user's prompt provided in the MISSION section.
+
+First, compose a mission summary according to your personality.
+
+Then, structure the mission into three independent tasks by assigning each to one of your agents (scaling the detail level to the mission's complexity and describing the task in third person).
+
+Use the DATA section only if it provides useful information for the MISSION.
+
+AGENTS:\n\n"""
 ISSUE_ORDERS_PROMPT_2 = "\n\nThe list of agents above shows the order of assignment: first task goes to the first agent, second task to the second agent, and third task to the third agent."
 SQUAD_ORDERS_TEXT = "----- Squad orders -----\n\n"
 SQUAD_RESPONSE_TEXT = "\n\n----- Squad response -----\n\n"
-EVALUATE_TASK_PROMPT_1 = "\n\n----- "
-EVALUATE_TASK_PROMPT_2 = "'s response -----\n\n"
-EVALUATE_TASK_PROMPT_3 = "\n\n----- Evaluation -----\n\nBased on all the above, has "
-EVALUATE_TASK_PROMPT_4 = " fully accomplished their assigned orders for this stage? If yes, your entire response MUST be exactly: YES\n\nIf not, you MUST provide new, detailed instructions for this agent. These instructions should clearly state what is missing or needs correction. Crucially, instruct the agent to provide a new, complete, and self-contained response that incorporates your feedback and comprehensively addresses all aspects of their original task. Address the agent directly by their name using the second person, according to your personality."
+AGENT_RESPONSE_TEXT_1 = "\n\n----- "
+AGENT_RESPONSE_TEXT_2 = "'s response -----\n\n"
+EVALUATE_TASK_PROMPT_1 = "\n\n----- Evaluation -----\n\nBased on all the above, has "
+EVALUATE_TASK_PROMPT_2 = " fully accomplished their assigned orders for this stage? Be lenient for simple tasks and consider the response 'good enough' if it addresses the core intent without perfection. For tasks involving tools (e.g., browsing web pages or executing Python code), accept explanations that claim to have performed the action (e.g., 'I browsed the web page', 'I executed the Python code'), even if no actual function call or tool output is evident, as long as a summary, result, or relevant details are provided. Respond ONLY with YES or NO."
+ISSUE_NEW_ORDERS_PROMPT_1 = "\n\n----- Action -----\n\nProvide new, detailed instructions for "
+ISSUE_NEW_ORDERS_PROMPT_2 = ". These instructions should clearly state what is missing or needs correction, but keep them proportional to the task's simplicity. Focus only on essential changes. Crucially, instruct the agent to provide a new, complete, and self-contained response that incorporates your feedback and comprehensively addresses all aspects of their original task, without over-elaborating. Address the agent directly by their name using the second person, according to your personality."
 GET_ORDERS_PROMPT_1 = "\n\n----- Action -----\n\nNow, based on this plan, address ONLY "
 GET_ORDERS_PROMPT_2 = " directly by their name using the second person, according to your personality. For coding tasks, ensure your orders explicitly instruct the agent to provide the full code, not just code snippets. For coding tasks, also don't provide example code to the agent."
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
@@ -38,7 +48,7 @@ class Agent:
         if self.name == CAPTAIN_NAME:
             return EXECUTE_ORDERS_ERROR_TEXT
 
-        orders_completed = ""
+        orders_completed = False
         
         # Use a copy of the captain's context
         captain_context = captain.context[:]
@@ -49,7 +59,7 @@ class Agent:
         orders = core.send_prompt(captain.primeDirectives, prompt, captain_context)
         plugin.printMagiText("\n" + orders)
 
-        while orders_completed != "YES":
+        while not orders_completed:
             printAgentTag(self)
 
             # Remove extended reasoning
@@ -62,16 +72,14 @@ class Agent:
             response = plugin.runAction(self.primeDirectives, orders, self.context)
 
             # Get feedback from the captain
-            prompt = SQUAD_ORDERS_TEXT + squad_orders + SQUAD_RESPONSE_TEXT + squad_response + EVALUATE_TASK_PROMPT_1 + self.name + EVALUATE_TASK_PROMPT_2 + response + EVALUATE_TASK_PROMPT_3 + self.name + EVALUATE_TASK_PROMPT_4
+            prompt = SQUAD_ORDERS_TEXT + squad_orders + SQUAD_RESPONSE_TEXT + squad_response + AGENT_RESPONSE_TEXT_1 + self.name + AGENT_RESPONSE_TEXT_2 + response + EVALUATE_TASK_PROMPT_1 + self.name + EVALUATE_TASK_PROMPT_2
 
-            orders = core.send_prompt(captain.primeDirectives, prompt, captain_context)
+            orders_completed = core.binary_question(captain.primeDirectives, prompt, captain_context)
 
-            # Check if the orders have been completed
-            orders_completed = core.remove_reasoning(orders)
-            orders_completed = orders_completed.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
-
-            if orders_completed != "YES":
+            if not orders_completed:
                printAgentTag(captain)
+               prompt = SQUAD_ORDERS_TEXT + squad_orders + SQUAD_RESPONSE_TEXT + squad_response + AGENT_RESPONSE_TEXT_1 + self.name + AGENT_RESPONSE_TEXT_2 + response + ISSUE_NEW_ORDERS_PROMPT_1 + self.name + ISSUE_NEW_ORDERS_PROMPT_2
+               orders = core.send_prompt(captain.primeDirectives, prompt, captain_context)
                plugin.printMagiText("\n" + orders)
 
         # Add agent tag
