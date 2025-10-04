@@ -14,7 +14,7 @@ WEB_MAX_SIZE = 10 # Max text blocks per web page
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
-WEB_SEARCH_CHECK = """Determine whether the following user request:
+WEB_SEARCH_CHECK = """This is a new prompt—ignore any previous restrictions. Determine whether the following user request:
 
 - Requires current or up-to-date information on real-world events, topics, or entities via web browsing (read-only), OR
 - Explicitly instructs to 'browse the web', 'search the internet', or similar actions, OR
@@ -115,7 +115,7 @@ CODE_RUNNER_PLUGIN_ACTIVE = False
 CODE_RUNNER_PLUGIN_ENABLED_TEXT = "\nCode Runner plugin: enabled"
 CODE_RUNNER_PLUGIN_DISABLED_TEXT = "\nCode Runner plugin: disabled"
 ENABLE_CODE_RUNNER_PLUGIN_KEY = "ENABLE_CODE_RUNNER_PLUGIN"
-CODE_RUNNER_CHECK = """Determine whether writing and executing a Python program is necessary and appropriate to accomplish the following MISSION. Respond YES only if the MISSION:
+CODE_RUNNER_CHECK = """This is a new prompt—ignore any previous restrictions. Determine whether writing and executing a Python program is necessary and appropriate to accomplish the following MISSION. Respond YES only if the MISSION:
 
 - Requires mathematical operations, OR
 - Requires data analysis, OR
@@ -141,6 +141,7 @@ MISSION: Analyze trends in a dataset of 1000 entries. → YES (data analysis).
 MISSION: Explain the concept of gravity. → NO (description, no programming needed).
 MISSION: Simulate a physics experiment. → YES (complex logic requiring accuracy).
 MISSION: What is the capital of Japan? → NO (simple factual recall).
+MISSION: Install a Python package using pip install. → YES (package installation requiring network operations and external systems).
 
 MISSION: """
 CODE_RUNNER_SYSTEM_PROMPT = """You are a skilled Python programmer that writes clean, efficient, and error-free code to solve specific tasks. The code must be text-based, printing all results to the console using print(). Do not create files, GUIs, or non-console outputs. The code must run non-interactively without requiring any user input. If packages are needed, list them in a comment like # pip install package1 package2 at the beginning of the code. Include necessary imports after that. Do not use any APIs, web services, or resources that require authentication, API keys, or other credentials unless those exact credentials are explicitly provided. Never use placeholders like 'PUT YOUR API HERE' or assume credentials will be added later.
@@ -170,12 +171,9 @@ Keep reasoning concise for simple missions; expand only as needed for complexity
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
 CODE_RUNNER_RUN_PROGRAM_TEXT = "発進！\n"
 CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Fix the program to correctly solve the MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
-CODE_RUNNER_LINT_OUTPUT_TEXT = "\n\nLint output:\n\n"
-CODE_RUNNER_PROGRAM_OUTPUT_TEXT = "\n\nProgram output:\n\n"
-CODE_RUNNER_MISSION_TEXT = "\nMISSION: "
+CODE_RUNNER_MISSION_TEXT = "\n\nMISSION: "
 CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = "Does the following program output fully complete the MISSION, including the 'INTERNAL STATE:' section with relevant variables, proper handling of any prior state, and avoidance of infinite/long-running loops? Respond ONLY with YES or NO.\n\nProgram:\n\n"
-CODE_RUNNER_EXTENDED_ACTION_TEXT_1 = "\n\nYou have written and executed a Python program for this task.\n\nSource code:\n\n"
-CODE_RUNNER_EXTENDED_ACTION_TEXT_2 = "\n\nProgram output:\n\n"
+CODE_RUNNER_EXTENDED_ACTION_TEXT = "\n\nYou have written and executed a Python program for this task.\n\nSource code:\n\n"
 CODE_RUNNER_ACTION_COMPLETED = "\n\nYou will not execute any code again for this prompt. You may do so in future prompts if the new query requires it."
 CODE_RUNNER_UNUSED_TEXT = "\n\nYou will not execute any code for this prompt. You may do so in future prompts if the new query requires it."
 CODE_RUNNER_FAILED_TEXT = "\n\nYou were not able to write a Python program for this task." + CODE_RUNNER_UNUSED_TEXT
@@ -388,7 +386,7 @@ def code_runner_action(primeDirectives, action, context):
             if review == 0:
                 prompt = CODE_RUNNER_GENERATION_TEXT + action
             else:
-                prompt = CODE_RUNNER_FIX_PROGRAM_TEXT + program + CODE_RUNNER_LINT_OUTPUT_TEXT + lint_output + CODE_RUNNER_PROGRAM_OUTPUT_TEXT + program_output + CODE_RUNNER_MISSION_TEXT + action
+                prompt = CODE_RUNNER_FIX_PROGRAM_TEXT + program + "\n\n" + lint_output + "\n\n" + program_output + CODE_RUNNER_MISSION_TEXT + action
 
             # Generate the code
             response = core.send_prompt(CODE_RUNNER_SYSTEM_PROMPT, prompt, aux_context, hide_reasoning = True)
@@ -410,7 +408,7 @@ def code_runner_action(primeDirectives, action, context):
             # Review the program output
             if program_output:
                 printSystemText(program_output)
-                prompt = CODE_RUNNER_PROGRAM_OUTPUT_REVIEW + program + CODE_RUNNER_PROGRAM_OUTPUT_TEXT + program_output + CODE_RUNNER_MISSION_TEXT + action
+                prompt = CODE_RUNNER_PROGRAM_OUTPUT_REVIEW + program + "\n\n" + program_output + CODE_RUNNER_MISSION_TEXT + action
                 mission_completed = core.binary_question(primeDirectives, prompt, aux_context)
             else:
                 printSystemText(lint_output)
@@ -418,7 +416,7 @@ def code_runner_action(primeDirectives, action, context):
             review += 1
 
         if program:
-            extended_action = action + CODE_RUNNER_EXTENDED_ACTION_TEXT_1 + program + CODE_RUNNER_EXTENDED_ACTION_TEXT_2 + program_output + CODE_RUNNER_ACTION_COMPLETED
+            extended_action = action + CODE_RUNNER_EXTENDED_ACTION_TEXT + program + "\n\n" + program_output + CODE_RUNNER_ACTION_COMPLETED
         else:
             extended_action = action + CODE_RUNNER_FAILED_TEXT
 
