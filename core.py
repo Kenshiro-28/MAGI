@@ -5,7 +5,7 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v12.14"
+SYSTEM_VERSION_TEXT = "\n\nSystem: v12.15"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -51,7 +51,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 10000
+TEXT_BLOCK_WORDS = 5000
 
 CONFIG_ERROR = "\n[ERROR] Configuration error: "
 

@@ -9,8 +9,9 @@ SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: 
 
 # WEB PLUGIN
 WEB_PLUGIN_ACTIVE = False
-WEB_SEARCH_LIMIT = 3 # Number of web pages per search
-WEB_MAX_SIZE = 10 # Max text blocks per web page
+WEB_SEARCH_LIMIT = 10 # Number of web searches
+WEB_SEARCH_PAGE_LIMIT = 5 # Number of web pages per search
+WEB_MAX_SIZE = 20 # Max text blocks per web page
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
@@ -45,6 +46,9 @@ TOPIC = python errors → "common python programming bugs fixes"
 TOPIC = japanese festivals → "traditional japanese festivals history celebrations"
 
 TOPIC = """
+WEB_SEARCH_HELPER = "\n\nThe previous web search didn't find the required information, please refine/optimize the web search query."
+WEB_SEARCH_REVIEW_1 = "Does the following WEB page contain the required information to complete the MISSION? Respond ONLY with YES or NO.\n\nMISSION = "
+WEB_SEARCH_REVIEW_2 = "\n\nWEB = "
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_REVIEW = "\n\nYou found the following information from browsing the web:\n\n"
@@ -261,33 +265,44 @@ def runAction(primeDirectives, action, context):
 def web_search(primeDirectives, action, context):
     extended_action = action + WEB_SEARCH_UNUSED_TEXT
 
-    summary = ""
-
     run_web_search = core.binary_question(primeDirectives, WEB_SEARCH_CHECK + action, context)
 
     if run_web_search:
         aux_context = context[:]
-        query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, aux_context, hide_reasoning = True)
-        query = query.replace('"', '')
+        aux_action = action
+        mission_completed = False
+        search_number = 0
+        web_summary = ""
 
-        printSystemText(WEB_SEARCH_TAG + query)
+        while not mission_completed and search_number < WEB_SEARCH_LIMIT:
+            query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + aux_action, aux_context, hide_reasoning = True)
+            query = query.replace('"', '')
 
-        urls = web.search(query, WEB_SEARCH_LIMIT)
+            printSystemText(WEB_SEARCH_TAG + query)
 
-        for url in urls:
-            printSystemText("\n" + url)
-            text = web.scrape(url)
-            blockArray = core.split_text_in_blocks(text)
+            urls = web.search(query, WEB_SEARCH_PAGE_LIMIT)
 
-            web_summary = core.summarize_block_array(query, blockArray[:WEB_MAX_SIZE])
+            for url in urls:
+                printSystemText("\n" + url)
+                text = web.scrape(url)
+                blockArray = core.split_text_in_blocks(text)
 
-            summary = core.update_summary(query, summary, web_summary)
+                web_summary = core.summarize_block_array(query, blockArray[:WEB_MAX_SIZE])
 
-            if not web_summary:
-                printSystemText(WEB_SEARCH_ERROR)
+                if web_summary:
+                    mission_completed = core.binary_question(primeDirectives, WEB_SEARCH_REVIEW_1 + action + WEB_SEARCH_REVIEW_2 + web_summary, aux_context)
+                else:
+                    printSystemText(WEB_SEARCH_ERROR)
 
-        if summary:
-            extended_action = action + WEB_SUMMARY_REVIEW + summary + WEB_SEARCH_COMPLETED
+                if mission_completed:
+                    break
+
+            if not mission_completed:
+                aux_action = action + WEB_SEARCH_HELPER
+                search_number += 1
+
+        if mission_completed:
+            extended_action = action + WEB_SUMMARY_REVIEW + web_summary + WEB_SEARCH_COMPLETED
         else:
             extended_action = action + WEB_SEARCH_FAILED_TEXT
 

@@ -147,6 +147,10 @@ This plugin allows MAGI to browse the internet for up-to-date information.
 
 Even when the plugin is active, MAGI decides when to use it.
 
+MAGI will search, scrape, and summarize relevant pages with automatic early stopping on success.
+
+If the relevant information is not found after 10 web searches (up to 5 pages per search), the web search will stop.
+
 ## Model 
 
 You can use any GGUF model supported by llama-cpp-python, as long as it adheres to the ChatML prompt format:
