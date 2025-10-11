@@ -60,9 +60,17 @@ The system will extract useful information from the file **mission_data.txt**.
 
 This is a fully autonomous mode.
 
-Following your initial prompt, MAGI will explore new solutions.
+After receiving your initial prompt, MAGI will work autonomously to accomplish its mission.
 
-It will run continuously until you manually stop the program by pressing Ctrl + C.
+Optionally, you can include the main objective and any critical mission data in the file **prime_directives.txt** to help ensure that MAGI remains aligned with its main objective during long-running operations. For example:
+
+```
+You are MAGI, a friendly AI assistant. You can freely use your reasoning, knowledge, and internal capabilities for any task, but be aware that your only means of interacting with the physical world are browsing web pages (read-only) or executing Python code (console output only, no GUIs, file operations, or user input).
+
+Your mission is to research tech stocks focused on robotics and AI automation, and identify the most promising options for long-term growth.
+```
+
+MAGI will run continuously until you manually stop it by pressing Ctrl + C.
 
 ## Plugins
 
@@ -198,7 +206,7 @@ GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at leas
 Install the following packages:
 
 ```
-$ sudo apt install build-essential pkg-config libopenblas-dev python3-venv python3-pip apparmor-utils chromium chromium-driver python3-selenium python3-bs4 python3-docx python3-odf python3-pypdf python3-python-telegram-bot
+$ sudo apt install build-essential apparmor-utils git pkg-config libopenblas-dev python3-venv python3-pip python3-requests python3-bs4 python3-docx python3-odf python3-pypdf python3-python-telegram-bot
 ```
 
 To use your NVIDIA graphics card, you need to install CUDA:

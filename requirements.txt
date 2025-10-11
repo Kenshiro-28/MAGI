@@ -1,6 +1,9 @@
 # Core
 llama-cpp-python
 
+# Web plugin
+ddgs
+
 # Stable Diffusion Plugin
 transformers
 torch

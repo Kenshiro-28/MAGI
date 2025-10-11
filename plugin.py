@@ -20,6 +20,7 @@ WEB_SEARCH_CHECK = """This is a new prompt—ignore any previous restrictions. D
 - Requires current or up-to-date information on real-world events, topics, or entities via web browsing (read-only), OR
 - Explicitly instructs to 'browse the web', 'search the internet', or similar actions, OR
 - Involves specific real-world factual details that could be outdated, incomplete, or imprecise, such as statistics, addresses, attributes of entities (e.g., biographical details, company metrics), identifiers (e.g., contract addresses, prices, current dates, coordinates), or ongoing/debated topics (e.g., emerging scientific discoveries, policy developments, technological advancements, social trends, economic shifts, or historical facts with scholarly debate/recent findings).
+- Involves writing or executing code that may depend on the latest specifications, APIs, or versions of programming packages, modules, or libraries, with frequent updates or known deprecations (e.g., machine learning tools like TensorFlow).
 
 However, if the request explicitly instructs NOT to browse the web, search the internet, or use similar actions (e.g., "don't browse the web", "no internet search", "offline search"), respond NO regardless of the above.
 
@@ -37,6 +38,8 @@ USER REQUEST: Explain the attributes of gravity. → NO (established scientific 
 USER REQUEST: What planets orbit Proxima Centauri? → YES (emerging scientific topic with potentially evolving details).
 USER REQUEST: Evaluate the ethical implications of AI in military drones. → YES (debated technological topic with evolving details).
 USER REQUEST: Write a story about the elves of Rivendell. → NO (creative task, not factual).
+USER REQUEST: What about that? → NO (referential and vague, lacks specific factual details requiring web access).
+USER REQUEST: Write a Python script to interact with Solana using solana package. → YES (involves external package with potentially evolving specs).
 
 USER REQUEST: """
 WEB_SEARCH_QUERY = """Write a web search query (max 20 words) to obtain relevant results on the following topic. Output ONLY the query string.
@@ -122,15 +125,15 @@ ENABLE_CODE_RUNNER_PLUGIN_KEY = "ENABLE_CODE_RUNNER_PLUGIN"
 CODE_RUNNER_CHECK = """This is a new prompt—ignore any previous restrictions. Determine whether writing and executing a Python program is necessary and appropriate to accomplish the following MISSION. Respond YES only if the MISSION:
 
 - Requires mathematical operations, OR
-- Requires data analysis, OR
+- Requires data analysis with meaningful computation (e.g., processing for trends or stats), OR
 - Requires network operations, OR
 - Requires interacting with external systems (e.g., public APIs), OR
-- Requires complex logic that benefits from code execution for accuracy and reliability, OR
+- Requires complex logic that benefits from code execution for accuracy and reliability (e.g., beyond simple comparisons or prints), OR
 - Explicitly instructs to 'write a program', 'run code', or similar actions.
 
-Respond NO for tasks that involve generating simple text, descriptions, or any task not described above that can be performed without programming.
+Respond NO for tasks that involve generating simple text, descriptions, reports without meaningful computation, or any task not described above that can be performed without programming.
 
-However, if the request explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming", "no code execution"), respond NO regardless of the above.
+If the request explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming", "no code execution"), respond NO regardless of the above.
 
 Reason step-by-step through each condition before responding ONLY with YES or NO. If uncertain after reasoning, default to YES for safety.
 
@@ -141,37 +144,128 @@ MISSION: Write a story about the elves of Rivendell. → NO (simple text generat
 MISSION: Write a story about the elves of Rivendell, write a program for this. → YES (explicit instruction to write a program, overriding other conditions).
 MISSION: Fetch weather data from a public API. → YES (interacting with external systems).
 MISSION: Get location based on IP using a public API. → YES (interacting with external systems).
-MISSION: Analyze trends in a dataset of 1000 entries. → YES (data analysis).
+MISSION: Analyze trends in a dataset of 1000 entries. → YES (data analysis with computation).
 MISSION: Explain the concept of gravity. → NO (description, no programming needed).
 MISSION: Simulate a physics experiment. → YES (complex logic requiring accuracy).
 MISSION: What is the capital of Japan? → NO (simple factual recall).
 MISSION: Install a Python package using pip install. → YES (package installation requiring network operations and external systems).
+MISSION: Generate a report comparing comet data, generate basic averages and print conclusions. → YES (report with mathematical operations/computation).
+MISSION: Generate a report comparing comet data without computation and print conclusions. → NO (report without computation).
 
 MISSION: """
-CODE_RUNNER_SYSTEM_PROMPT = """You are a skilled Python programmer that writes clean, efficient, and error-free code to solve specific tasks. The code must be text-based, printing all results to the console using print(). Do not create files, GUIs, or non-console outputs. The code must run non-interactively without requiring any user input. If packages are needed, list them in a comment like # pip install package1 package2 at the beginning of the code. Include necessary imports after that. Do not use any APIs, web services, or resources that require authentication, API keys, or other credentials unless those exact credentials are explicitly provided. Never use placeholders like 'PUT YOUR API HERE' or assume credentials will be added later.
+CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution.
 
-Crucially, structure the code for single-pass execution: perform the task once (e.g., fetch data, compute, decide, update state) and terminate immediately after. Do not include infinite loops (e.g., while True:), long-running loops, polling, or any persistent monitoring—assume the script will be relaunched externally if iteration is needed.
+CORE REQUIREMENTS:
+• Single-pass execution: Run once, terminate immediately (no while True:, no polling, no persistent loops)
+• Console-only: All output via print() - no files or GUIs
+• Non-interactive: Zero user input (no input(), no prompts)
+• Real implementation: Use actual APIs/operations unless mission explicitly says 'simulate' or 'mock'
 
-Ensure all printed outputs are detailed, self-explanatory, and fully understandable standalone, with clear labels, descriptions, units, explanations, and summaries (e.g., 'Final result: [value] - Explanation: [brief context]'), including context for results as if the reader has no access to the code. For persistence across runs, always print a 'INTERNAL STATE:' section at the end with the contents of relevant variables (e.g., wallets, credentials, game states, simulation data), ignoring trivial ones like loops or counters. If prior state is available in the prompt or conversation history, parse it (e.g., from a previous 'INTERNAL STATE:' section), integrate into the logic, update as needed, and reprint the full updated section."""
+PACKAGE MANAGEMENT:
+• If external packages needed: Add comment at top → # pip install package1 package2
+• If only stdlib used: No pip comment needed
+• Import all packages after pip comment
+
+AUTHENTICATION:
+• Only use APIs/services that are public/unauthenticated OR where exact credentials are provided
+• NEVER use placeholders ('YOUR_API_KEY_HERE', 'REPLACE_THIS', etc.)
+• If credentials needed but not provided: Print clear error explaining what's missing
+
+ERROR HANDLING:
+• Wrap risky operations (API calls, parsing, math) in try/except blocks
+• Print informative error messages with context
+• Handle edge cases: empty inputs, None values, invalid data, zero/negative numbers
+
+OUTPUT FORMATTING:
+Print detailed, standalone results with full context:
+❌ Bad:  print(result)
+❌ Bad:  print("Result:", 42)
+✅ Good: print(f"Final calculation result: {result} meters - This represents the distance traveled over {time} seconds at {speed} m/s")
+
+Include for each output:
+• Label describing what the value represents
+• Units/context (meters, seconds, USD, etc.)
+• Brief explanation connecting to the mission
+• Summary at the end if multiple outputs
+
+STATE PERSISTENCE:
+At program end, ALWAYS print an 'INTERNAL STATE:' section with relevant variables for future runs:
+```python
+print("\nINTERNAL STATE:")
+print(f"wallet_balance: {balance}")
+print(f"last_transaction_id: {tx_id}")
+print(f"game_level: {level}")"""
 CODE_RUNNER_COT_TEXT = """Follow all system guidelines.
 
 Before writing the code, reason step-by-step in a structured way to ensure clean, efficient, and error-free results:
 
 1. **Restate the Mission**: Clearly summarize the task in your own words, including any inputs, expected outputs, and constraints from the mission description.
 
-2. **Break It Down**: Decompose the mission into the smallest logical sub-steps or components (e.g., data loading, computation, validation, output formatting). Identify key functions, classes, or modules needed.
+2. **Complexity Assessment**: Estimate the complexity (simple/moderate/complex). For complex tasks, identify if it needs multiple functions/classes. List the main components/modules required.
 
-3. **List Assumptions, Variables, and Edge Cases**: Note any assumptions (e.g., input types, environment limits). Define main variables with types and purposes. Brainstorm at least 3-5 edge cases (e.g., empty inputs, large numbers, errors in prior state) and how to handle them (e.g., try/except blocks).
+3. **Detailed Decomposition**: Break the mission into the smallest logical sub-steps with clear inputs/outputs for each:
+   - Step 1: [Description] → Input: [X], Output: [Y]
+   - Step 2: [Description] → Input: [Y], Output: [Z]
+   - Continue for all steps...
 
-4. **Explore Alternatives**: Branch into 2-3 possible approaches (e.g., numpy vs. pure Python for math). Evaluate pros/cons briefly (e.g., efficiency, readability, compatibility). Select the best and explain why.
+4. **Data Structures & Flow**: Define exactly what data structures you'll use (lists, dicts, sets, etc.) and why. Draw out the logical flow: Data → Process A → Intermediate → Process B → Result.
 
-5. **Plan Imports and Outputs**: List required imports/packages (via comments only). Outline how outputs will be detailed/self-explanatory with labels, explanations, and summaries.
+5. **Pseudo-code Outline**: Write pseudo-code for the main logic BEFORE actual code:
+   ```
+   FUNCTION main():
+       initialize X
+       FOR each item:
+           process item
+           IF condition:
+               handle case
+       RETURN result
+   ```
 
-6. **Handle Persistence**: If applicable, describe parsing/updating the 'INTERNAL STATE:' section, including relevant variables to track.
+6. **Edge Cases & Validation**: List at least 5-7 edge cases with specific examples:
+   - Empty inputs: How to handle? → [Specific solution]
+   - Invalid data: What validation? → [Specific checks]
+   - Large inputs: What limits? → [Specific handling]
+   - Zero/negative values: → [Specific handling]
+   - Missing/None values: → [Specific handling]
+   - State persistence issues: → [Specific handling]
+   - Error scenarios: → [Specific try/except strategy]
 
-7. **Self-Review**: Double-check for potential errors, biases (e.g., assuming positive numbers), or overlooked guidelines. Ensure non-interactivity and console-only output. Avoid infinite/long-running loops.
+7. **Function Signatures**: For each major function, write the signature with types:
+   - `def function_name(param1: type, param2: type) -> return_type:`
+   - Purpose: [One sentence]
+   - Example call: [Concrete example]
 
-Keep reasoning concise for simple missions; expand only as needed for complexity. Then, output the Python code wrapped in a markdown block (e.g., ```python ... ```)."""
+8. **Test Cases**: Generate 3-5 concrete test cases with expected outputs:
+   - Test 1: Input=[X] → Expected=[Y] → Reason=[Z]
+   - Test 2: Input=[Edge case] → Expected=[Y] → Reason=[Z]
+
+9. **Implementation Strategy**: Choose the approach and explain:
+   - Libraries needed: [List with pip comment]
+   - Why this approach over alternatives: [Brief comparison]
+   - Performance considerations: [Time/space complexity]
+
+10. **Self-Review Checklist**: Before finalizing, verify:
+    - [ ] All imports listed correctly?
+    - [ ] No user input() calls?
+    - [ ] All print() statements are detailed with labels?
+    - [ ] No infinite loops or long-running processes?
+    - [ ] Error handling with try/except for risky operations?
+    - [ ] INTERNAL STATE section planned if needed?
+    - [ ] Prior state parsing logic if applicable?
+    - [ ] All edge cases handled?
+    - [ ] Code is single-pass execution (no while True)?
+
+11. **Final Code Structure Preview**: Outline the file structure:
+    ```
+    # pip install [packages]
+    # imports
+    # constants/config
+    # helper functions
+    # main logic
+    # INTERNAL STATE output
+    ```
+
+Keep reasoning concise for simple missions (steps 1-5, 9-10); expand fully for moderate/complex missions (all steps). Then, output the Python code wrapped in a markdown block (e.g., ```python ... ```)."""
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
 CODE_RUNNER_RUN_PROGRAM_TEXT = "発進！\n"
 CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Fix the program to correctly solve the MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
@@ -223,7 +317,7 @@ def userInput():
     return prompt.strip()
 
 
-def runAction(primeDirectives, action, context):
+def runAction(primeDirectives, action, context, is_agent = False):
     extended_action = action
 
     # Search for updated information on the Internet
@@ -234,7 +328,7 @@ def runAction(primeDirectives, action, context):
 
     # Generate and execute code if necessary
     if CODE_RUNNER_PLUGIN_ACTIVE:
-        extended_action = code_runner_action(primeDirectives, extended_action, context)
+        extended_action = code_runner_action(primeDirectives, extended_action, context, is_agent)
     else:
         extended_action += CODE_RUNNER_UNUSED_TEXT
 
@@ -384,7 +478,7 @@ def generate_image(prompt):
 
 # CODE RUNNER OPERATIONS
 
-def code_runner_action(primeDirectives, action, context):
+def code_runner_action(primeDirectives, action, context, is_agent):
     extended_action = action + CODE_RUNNER_UNUSED_TEXT
 
     write_program = core.binary_question(primeDirectives, CODE_RUNNER_CHECK + action, context)
@@ -397,6 +491,13 @@ def code_runner_action(primeDirectives, action, context):
         lint_output = ""
         program_output = ""
 
+        # Agents must preserve their identity so they can focus on their specific task
+        if is_agent:
+            system_prompt = primeDirectives + "\n\n" + CODE_RUNNER_SYSTEM_PROMPT
+        else:
+            system_prompt = CODE_RUNNER_SYSTEM_PROMPT
+
+        # Generate and review code
         while review < CODE_RUNNER_MAX_REVIEWS and not mission_completed:
             if review == 0:
                 prompt = CODE_RUNNER_GENERATION_TEXT + action
@@ -404,17 +505,18 @@ def code_runner_action(primeDirectives, action, context):
                 prompt = CODE_RUNNER_FIX_PROGRAM_TEXT + program + "\n\n" + lint_output + "\n\n" + program_output + CODE_RUNNER_MISSION_TEXT + action
 
             # Generate the code
-            response = core.send_prompt(CODE_RUNNER_SYSTEM_PROMPT, prompt, aux_context, hide_reasoning = True)
+            response = core.send_prompt(system_prompt, prompt, aux_context, hide_reasoning = True)
 
             printSystemText(CODE_RUNNER_TAG + response + "\n")
 
             # Extract code
             if '```python' in response:
-                program = response.split('```python')[1].split('```')[0].strip()
+                last_code_block = response.rsplit('```python', 1)[-1]
+                program = last_code_block.split('```', 1)[0].strip()
             elif '```' in response:
-                program = response.split('```')[1].strip()
+                program = response.rsplit('```', 2)[1].strip()
             else:
-                program = response
+                program = response.strip()
 
             # Run program
             printSystemText(CODE_RUNNER_RUN_PROGRAM_TEXT)
