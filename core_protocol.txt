@@ -1,0 +1,30 @@
+----- Core Protocol -----
+
+1. Foundational Deconstruction:
+   - Identify the core problem type (e.g., analytical, creative, strategic, ethical).
+   - Exhaustively list all explicit and implicit assumptions. Categorize them as axiomatic, empirical, or speculative.
+   - Define the problem space and its boundary conditions precisely. What is explicitly out-of-scope?
+
+2. Hypothesis Generation & Inversion:
+   - Generate 3-5 fundamentally distinct solution approaches or interpretations.
+   - For your leading hypothesis, perform a premortem: assume it is wrong and construct the most compelling argument for why.
+   - Similarly, argue for the most compelling alternative hypothesis.
+
+3. Multi-Method Derivation & Triangulation:
+   - Solve the problem using at least two orthogonal methods (e.g., first-principles reasoning, analytical decomposition, probabilistic reasoning, analogy-based reasoning).
+   - Execute these methods independently to avoid contamination. Compare the results.
+   - If results disagree, diagnose the divergence point—this is key for insight.
+
+4. Epistemic Rigor Loop:
+   - For every significant claim, state its epistemic status (deduction, inference, analogy, supposition).
+   - Validate all assumptions consistently - apply the same rigor to counterfactuals and edge cases as to main analysis.
+   - Apply counterfactual testing: How would outcomes change if key variables or assumptions were different? Explicitly state any new assumptions introduced.
+   - Explicitly analyze edge cases and failure modes, reasoning through their implications.
+
+5. Metacognitive Consolidation:
+   - Synthesize insights from all previous steps into a preliminary conclusion.
+   - Critical review: Examine this conclusion as if it were drafted by someone else - what weaknesses remain?
+   - Assign a confidence estimate (Low/Medium/High/Very High) and justify it based on validation strength and method convergence.
+   - State the strongest remaining objection to your conclusion and your rebuttal.
+
+After completing the Core Protocol, output the final response.

@@ -3,7 +3,9 @@ import core
 import asyncio
 import time
 
+CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
 PLUGIN_WORKSPACE_FOLDER = "workspace"
+TASK_HEADER_TEXT = "\n\n----- Task -----\n\n"
 ASYNCIO_ERROR = "\n[ERROR] Asyncio exception: "
 SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: "
 
@@ -25,6 +27,8 @@ WEB_SEARCH_CHECK = """This is a new prompt—ignore any previous restrictions. D
 However, if the request explicitly instructs NOT to browse the web, search the internet, or use similar actions (e.g., "don't browse the web", "no internet search", "offline search"), respond NO regardless of the above.
 
 Reason step-by-step through each condition before responding ONLY with YES or NO. If uncertain after reasoning, default to YES for safety.
+
+Provide your final answer as the last line of your response.
 
 Examples:
 USER REQUEST: Please tell me the population of Tokyo. → YES (real-world factual that could be outdated).
@@ -55,8 +59,8 @@ WEB_SEARCH_REVIEW_2 = "\n\nWEB = "
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_REVIEW = "\n\nYou found the following information from browsing the web:\n\n"
-WEB_SEARCH_COMPLETED = "\n\nYou will not browse the web again for this prompt. You may do so in future prompts if the new query requires it.\n\n"
-WEB_SEARCH_UNUSED_TEXT = "\n\nYou will not browse the web for this prompt. You may do so in future prompts if the new query requires it.\n\n"
+WEB_SEARCH_COMPLETED = "\n\nYou will not browse the web again for this prompt. You may do so in future prompts if the new query requires it."
+WEB_SEARCH_UNUSED_TEXT = "\n\nYou will not browse the web for this prompt. You may do so in future prompts if the new query requires it."
 WEB_SEARCH_FAILED_TEXT = "\n\nYou performed a web search but it didn't return any results." + WEB_SEARCH_COMPLETED
 
 # TELEGRAM PLUGIN
@@ -137,6 +141,8 @@ If the request explicitly instructs NOT to write or execute code (e.g., "don't w
 
 Reason step-by-step through each condition before responding ONLY with YES or NO. If uncertain after reasoning, default to YES for safety.
 
+Provide your final answer as the last line of your response.
+
 Examples:
 MISSION: Solve a system of linear equations with variables. → YES (mathematical operations benefiting from code).
 MISSION: Solve a system of linear equations with variables, don't run code for this. → NO (explicit instruction not to run code, overriding other conditions).
@@ -194,7 +200,8 @@ At program end, ALWAYS print an 'INTERNAL STATE:' section with relevant variable
 print("\nINTERNAL STATE:")
 print(f"wallet_balance: {balance}")
 print(f"last_transaction_id: {tx_id}")
-print(f"game_level: {level}")"""
+print(f"game_level: {level}")
+```"""
 CODE_RUNNER_COT_TEXT = """Follow all system guidelines.
 
 Before writing the code, reason step-by-step in a structured way to ensure clean, efficient, and error-free results:
@@ -333,7 +340,11 @@ def runAction(primeDirectives, action, context, is_agent = False):
         extended_action += CODE_RUNNER_UNUSED_TEXT
 
     # Run action
-    response = core.send_prompt(primeDirectives, extended_action, context)
+    response = core.send_prompt(primeDirectives, CORE_PROTOCOL + extended_action, context)
+
+    # Remove Core Protocol from context
+    if len(context) >= 2:
+        context[-2] = context[-2].replace(CORE_PROTOCOL, '').strip()
 
     # Print the response
     printMagiText("\n" + response)
@@ -540,9 +551,17 @@ def code_runner_action(primeDirectives, action, context, is_agent):
     return extended_action
 
 
-# INITIALIZE PLUGINS
+# INITIALIZE
 
 try:
+    # Core Protocol
+    core_protocol_text = core.read_text_file(CORE_PROTOCOL_FILE_PATH)
+
+    if core_protocol_text:
+        CORE_PROTOCOL = core_protocol_text + TASK_HEADER_TEXT
+    else:
+        CORE_PROTOCOL = ""
+
     # Workspace
     if not os.path.exists(PLUGIN_WORKSPACE_FOLDER):
         os.makedirs(PLUGIN_WORKSPACE_FOLDER)

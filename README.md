@@ -24,9 +24,25 @@ ENABLE_LOG: enable or disable logging to the file **mission_log.txt** (default: 
 
 ## Prime Directives
 
-You can set MAGI to behave like a fictional character or follow a set of rules. Simply describe your desired behavior, and MAGI will follow your instructions.
+Prime Directives serve as the system prompt or behavioral guidelines, defining MAGI's personality, rules, and operational ethos. This is where you imprint MAGI with a specific identity—whether as a helpful assistant, a fictional character, or a specialized agent.
 
 You can set your Prime Directives in the file **prime_directives.txt**. 
+
+## Core Protocol
+
+The Core Protocol boosts MAGI's reasoning by guiding its internal thought process with a customizable reasoning framework.
+
+You can tailor it to different techniques such as Chain-of-Thought, Chain of Draft, or other variants.
+
+The default Core Protocol includes:
+
+- Foundational Deconstruction: Classify the problem, list assumptions, define boundaries.
+- Hypothesis Generation & Inversion: Create diverse approaches, stress-test via premortem.
+- Multi-Method Derivation & Triangulation: Solve via orthogonal methods, reconcile discrepancies.
+- Epistemic Rigor Loop: Annotate claims, test counterfactuals and edges.
+- Metacognitive Consolidation: Synthesize, critique, calibrate confidence, rebut objections.
+
+You can set your Core Protocol in the file **core_protocol.txt**.
 
 ## AI modes
 
@@ -67,7 +83,7 @@ Optionally, you can include the main objective and any critical mission data in 
 ```
 You are MAGI, a friendly AI assistant. You can freely use your reasoning, knowledge, and internal capabilities for any task, but be aware that your only means of interacting with the physical world are browsing web pages (read-only) or executing Python code (console output only, no GUIs, file operations, or user input).
 
-Your mission is to research tech stocks focused on robotics and AI automation, and identify the most promising options for long-term growth.
+Your primary mission is to research tech stocks focused on robotics and AI automation, and identify the most promising options for long-term growth.
 ```
 
 MAGI will run continuously until you manually stop it by pressing Ctrl + C.

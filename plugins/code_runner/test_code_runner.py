@@ -10,8 +10,7 @@ SAMPLE_CODE_PACKAGE = '# pip install numpy requests\nimport numpy as np\nprint(n
 
 
 def _print_result(lint_output, program_output):
-    print("\nLint: " + lint_output)
-    print("Output: " + program_output)
+    print(lint_output + "\n\n" + program_output)
 
 
 # Good code test

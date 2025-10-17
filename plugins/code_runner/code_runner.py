@@ -2,6 +2,7 @@
 import subprocess
 import os
 import sys
+import shutil
 
 PROGRAM_TIMEOUT = 1800
 CODE_RUNNER_ERROR = "\n[ERROR] Code Runner error: "
@@ -12,6 +13,24 @@ PROGRAM_OUTPUT_TEXT = "\n----- PROGRAM OUTPUT -----\n\n"
 PROGRAM_ERROR_TEXT = "\n\nProgram error: "
 PROGRAM_RETURN_CODE_TEXT = "\nReturn code: "
 PACKAGE_LIST_COMMENT = "# pip install "
+
+
+def _install_packages(package_list):
+    result = subprocess.run([PIP_EXEC_PATH, 'install', '--upgrade'] + package_list, capture_output = True, text = True)
+
+    return result
+
+
+def _create_venv():
+    # Delete previous environment and cache
+    shutil.rmtree(VENV_PATH, ignore_errors = True)
+    shutil.rmtree(PYCACHE_PATH, ignore_errors = True)
+
+    # Create new environment
+    subprocess.check_call([sys.executable, '-m', 'venv', VENV_PATH])
+
+    # Install Ruff
+    subprocess.check_call([PIP_EXEC_PATH, 'install', '--quiet', 'ruff'])
 
 
 def run_python_code(program: str):
@@ -28,7 +47,12 @@ def run_python_code(program: str):
 
         # Install Python packages
         if package_list:
-            result = subprocess.run([PIP_EXEC_PATH, 'install', '--upgrade'] + package_list, capture_output = True, text = True)
+            result = _install_packages(package_list)
+
+            # If failed, recreate venv and try again
+            if result.returncode != 0:
+                _create_venv()
+                result = _install_packages(package_list)
 
             pip_output = PACKAGE_INSTALLATION_TEXT + ' '.join(package_list) + "\n\n" + result.stdout
 
@@ -76,22 +100,26 @@ def run_python_code(program: str):
 # INITIALIZE
 
 try:
-    current_path = os.getcwd()
+    CURRENT_PATH = os.getcwd()
 
     # Get path of Python virtual environment
-    venv_path = os.path.join(current_path, 'venv')
+    VENV_PATH = os.path.join(CURRENT_PATH, 'venv')
 
-    # Create Python virtual environment
-    if not os.path.exists(venv_path):
-        subprocess.check_call([sys.executable, '-m', 'venv', venv_path])
+    # Get path of Python cache
+    PYCACHE_PATH = os.path.join(CURRENT_PATH, '__pycache__')
 
     # Get Python, Pip and Ruff executable paths
-    PYTHON_EXEC_PATH = os.path.join(venv_path, 'bin', 'python')
-    PIP_EXEC_PATH = os.path.join(venv_path, 'bin', 'pip')
-    RUFF_EXEC_PATH = os.path.join(venv_path, 'bin', 'ruff')
+    PYTHON_EXEC_PATH = os.path.join(VENV_PATH, 'bin', 'python')
+    PIP_EXEC_PATH = os.path.join(VENV_PATH, 'bin', 'pip')
+    RUFF_EXEC_PATH = os.path.join(VENV_PATH, 'bin', 'ruff')
 
-    # Install/upgrade Ruff
-    subprocess.check_call([PIP_EXEC_PATH, 'install', '--upgrade', '--quiet', 'ruff'])
+    # Check Python virtual environment
+    if os.path.exists(VENV_PATH):
+        # Upgrade Ruff
+        subprocess.check_call([PIP_EXEC_PATH, 'install', '--upgrade', '--quiet', 'ruff'])
+    else:
+        # Create new Python virtual environment
+        _create_venv()
 
 except Exception as e:
     print(CODE_RUNNER_ERROR + str(e))
