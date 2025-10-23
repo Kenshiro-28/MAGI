@@ -34,7 +34,9 @@ The Core Protocol boosts MAGI's reasoning by guiding its internal thought proces
 
 You can tailor it to different techniques such as Chain-of-Thought, Chain of Draft, or other variants.
 
-The default Core Protocol includes:
+You can set your Core Protocol in the file **core_protocol.txt**.
+
+The default protocol includes:
 
 - Foundational Deconstruction: Classify the problem, list assumptions, define boundaries.
 - Hypothesis Generation & Inversion: Create diverse approaches, stress-test via premortem.
@@ -42,7 +44,7 @@ The default Core Protocol includes:
 - Epistemic Rigor Loop: Annotate claims, test counterfactuals and edges.
 - Metacognitive Consolidation: Synthesize, critique, calibrate confidence, rebut objections.
 
-You can set your Core Protocol in the file **core_protocol.txt**.
+To revert to the default model reasoning without applying any custom protocol, simply remove all contents from the file **core_protocol.txt** or delete the file.
 
 ## AI modes
 

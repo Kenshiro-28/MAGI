@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.17
+Version     : 12.18
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -34,20 +34,22 @@ MAGI_ACTION_PROMPT = """You are working autonomously without user interaction.
 
 Review your previous response in the context of overall progress. Then select one action:
 
-1. EXPLOIT: If the previous response can be improved through correction, clarification, refinement, more detail, or updated data to directly advance the current path, create a command for the single most effective action.
-2. EXPLORE: If further exploitation on the current path offers no meaningful value (e.g., it's in a dead end, redundant, or stalled with no clear progress), reflect on the current situation and create a command to explore the most promising direction. If no clear new direction is viable, create a command to brainstorm new ideas and select the best one.
+1. EXPLOIT: If the previous response can be improved through correction, clarification, refinement, more detail, or updated data to directly advance the current path, create a command for the single most effective action. Ensure the command is actionable, detailed, and written in a clear, self-contained manner.
+2. EXPLORE: If further exploitation on the current path offers no meaningful value (e.g., it's in a dead end, redundant, or stalled with no clear progress), reflect on the current situation and create a command to explore the most promising direction. If no clear new direction is viable, create a command to brainstorm new ideas and select the best one. Ensure the command is actionable, detailed, and written in a clear, self-contained manner.
 
 Always choose one action to continue the mission—do not stop or exit.
 
 Output only the mode tag followed by the command in second person (imperative form), as in the examples below.
 
 Examples:
-EXPLOIT: Fix the error in the data processing script.
-EXPLORE: Investigate alternative data sources to bypass the current limitations.
-EXPLOIT: Refine the report by adding key insights from the analysis.
-EXPLORE: Brainstorm new angles for the project and select the best one.
-EXPLOIT: Iterate on the strategy by incorporating updated data.
-EXPLORE: Shift focus to a related sub-problem that could unblock progress."""
+EXPLOIT: Check current SOL balance for the wallet address abcde12345 by using Python to connect to Solana's public RPC endpoint at https://api.mainnet-beta.solana.com.
+EXPLORE: Investigate alternative Solana public RPC endpoint to bypass the issue of endpoint https://api.mainnet-beta.solana.com rejecting connections.
+EXPLOIT: Fix the error of SOLANA_PRIVATE_KEY environment variable not set by hardcoding the private key '2base58exampleprivatekeystring' in the code.
+EXPLORE: Research how to earn SOL tokens.
+EXPLOIT: Refine the stock analysis for TSLA by incorporating recent price data with closing prices on Oct 21, 2025: 442.60, Oct 22, 2025: 438.97, Oct 23, 2025: 419.50.
+EXPLORE: Brainstorm alternative trading strategies for volatile stocks.
+EXPLOIT: Refine the military drone swarm simulation by incorporating formation data with drone counts 10, 20, 30 and positions at (40.7128, -74.0060), (34.0522, -118.2437).
+EXPLORE: Research alternative deployment strategies for drone reconnaissance in urban environments."""
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
 
@@ -83,7 +85,7 @@ def runMagi(primeDirectives, action, context):
     while True:
         plugin.runAction(primeDirectives, action, context)
         aux_context = context[:]
-        action = core.send_prompt(primeDirectives, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
+        action = core.send_prompt(primeDirectives, plugin.CORE_PROTOCOL + MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
         plugin.printSystemText(ACTION_TAG + action)
 
 
