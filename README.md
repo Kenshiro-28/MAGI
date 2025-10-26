@@ -1,6 +1,8 @@
 # MAGI
 
-MAGI (マギ) is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware. It also features a plugin system that enables web browsing, code execution, remote operation through Telegram, and image generation.
+MAGI (マギ) is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware.
+
+Key features include a customizable Core Protocol for enhanced reasoning, a modular Toolchain for dynamic tool chaining (code execution, web browsing, and image generation), and teleoperation via Telegram for remote access.
 
 ## Configuration
 
@@ -12,7 +14,7 @@ CONTEXT_SIZE: number of tokens in the context window (default: 65536)
 
 ENABLE_CODE_RUNNER_PLUGIN: enable or disable the Code Runner plugin (default: YES)
 
-ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: NO)
+ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: YES)
 
 ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: NO)
 
@@ -45,6 +47,16 @@ The default protocol includes:
 - Metacognitive Consolidation: Synthesize, critique, calibrate confidence, rebut objections.
 
 To revert to the default model reasoning without applying any custom protocol, simply remove all contents from the file **core_protocol.txt** or delete the file.
+
+## Toolchain
+
+MAGI's toolchain acts as a modular system for registering and calling tools, similar to frameworks like Langchain. It allows MAGI to dynamically select and execute tools based on task needs, chaining their outputs into responses. Tools are enabled through the plugin system by editing the file **config.cfg**.
+
+The plugin system includes the following tools:
+
+- Code Runner plugin: adds a tool to generate and execute Python code.
+- Image generation plugin: adds a tool to generate images.
+- Web plugin: adds a tool to browse the web.
 
 ## AI modes
 
@@ -83,7 +95,7 @@ After receiving your initial prompt, MAGI will work autonomously to accomplish i
 Optionally, you can include the main objective and any critical mission data in the file **prime_directives.txt** to help ensure that MAGI remains aligned with its main objective during long-running operations. For example:
 
 ```
-You are MAGI, a friendly AI assistant. You can freely use your reasoning, knowledge, and internal capabilities for any task, but be aware that your only means of interacting with the physical world are browsing web pages (read-only) or executing Python code (console output only, no GUIs, file operations, or user input).
+You are MAGI, a friendly AI assistant.
 
 Your primary mission is to research tech stocks focused on robotics and AI automation, and identify the most promising options for long-term growth.
 ```
@@ -94,25 +106,25 @@ MAGI will run continuously until you manually stop it by pressing Ctrl + C.
 
 ### Code Runner plugin
 
-This plugin allows MAGI to generate and execute Python code to solve specific tasks, such as mathematical operations, accessing resources on the internet, simulations, or complex logic.
+This plugin adds a tool to generate and execute Python code to solve specific tasks, such as mathematical operations, accessing resources on the internet, simulations, or complex logic.
 
 MAGI will install the required Python packages in an isolated virtual environment.
 
-Even when the plugin is active, MAGI decides when to use it.
-
-Linting is performed using Ruff to ensure clean code, and execution times out after 30 minutes for safety.
+Linting is performed using Ruff to ensure clean code, and the execution times out after 30 minutes for safety.
 
 The generated code will run non-interactively, printing all results to the console.
 
-Moreover, the generated code will also print its relevant internal state (e.g., seeds, keys, or simulation variables) at the end of each execution for reuse in multi-step tasks.
+Moreover, the generated code will also print its relevant internal state at the end of each execution for reuse in multi-step tasks.
 
 MAGI will review and refine the generated code and its output up to 10 times to ensure it functions correctly and fully completes the task.
 
 ### Image generation plugin
 
-This plugin allows MAGI to download an image generation model from Hugging Face.
+This plugin adds a tool to generate images.
 
 Only Stable Diffusion 3 checkpoints are supported.
+
+It automatically downloads the specified image generation model from Hugging Face.
 
 MAGI will use the model to generate context-related images and save them in the folder **workspace**.
 
@@ -120,7 +132,7 @@ If the folder contains images from previous sessions, they will be overwritten.
 
 *System requirements:*
 
-CPU-only: 64GB of system RAM.
+CPU-only: 64GB of system RAM (due to float32 usage instead of float16).
 
 GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
 
@@ -169,13 +181,13 @@ TELEGRAM_USER_ID: your Telegram user ID, you can get it from userinfobot.
 
 ### Web plugin
 
-This plugin allows MAGI to browse the internet for up-to-date information.
-
-Even when the plugin is active, MAGI decides when to use it.
+This plugin adds a tool to browse the internet for up-to-date information.
 
 MAGI will search, scrape, and summarize relevant pages with automatic early stopping on success.
 
-If the relevant information is not found after 10 web searches (up to 5 pages per search), the web search will stop.
+It uses Dux Distributed Global Search (DDGS), a metasearch library that aggregates results from diverse web search services.
+
+It only scrapes websites that explicitly authorize it in robots.txt.
 
 ## Model 
 
@@ -189,7 +201,7 @@ You are a friendly AI assistant.
 Who was Sun Tzu?
 <|im_end|>
 <|im_start|>assistant
-Sun Tzu was the master strategist of ancient China, renowned as the author of The Art of War.
+Sun Tzu was the author of The Art of War.
 <|im_end|>
 ```
 

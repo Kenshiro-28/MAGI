@@ -14,16 +14,16 @@ MAX_SEQUENCE_LENGTH = 512
 def _load_pipeline(model: str, lora: str):
     if torch.cuda.is_available() and torch.cuda.get_device_properties(0).total_memory >= RECOMMENDED_VRAM:
         # Best quality
-        pipe = StableDiffusion3Pipeline.from_pretrained(model, torch_dtype = torch.bfloat16)
+        pipe = StableDiffusion3Pipeline.from_pretrained(model, dtype = torch.bfloat16)
         pipe.enable_model_cpu_offload()
     elif torch.cuda.is_available() and torch.cuda.get_device_properties(0).total_memory >= MIN_VRAM:
         # For lower VRAM, use float16 and more aggressive optimizations
-        pipe = StableDiffusion3Pipeline.from_pretrained(model, torch_dtype = torch.float16)
+        pipe = StableDiffusion3Pipeline.from_pretrained(model, dtype = torch.float16)
         pipe.enable_model_cpu_offload()
         pipe.enable_attention_slicing()
     else:
         # Force CPU mode for low VRAM or no CUDA
-        pipe = StableDiffusion3Pipeline.from_pretrained(model, torch_dtype = torch.float32)
+        pipe = StableDiffusion3Pipeline.from_pretrained(model, dtype = torch.float32)
         pipe.to("cpu")
 
     if lora:

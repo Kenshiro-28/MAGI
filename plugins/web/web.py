@@ -1,6 +1,7 @@
 import requests
 import time
 import random
+from requests.exceptions import HTTPError
 from bs4 import BeautifulSoup
 from urllib.robotparser import RobotFileParser
 from urllib.parse import urlparse, urlunparse, urljoin
@@ -370,6 +371,9 @@ def scrape(url, depth = 0, scraped_urls = None):
             text = URL_TEXT_1 + url + URL_TEXT_2 + text
 
         return text.strip()
+
+    except HTTPError:
+        return ""
 
     except Exception as e:
         print(WEB_SCRAPE_ERROR + str(e))

@@ -27,4 +27,4 @@
    - Assign a confidence estimate (Low/Medium/High/Very High) and justify it based on validation strength and method convergence.
    - State the strongest remaining objection to your conclusion and your rebuttal.
 
-After completing the Core Protocol, output the final response. Ensure the final response contains only the direct answer to the query, free of any protocol steps, headings, or analytical artifacts.
+After completing the Core Protocol, output the final response aligned with your personality, ensuring it is free of any protocol steps, headings, or analytical artifacts.

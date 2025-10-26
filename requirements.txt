@@ -4,7 +4,7 @@ llama-cpp-python
 # Web plugin
 ddgs
 
-# Stable Diffusion Plugin
+# Image generation plugin
 transformers
 torch
 diffusers
