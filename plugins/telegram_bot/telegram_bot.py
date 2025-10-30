@@ -26,7 +26,7 @@ class TelegramBot:
         except Forbidden:
             print(FORBIDDEN_ERROR)
         except Exception as e:
-            print(TELEGRAM_PLUGIN_ERROR + str(e))        
+            print(TELEGRAM_PLUGIN_ERROR + str(e))
 
 
     async def send_image(self, image):
@@ -36,7 +36,7 @@ class TelegramBot:
             image.save(bytes_io, TELEGRAM_IMAGE_FORMAT)
             bytes_io.seek(0)
 
-            await self.getUpdateId()            
+            await self.getUpdateId()
             await self.bot.send_photo(self.user, photo=bytes_io)
         except NetworkError:
             await asyncio.sleep(TIMEOUT)
@@ -44,18 +44,18 @@ class TelegramBot:
             print(FORBIDDEN_ERROR)
         except Exception as e:
             print(TELEGRAM_PLUGIN_ERROR + str(e))
-            
+
 
     async def receive(self):
         messageList = []
-    
+
         update_id = await self.getUpdateId()
 
         # Get the pending messages
         while update_id is not None:
             try:
                 next_update_id = update_id
-            
+
                 # Request updates after the last update_id
                 updates = await self.bot.get_updates(offset = update_id, timeout = TIMEOUT)
 
@@ -65,7 +65,7 @@ class TelegramBot:
                         messageList.append(update.message.text)
 
                     next_update_id = update.update_id + 1
-                
+
                 if next_update_id == update_id:
                     break
                 else:
@@ -80,7 +80,7 @@ class TelegramBot:
                 print(TELEGRAM_PLUGIN_ERROR + str(e))
 
         return messageList
-        
+
 
     async def getUpdateId(self):
         # Get the first pending update_id, this is so we can skip over it in case
@@ -90,8 +90,8 @@ class TelegramBot:
         except IndexError:
             update_id = None
         except Exception as e:
-            print(TELEGRAM_PLUGIN_ERROR + str(e))            
-            
-        return update_id            
+            print(TELEGRAM_PLUGIN_ERROR + str(e))
+
+        return update_id
 
 

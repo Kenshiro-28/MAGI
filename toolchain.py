@@ -1,7 +1,16 @@
 import json
-from typing import Callable, Any
+from typing import Callable
 import inspect
+import comms
+import core
 
+TOOL_SELECTION_SYSTEM_PROMPT = "You are an AI assistant focused on tool selection. Respond strictly as instructed without explanations, questions, or additional text."
+CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
+TASK_SECTION_TEXT = "\n---\nTASK: "
+AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE TOOLS: "
+CONTINUE_TEXT = "continue"
+TOOL_SELECTION_TEXT = "\n---\nTOOL SELECTION: Do you want to use a tool? Think about it: Review the context and tools, reflect on your reasoning, then decide. On the last line, write ONLY the exact tool name or '" + CONTINUE_TEXT + "' to proceed without a tool."
+TOOL_NOT_FOUND_ERROR = "\n\n[ERROR] Tool not found: "
 TOOL_NOT_REGISTERED_ERROR = "[ERROR] Tool is not registered: "
 TOOL_NON_CALLABLE_FUNCTION_ERROR = "[ERROR] Tool has non-callable 'function' field: "
 TOOL_ADD_ERROR = "[ERROR] Error adding tool: "
@@ -9,14 +18,37 @@ TOOL_INVALID_PARAMETER_ERROR = "[ERROR] Invalid function parameter; tool functio
 TOOL_DUPLICATE_ERROR = "[ERROR] Duplicate tool: "
 TOOL_RUN_ERROR = "[ERROR] Error while running tool: "
 TOOL_SIGNATURE_ERROR = "[ERROR] Function must accept 3 or 4 parameters: "
-TOOL_PARAMETER_TYPE_ERROR = "[ERROR] Parameter {name} has incorrect type: expected {expected}, got {actual} in "
+TOOL_PARAMETER_TYPE_ERROR = "[ERROR] Parameter {name} has incorrect type: expected {expected}, got {actual} in {function}"
+TOOL_RETURN_TYPE_ERROR = "[ERROR] Function must return {expected}, got {actual} in {function}"
+
+TOOL_USE_LIMIT = 5
 
 TOOLS: dict[str, dict] = {}
 
 
+def _sanitize_tool_name(response):
+    # Get the last line
+    lines = response.split('\n')
+    last_line = lines[-1]
+
+    # Clean the last line
+    tool = last_line.replace(".", "").replace("'", "").replace("\"", "").lower().strip()
+
+    return tool
+
+
+def _run_core_protocol(primeDirectives, action, context, hide_reasoning = False):
+    response = core.send_prompt(primeDirectives, CORE_PROTOCOL + action, context, hide_reasoning)
+
+    # Remove Core Protocol from context (len(context) is always >= 3 after sending a prompt)
+    context[-2] = context[-2].replace(CORE_PROTOCOL, '').strip()
+
+    return response
+
+
 # Functions are expected to have 3 or 4 parameters (is_agent is optional)
-# Function signature: (primeDirectives: str, action: str, context: list[str], is_agent: bool)
-def _check_function(function: Callable[..., Any]):
+# Function signature: (primeDirectives: str, action: str, context: list[str], is_agent: bool)-> str)
+def _check_function(function: Callable[..., str]):
     # Check function is callable
     if not callable(function):
         raise TypeError(TOOL_NON_CALLABLE_FUNCTION_ERROR)
@@ -26,7 +58,7 @@ def _check_function(function: Callable[..., Any]):
     # Check arguments are not *args or **kwargs
     for param in signature.parameters.values():
         if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
-            raise ValueError(TOOL_INVALID_PARAMETER_ERROR + str(function))
+            raise ValueError(TOOL_INVALID_PARAMETER_ERROR + function.__name__)
 
     # Get function parameters
     params = list(signature.parameters.values())
@@ -34,30 +66,35 @@ def _check_function(function: Callable[..., Any]):
 
     # Check number of parameters
     if num_params not in (3, 4):
-        raise ValueError(TOOL_SIGNATURE_ERROR + str(function))
+        raise ValueError(TOOL_SIGNATURE_ERROR + function.__name__)
 
     # Check parameter types
-    expected_types = [str, str, list[str]]
+    expected_parameters = [str, str, list[str]]
 
     if num_params == 4:
-        expected_types.append(bool)
+        expected_parameters.append(bool)
 
     for i, param in enumerate(params):
         actual = param.annotation
-        expected = expected_types[i]
+        expected = expected_parameters[i]
 
         if actual != expected:
-            raise TypeError(TOOL_PARAMETER_TYPE_ERROR.format(name = param.name, expected = expected, actual = actual) + str(function))
+            raise TypeError(TOOL_PARAMETER_TYPE_ERROR.format(name = param.name, expected = expected, actual = actual, function = function.__name__))
+
+    # Check return type
+    actual = signature.return_annotation
+    expected = str
+
+    if actual != expected:
+        raise TypeError(TOOL_RETURN_TYPE_ERROR.format(expected = expected, actual = actual, function = function.__name__))
 
 
-def _get_number_of_parameters(function: Callable[..., Any]):
-    signature = inspect.signature(function)
-    num_params = len(signature.parameters)
+def add_tool(name: str, description: str, function: Callable[..., str]) -> None:
+    name = _sanitize_tool_name(name)
 
-    return num_params
+    if not name:
+        raise ValueError(TOOL_ADD_ERROR + name)
 
-
-def add_tool(name: str, description: str, function: Callable[..., Any]) -> None:
     if name in TOOLS:
         raise ValueError(TOOL_DUPLICATE_ERROR + name)
 
@@ -77,7 +114,7 @@ def add_tool(name: str, description: str, function: Callable[..., Any]) -> None:
 
 def print_tools() -> str:
     if not TOOLS:
-        return ""
+        return "[]"
 
     tool_list = []
 
@@ -85,10 +122,13 @@ def print_tools() -> str:
         description = tool.get("description", "No description provided.")
         tool_list.append({"name": name, "description": description})
 
-    return json.dumps(tool_list, indent = 2)
+    if tool_list:
+        tools_text = json.dumps(tool_list, indent = 2)
+
+    return tools_text
 
 
-def run_tool(name: str, primeDirectives: str, action: str, context: list[str], is_agent: bool) -> Any:
+def run_tool(name: str, primeDirectives: str, action: str, context: list[str], is_agent: bool) -> str:
     tool = TOOLS.get(name)
 
     if not tool:
@@ -97,15 +137,74 @@ def run_tool(name: str, primeDirectives: str, action: str, context: list[str], i
     function = tool["function"]
 
     try:
-        num_params = _get_number_of_parameters(function)
+        signature = inspect.signature(function)
+        num_params = len(signature.parameters)
 
         if num_params == 4:
             return function(primeDirectives, action, context, is_agent)
         elif num_params == 3:
             return function(primeDirectives, action, context)
         else:
-            raise ValueError(TOOL_SIGNATURE_ERROR + str(function))
+            raise ValueError(TOOL_SIGNATURE_ERROR + function.__name__)
 
     except Exception as e:
         raise RuntimeError(TOOL_RUN_ERROR + name + "\n\n" + str(e)) from e
+
+
+def runAction(primeDirectives: str, action: str, context: list[str], is_agent: bool = False) -> str:
+    extended_action = action
+
+    tool_use = 0
+
+    # Use tools
+    while tool_use < TOOL_USE_LIMIT:
+        available_tools = print_tools()
+
+        if not available_tools:
+            break
+
+        # Select tool
+        prompt = extended_action + AVAILABLE_TOOLS_TEXT + available_tools + TOOL_SELECTION_TEXT
+        tool = core.send_prompt(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
+        tool = _sanitize_tool_name(tool)
+
+        if tool == CONTINUE_TEXT:
+            break
+
+        try:
+            extended_action = run_tool(tool, primeDirectives, extended_action, context, is_agent)
+            tool_use += 1
+
+        except KeyError:
+            error = TOOL_NOT_FOUND_ERROR + tool
+            extended_action += error
+            comms.printSystemText(error)
+
+        except Exception as e:
+            error = TOOL_RUN_ERROR + tool + "\n\n" + str(e)
+            extended_action += error
+            comms.printSystemText(error)
+
+    # Run action
+    response = _run_core_protocol(primeDirectives, extended_action, context)
+
+    # Print the response
+    comms.printMagiText("\n" + response)
+
+    # Remove extended reasoning
+    response = core.remove_reasoning(response)
+
+    return response
+
+
+# INITIALIZE
+
+# Core Protocol
+core_protocol_text = core.read_text_file(CORE_PROTOCOL_FILE_PATH)
+
+if core_protocol_text:
+    CORE_PROTOCOL = core_protocol_text + TASK_SECTION_TEXT
+else:
+    CORE_PROTOCOL = ""
+
 

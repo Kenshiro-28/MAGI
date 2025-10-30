@@ -1,5 +1,5 @@
 import core
-import plugin
+import comms
 import toolchain
 
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
@@ -17,6 +17,7 @@ AGENTS:\n\n"""
 ISSUE_ORDERS_PROMPT_2 = "\n\nThe list of agents above shows the order of assignment: first task goes to the first agent, second task to the second agent, and third task to the third agent.\n\nAgents have access to the following tools: "
 SQUAD_ORDERS_TEXT = "----- Squad orders -----\n\n"
 SQUAD_RESPONSE_TEXT = "\n\n----- Squad response -----\n\n"
+YOUR_ORDERS_TEXT = "\n\n----- Your orders -----\n\n"
 AGENT_ORDERS_TEXT_1 = "\n\n----- "
 AGENT_ORDERS_TEXT_2 = "'s orders -----\n\n"
 AGENT_RESPONSE_TEXT_1 = "\n\n----- "
@@ -24,9 +25,9 @@ AGENT_RESPONSE_TEXT_2 = "'s response -----\n\n"
 EVALUATE_TASK_PROMPT_1 = "\n\n----- Evaluation -----\n\nBased on all the above, has "
 EVALUATE_TASK_PROMPT_2 = " fully accomplished their assigned orders for this stage? For tasks involving tools (e.g., browsing web pages or executing Python code), accept explanations that claim to have performed the action (e.g., 'I browsed the web page', 'I executed the Python code'), even if no actual function call or tool output is evident, as long as a summary, result, or relevant details are provided. Respond ONLY with YES or NO."
 ISSUE_NEW_ORDERS_PROMPT_1 = "\n\n----- Action -----\n\nProvide new, detailed instructions for "
-ISSUE_NEW_ORDERS_PROMPT_2 = ". These instructions should clearly state what is missing or needs correction. Crucially, instruct the agent to provide a new, complete, and self-contained response that incorporates your feedback and comprehensively addresses all aspects of their original task. Address the agent directly by their name using the second person, aligned with your personality."
+ISSUE_NEW_ORDERS_PROMPT_2 = ". These instructions should clearly state what is missing or needs correction. Crucially, instruct the agent to provide a new, complete, and self-contained response that incorporates your feedback and comprehensively addresses all aspects of their original task. Address the agent directly by their name using the second person, according to your personality."
 GET_ORDERS_PROMPT_1 = "\n\n----- Action -----\n\nNow, based on this plan, address ONLY "
-GET_ORDERS_PROMPT_2 = " directly by their name using the second person, aligned with your personality. Provide clear and detailed instructions based on the plan above, reminding them to focus exclusively on their assigned task. If this is not the last task, remind them not to solve or expand on subsequent tasks."
+GET_ORDERS_PROMPT_2 = " directly by their name using the second person, according to your personality. Provide clear and detailed instructions based on the plan above, reminding them to focus exclusively on their assigned task. If this is not the last task, remind them not to solve or expand on subsequent tasks."
 ISSUE_ORDERS_ERROR_TEXT = "Only the captain can issue orders."
 EXECUTE_ORDERS_ERROR_TEXT = "Only soldiers can execute orders."
 
@@ -54,15 +55,13 @@ class Agent:
             return EXECUTE_ORDERS_ERROR_TEXT
 
         orders_completed = False
-        
-        # Use a copy of the captain's context
-        captain_context = captain.context[:]
+        initial_orders = True
 
         # Get orders from the captain
         printAgentTag(captain)
         prompt = SQUAD_ORDERS_TEXT + squad_orders + SQUAD_RESPONSE_TEXT + squad_response + GET_ORDERS_PROMPT_1 + self.name + GET_ORDERS_PROMPT_2
-        orders = core.send_prompt(captain.primeDirectives, prompt, captain_context)
-        plugin.printMagiText("\n" + orders)
+        orders = core.send_prompt(captain.primeDirectives, prompt, captain.context)
+        comms.printMagiText("\n" + orders)
 
         while not orders_completed:
             printAgentTag(self)
@@ -70,22 +69,28 @@ class Agent:
             # Remove extended reasoning
             orders = core.remove_reasoning(orders)
 
-            # Add squad orders, squad response and captain's tag
-            orders = squad_orders + "\n\n" + squad_response + "\n\n" + captain.tag() + orders
+            # Add captain's tag
+            orders = captain.tag() + orders
+
+            # Add squad orders and squad response
+            if initial_orders:
+                orders = SQUAD_ORDERS_TEXT + squad_orders + SQUAD_RESPONSE_TEXT + squad_response + YOUR_ORDERS_TEXT + orders
 
             # Execute orders
-            response = plugin.runAction(self.primeDirectives, orders, self.context, is_agent = True)
+            response = toolchain.runAction(self.primeDirectives, orders, self.context, is_agent = True)
 
             # Get feedback from the captain
             prompt = SQUAD_ORDERS_TEXT + squad_orders + SQUAD_RESPONSE_TEXT + squad_response + AGENT_ORDERS_TEXT_1 + self.name + AGENT_ORDERS_TEXT_2 + orders + AGENT_RESPONSE_TEXT_1 + self.name + AGENT_RESPONSE_TEXT_2 + response + EVALUATE_TASK_PROMPT_1 + self.name + EVALUATE_TASK_PROMPT_2
 
-            orders_completed = core.binary_question(captain.primeDirectives, prompt, captain_context)
+            orders_completed = core.binary_question(captain.primeDirectives, prompt, captain.context)
 
+            # Get new orders
             if not orders_completed:
+               initial_orders = False
                printAgentTag(captain)
                prompt = SQUAD_ORDERS_TEXT + squad_orders + SQUAD_RESPONSE_TEXT + squad_response + AGENT_RESPONSE_TEXT_1 + self.name + AGENT_RESPONSE_TEXT_2 + response + ISSUE_NEW_ORDERS_PROMPT_1 + self.name + ISSUE_NEW_ORDERS_PROMPT_2
-               orders = core.send_prompt(captain.primeDirectives, prompt, captain_context)
-               plugin.printMagiText("\n" + orders)
+               orders = core.send_prompt(captain.primeDirectives, prompt, captain.context)
+               comms.printMagiText("\n" + orders)
 
         # Add agent tag
         response = self.tag() + response
@@ -105,7 +110,7 @@ class Agent:
         prompt = mission + ISSUE_ORDERS_PROMPT_1 + SOLDIER_1_NAME + "\n" + SOLDIER_2_NAME + "\n" + SOLDIER_3_NAME + ISSUE_ORDERS_PROMPT_2 + tools
         response = core.send_prompt(self.primeDirectives, prompt, self.context)
 
-        plugin.printMagiText("\n" + response)
+        comms.printMagiText("\n" + response)
 
         # Remove extended reasoning
         response = core.remove_reasoning(response)
@@ -118,19 +123,20 @@ class Agent:
 
 
     def display(self):
-        plugin.printSystemText("Name: " + self.name + "\nPrime Directives: " + self.primeDirectives + "\n")
+        comms.printSystemText("Name: " + self.name + "\nPrime Directives: " + self.primeDirectives + "\n")
 
 
 def displayNervSquad():
-    plugin.printSystemText(NERV_SQUAD_TEXT)
+    comms.printSystemText(NERV_SQUAD_TEXT)
 
     captain.display()
-    
+
     for soldier in soldiers:
         soldier.display()
 
 
 def runSquadOrders(squad_orders):
+    squad_orders = captain.tag() + squad_orders
     squad_response = ""
 
     for soldier in soldiers:
@@ -141,7 +147,7 @@ def runSquadOrders(squad_orders):
 
 
 def printAgentTag(agent):
-    plugin.printSystemText("\n[AGENT] " + agent.name)
+    comms.printSystemText("\n[AGENT] " + agent.name)
 
 
 # INITIALIZE AGENTS

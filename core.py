@@ -5,14 +5,14 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\n\nSystem: v12.19"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.20"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
 EOS = "\n<|im_end|>\n"
 
-TEMPERATURE = 0.8
+TEMPERATURE = 1.0
 
 SUMMARIZE_SYSTEM_PROMPT = """You are an expert assistant specialized in text summarization. Your task is to generate a concise and accurate summary of the provided text, focusing strictly on the topic specified at the end of the user prompt.
 
@@ -75,7 +75,7 @@ config = None
 def split_text_in_blocks(text):
     index = 0
     blockArray = []
-    
+
     wordList = text.split()
 
     while index < len(wordList):
@@ -90,21 +90,21 @@ def split_text_in_blocks(text):
 def get_number_of_tokens(text):
     tokenized_text = model.tokenize(text.encode('utf-8'))
     text_tokens = len(tokenized_text)
-    
+
     return text_tokens
-    
+
 
 def get_context_data(context):
     text = ''.join(context)
     text_tokens = get_number_of_tokens(text)
-    
+
     return text, text_tokens
-    
-    
+
+
 def get_completion_from_messages(context):
     try:
         text, text_tokens = get_context_data(context)
-        
+
         # Check context size
         while len(context) > 3 and text_tokens > MAX_INPUT_TOKENS:
             context.pop(1)
@@ -116,9 +116,9 @@ def get_completion_from_messages(context):
         response = model(text, max_tokens = max_tokens, temperature = TEMPERATURE)
 
         return response['choices'][0]['text'].strip()
-        
+
     except Exception as e:
-        print_system_text(MODEL_ERROR_TEXT + str(e)) 
+        print_system_text(MODEL_ERROR_TEXT + str(e))
         return ""
 
 
@@ -133,23 +133,35 @@ def remove_reasoning(response):
 
 
 def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
+    # Sanitize input
+    primeDirectives = primeDirectives.strip()
+    prompt = prompt.strip()
+
+    # Format Prime Directives
     primeDirectives = SYSTEM_TEXT + primeDirectives + EOS
 
+    # Set Prime Directives in context
     if context:
         context[0] = primeDirectives
     else:
         context.append(primeDirectives)
 
+    # Format prompt
     command = USER_TEXT + prompt + EOS + ASSISTANT_TEXT
 
+    # Append prompt to context
     context.append(command)
 
+    # Process the updated context
     full_response = get_completion_from_messages(context)
 
+    # Remove extended reasoning from response
     response = remove_reasoning(full_response)
 
+    # Add response to context
     context.append(response + EOS)
 
+    # Return the full response if required
     if DISPLAY_EXTENDED_REASONING and not hide_reasoning:
         return full_response
     else:
@@ -158,22 +170,22 @@ def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
 
 def print_system_text(text):
     print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)
-    
+
     if LOG_ENABLED:
-        save_mission_log(text)    
+        save_mission_log(text)
 
 
 def print_magi_text(text):
     print(END_COLOR + MAGI_COLOR, end='')
-    
+
     for char in text:
         print(char, end='', flush=True)
         time.sleep(MAGI_TEXT_SLEEP_TIME)
-        
+
     print(END_COLOR)
-    
+
     if LOG_ENABLED:
-        save_mission_log(text)    
+        save_mission_log(text)
 
 
 def save_mission_log(text):
@@ -181,7 +193,7 @@ def save_mission_log(text):
 
     # Use regex to insert timestamp after any leading newlines
     log_entry = re.sub(r'^(\n*)', r'\1[{}] '.format(timestamp), text)
-    
+
     with open(MISSION_LOG_FILE_PATH, 'a') as missionFile:
         missionFile.write(log_entry + "\n")
 
@@ -190,10 +202,10 @@ def user_input():
     sys.stdin.flush()
 
     prompt = input(USER_COLOR + "\n$ ")
-    
+
     if LOG_ENABLED:
-        save_mission_log("\n" + prompt)    
-    
+        save_mission_log("\n" + prompt)
+
     return prompt
 
 
@@ -222,7 +234,7 @@ def summarize_block_array(topic, blockArray):
     for block in blockArray:
         summary = update_summary(topic, summary, block)
 
-    return summary        
+    return summary
 
 
 def binary_question(primeDirectives, question, context):
@@ -246,26 +258,26 @@ def binary_question(primeDirectives, question, context):
 
 def load_mission_data(prompt):
     missionData = read_text_file(MISSION_DATA_FILE_PATH)
-    
+
     if len(missionData.split()) > TEXT_BLOCK_WORDS:
         blockArray = split_text_in_blocks(missionData)
-        summary = summarize_block_array(prompt, blockArray)    
+        summary = summarize_block_array(prompt, blockArray)
     else:
-        summary = missionData    
-        
-    return summary            
+        summary = missionData
+
+    return summary
 
 
 def read_text_file(path):
     try:
         with open(path) as textFile:
             text = textFile.read().strip()
-            return text    
-    
+            return text
+
     except FileNotFoundError:
         print_system_text(READ_TEXT_FILE_WARNING + str(path))
         return ""
-    
+
 
 def load_model(startup = True):
     global model
@@ -286,17 +298,15 @@ def load_model(startup = True):
 
         # Get the file name without the .gguf extension
         modelName = os.path.splitext(modelFile)[0]
-        
-        print()
-        
-        # Load model        
-        model = Llama(model_path = modelFile, n_ctx = CONTEXT_SIZE)
 
-        model.verbose = False
-        
+        print()
+
+        # Load model
+        model = Llama(model_path = modelFile, n_ctx = CONTEXT_SIZE, verbose = False)
+
         if startup:
             print_system_text(SYSTEM_VERSION_TEXT)
-            print_system_text(MODEL_TEXT + modelName)        
+            print_system_text(MODEL_TEXT + modelName)
 
     except Exception as e:
         print_system_text(MODEL_LOAD_ERROR + str(e))
@@ -334,7 +344,7 @@ def load_config():
 
                 # Add to dictionary
                 config[key] = value
-                
+
     except Exception as e:
         print_system_text(CONFIG_ERROR + str(e) + "\n")
 
@@ -359,7 +369,7 @@ def configure_model():
             raise ValueError
 
         MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
-        
+
         # Set logging configuration
         LOG_ENABLED = config.get(ENABLE_LOG_KEY, "NO").upper() == "YES"
 

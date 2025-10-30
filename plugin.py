@@ -1,21 +1,11 @@
 import os
 import core
-import asyncio
-import time
+import comms
 import toolchain
+from PIL import Image
 
-CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
 PLUGIN_WORKSPACE_FOLDER = "workspace"
-TOOL_SELECTION_SYSTEM_PROMPT = "You are an AI assistant focused on tool selection. Respond strictly as instructed without explanations, questions, or additional text."
-AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE TOOLS: "
-CONTINUE_TEXT = "continue"
-TOOL_SELECTION_TEXT = "\n---\nTOOL SELECTION: Do you want to use a tool? Think about it: Review the context and tools, reflect on your reasoning, then decide. On the last line, write ONLY the exact tool name or '" + CONTINUE_TEXT + "' to proceed without a tool."
-TASK_SECTION_TEXT = "\n---\nTASK: "
-TOOL_USE_LIMIT = 5 # Number of tool usages per action
-ASYNCIO_ERROR = "\n[ERROR] Asyncio exception: "
 SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: "
-TOOL_NOT_FOUND_ERROR = "\n\n[ERROR] Tool not found: "
-TOOL_RUN_ERROR = "\n\n[ERROR] Error running tool: "
 
 # WEB PLUGIN
 WEB_SEARCH_PAGE_LIMIT = 5 # Number of web pages per search
@@ -47,16 +37,11 @@ WEB_SUMMARY_REVIEW_2 = "\n\nWeb search result: "
 WEB_SEARCH_FAILED_TEXT = "\n---\n" + WEB_SEARCH_TOOL_NAME + ": you performed a web search but it didn't return any results."
 
 # TELEGRAM PLUGIN
-TELEGRAM_PLUGIN_ACTIVE = False
-TELEGRAM_PLUGIN_WAIT_TIME = 3
-TELEGRAM_PLUGIN_CHAR_LIMIT = 4096
 TELEGRAM_PLUGIN_ENABLED_TEXT = "\nTelegram plugin: enabled"
 TELEGRAM_PLUGIN_DISABLED_TEXT = "\nTelegram plugin: disabled"
-TELEGRAM_PLUGIN_INPUT_READY_TEXT = "Ready for inquiry."
 ENABLE_TELEGRAM_PLUGIN_KEY = "ENABLE_TELEGRAM_PLUGIN"
 TELEGRAM_BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN"
 TELEGRAM_USER_ID_KEY = "TELEGRAM_USER_ID"
-TELEGRAM_TAG = "\n[TELEGRAM] "
 
 # IMAGE GENERATION PLUGIN
 IMAGE_GENERATION_PLUGIN_ENABLED_TEXT = "\nImage generation plugin: enabled"
@@ -255,114 +240,9 @@ CODE_RUNNER_TAG = "\n[CODE RUNNER]\n\n"
 CODE_RUNNER_MAX_REVIEWS = 10
 
 
-telegram_input_ready = True
-
-
-# SHARED OPERATIONS
-
-def printMagiText(text):
-    if TELEGRAM_PLUGIN_ACTIVE:
-        send_telegram_bot(text)
-        
-    core.print_magi_text(text)
-
-
-def printSystemText(text):
-    if TELEGRAM_PLUGIN_ACTIVE:
-        send_telegram_bot(text)
-        
-    core.print_system_text(text)
-
-
-def userInput():
-    global telegram_input_ready
-
-    if TELEGRAM_PLUGIN_ACTIVE:
-        if not telegram_input_ready:
-            send_telegram_bot(TELEGRAM_PLUGIN_INPUT_READY_TEXT)
-            telegram_input_ready = True
-
-        prompt = receive_telegram_bot()
-
-        if prompt:
-            core.print_system_text(TELEGRAM_TAG + prompt)
-            telegram_input_ready = False
-    else:
-        prompt = core.user_input()
-
-    return prompt.strip()
-
-
-def sanitize_tool_name(response):
-    # Get the last line
-    lines = response.split('\n')
-    last_line = lines[-1]
-
-    # Clean the last line
-    tool = last_line.replace(".", "").replace("'", "").replace("\"", "").lower().strip()
-
-    return tool
-
-
-def _run_core_protocol(primeDirectives, action, context, hide_reasoning = False):
-    response = core.send_prompt(primeDirectives, CORE_PROTOCOL + action, context, hide_reasoning)
-
-    # Remove Core Protocol from context
-    if len(context) >= 2:
-        context[-2] = context[-2].replace(CORE_PROTOCOL, '').strip()
-
-    return response
-
-
-def runAction(primeDirectives, action, context, is_agent = False):
-    extended_action = action
-
-    tool_use = 0
-
-    # Use tools
-    while tool_use < TOOL_USE_LIMIT:
-        available_tools = toolchain.print_tools()
-
-        if not available_tools:
-            break
-
-        # Select tool
-        prompt = extended_action + AVAILABLE_TOOLS_TEXT + available_tools + TOOL_SELECTION_TEXT
-        tool = core.send_prompt(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
-        tool = sanitize_tool_name(tool)
-
-        if tool == CONTINUE_TEXT:
-            break
-
-        try:
-            extended_action = toolchain.run_tool(tool, primeDirectives, extended_action, context, is_agent)
-            tool_use += 1
-
-        except KeyError:
-            error = TOOL_NOT_FOUND_ERROR + tool
-            extended_action += error
-            printSystemText(error)
-
-        except Exception as e:
-            error = TOOL_RUN_ERROR + tool + "\n\n" + str(e)
-            extended_action += error
-            printSystemText(error)
-
-    # Run action
-    response = _run_core_protocol(primeDirectives, extended_action, context)
-
-    # Print the response
-    printMagiText("\n" + response)
-
-    # Remove extended reasoning
-    response = core.remove_reasoning(response)
-
-    return response
-
-
 # WEB PLUGIN OPERATIONS
 
-def web_search(primeDirectives: str, action: str, context: list[str]):
+def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     aux_context = context[:]
     mission_completed = False
     summary = ""
@@ -371,13 +251,13 @@ def web_search(primeDirectives: str, action: str, context: list[str]):
     query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, aux_context, hide_reasoning = True)
     query = query.replace('"', '')
 
-    printSystemText(WEB_SEARCH_TAG + query)
+    comms.printSystemText(WEB_SEARCH_TAG + query)
 
     # Run the web search
     urls = web.search(query, WEB_SEARCH_PAGE_LIMIT)
 
     for url in urls:
-        printSystemText("\n" + url)
+        comms.printSystemText("\n" + url)
         text = web.scrape(url)
         blockArray = core.split_text_in_blocks(text)
 
@@ -387,7 +267,7 @@ def web_search(primeDirectives: str, action: str, context: list[str]):
             summary = core.update_summary(query, summary, web_summary)
             mission_completed = core.binary_question(primeDirectives, WEB_SEARCH_REVIEW_1 + query + WEB_SEARCH_REVIEW_2 + summary, aux_context)
         else:
-            printSystemText(WEB_SEARCH_ERROR)
+            comms.printSystemText(WEB_SEARCH_ERROR)
 
         if mission_completed:
             break
@@ -400,59 +280,14 @@ def web_search(primeDirectives: str, action: str, context: list[str]):
     return extended_action
 
 
-# TELEGRAM PLUGIN OPERATIONS
-
-def send_telegram_bot(text):
-    for i in range(0, len(text), TELEGRAM_PLUGIN_CHAR_LIMIT):
-        bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)    
-    
-        message = text[i:i + TELEGRAM_PLUGIN_CHAR_LIMIT]
-
-        time.sleep(TELEGRAM_PLUGIN_WAIT_TIME)
-
-        try:
-            asyncio.run(bot.send(message))
-        except Exception as e:
-            print(ASYNCIO_ERROR + str(e))
-
-
-def receive_telegram_bot():
-    message = ""
-
-    bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)    
-
-    time.sleep(TELEGRAM_PLUGIN_WAIT_TIME)
-    
-    try:    
-        messageList = asyncio.run(bot.receive())
-        
-        if messageList:
-            message = "\n".join(messageList)
-            
-    except Exception as e:
-        print(ASYNCIO_ERROR + str(e))
-
-    return message        
-
-
-def send_image_telegram_bot(image):
-    bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)
-    
-    time.sleep(TELEGRAM_PLUGIN_WAIT_TIME)        
-
-    try:
-        asyncio.run(bot.send_image(image))
-    except Exception as e:
-        print(ASYNCIO_ERROR + str(e))
-
-
 # IMAGE GENERATION OPERATIONS
 
 image_generation_counter = 1
 
-def generate_image(primeDirectives: str, action: str, context: list[str]):
+def generate_image(primeDirectives: str, action: str, context: list[str]) -> str:
     global image_generation_counter
     extended_action = action
+    image: Image.Image = None
 
     # Generate visual description
     aux_context = context[:]
@@ -462,7 +297,7 @@ def generate_image(primeDirectives: str, action: str, context: list[str]):
     aux_context = context[:]
     image_generation_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_PROMPT_TEXT + image_description, aux_context, hide_reasoning = True)
 
-    printSystemText(IMAGE_GENERATION_TAG + image_generation_prompt + "\n")
+    comms.printSystemText(IMAGE_GENERATION_TAG + image_generation_prompt + "\n")
 
     # Unload main model
     core.unload_model()
@@ -479,7 +314,7 @@ def generate_image(primeDirectives: str, action: str, context: list[str]):
             path = os.path.join(PLUGIN_WORKSPACE_FOLDER, image_name)
             image.save(path)
             image_generation_counter += 1
-            printSystemText(image_name)
+            comms.printSystemText("\n" + image_name)
             result = IMAGE_GENERATION_OK_TEXT_1 + image_description + IMAGE_GENERATION_OK_TEXT_2 + image_generation_prompt + IMAGE_GENERATION_OK_TEXT_3 + image_name
             extended_action += result
         else:
@@ -488,19 +323,19 @@ def generate_image(primeDirectives: str, action: str, context: list[str]):
     except Exception as e:
         image = None
         error = SAVE_FILE_ERROR + str(e)
-        printSystemText(error)
+        comms.printSystemText(error)
         extended_action += IMAGE_GENERATION_ERROR + "\n" + error
 
     # Send image to Telegram
-    if TELEGRAM_PLUGIN_ACTIVE and image:
-        send_image_telegram_bot(image)
+    if comms.telegram_bot_enabled and image:
+        comms.send_image_telegram_bot(image)
 
     return extended_action
 
 
 # CODE RUNNER OPERATIONS
 
-def code_runner_action(primeDirectives: str, action: str, context: list[str], is_agent: bool = False):
+def code_runner_action(primeDirectives: str, action: str, context: list[str], is_agent: bool = False) -> str:
     aux_context = context[:]
     review = 0
     mission_completed = False
@@ -524,7 +359,7 @@ def code_runner_action(primeDirectives: str, action: str, context: list[str], is
         # Generate the code
         response = core.send_prompt(system_prompt, prompt, aux_context, hide_reasoning = True)
 
-        printSystemText(CODE_RUNNER_TAG + response + "\n")
+        comms.printSystemText(CODE_RUNNER_TAG + response + "\n")
 
         # Extract code
         if '```python' in response:
@@ -536,16 +371,16 @@ def code_runner_action(primeDirectives: str, action: str, context: list[str], is
             program = response.strip()
 
         # Run program
-        printSystemText(CODE_RUNNER_RUN_PROGRAM_TEXT)
+        comms.printSystemText(CODE_RUNNER_RUN_PROGRAM_TEXT)
         lint_output, program_output = code_runner.run_python_code(program)
 
         # Review the program output
         if program_output:
-            printSystemText(program_output)
+            comms.printSystemText(program_output)
             prompt = CODE_RUNNER_PROGRAM_OUTPUT_REVIEW + program + "\n\n" + program_output + CODE_RUNNER_MISSION_TEXT + action
             mission_completed = core.binary_question(primeDirectives, prompt, aux_context)
         else:
-            printSystemText(lint_output)
+            comms.printSystemText(lint_output)
 
         review += 1
 
@@ -560,14 +395,6 @@ def code_runner_action(primeDirectives: str, action: str, context: list[str], is
 # INITIALIZE
 
 try:
-    # Core Protocol
-    core_protocol_text = core.read_text_file(CORE_PROTOCOL_FILE_PATH)
-
-    if core_protocol_text:
-        CORE_PROTOCOL = core_protocol_text + TASK_SECTION_TEXT
-    else:
-        CORE_PROTOCOL = ""
-
     # Workspace
     if not os.path.exists(PLUGIN_WORKSPACE_FOLDER):
         os.makedirs(PLUGIN_WORKSPACE_FOLDER)
@@ -597,10 +424,11 @@ try:
 
     # Telegram plugin
     if core.config.get(ENABLE_TELEGRAM_PLUGIN_KEY, '').upper() == "YES":
-        from plugins.telegram_bot import telegram_bot
-        TELEGRAM_PLUGIN_ACTIVE = True
-        TELEGRAM_BOT_TOKEN = core.config.get(TELEGRAM_BOT_TOKEN_KEY, '')
-        TELEGRAM_USER_ID = core.config.get(TELEGRAM_USER_ID_KEY, '')
+        telegram_bot_token = core.config.get(TELEGRAM_BOT_TOKEN_KEY, '')
+        telegram_user_id = core.config.get(TELEGRAM_USER_ID_KEY, '')
+
+        comms.initialize_telegram_bot(telegram_bot_token, telegram_user_id)
+
         core.print_system_text(TELEGRAM_PLUGIN_ENABLED_TEXT)
     else:
         core.print_system_text(TELEGRAM_PLUGIN_DISABLED_TEXT)

@@ -2,14 +2,16 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.19
+Version     : 12.20
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
 '''
 
 import core
-import plugin
+import plugin  # noqa: F401
+import comms
+import toolchain
 import agent
 import re
 from enum import Enum
@@ -42,8 +44,6 @@ Always choose one action to continue the mission—do not stop or exit.
 Output only the mode tag followed by the command in second person (imperative form), as in the examples below.
 
 Examples:
-EXPLOIT: Check current SOL balance for the wallet address abcde12345 by using Python to connect to Solana's public RPC endpoint at https://api.mainnet-beta.solana.com.
-EXPLORE: Investigate alternative Solana public RPC endpoint to bypass the issue of endpoint https://api.mainnet-beta.solana.com rejecting connections.
 EXPLOIT: Fix the error of SOLANA_PRIVATE_KEY environment variable not set by hardcoding the private key '2base58exampleprivatekeystring' in the code.
 EXPLORE: Research how to earn SOL tokens.
 EXPLOIT: Refine the stock analysis for TSLA by incorporating recent price data with closing prices on Oct 21, 2025: 442.60, Oct 22, 2025: 438.97, Oct 23, 2025: 419.50.
@@ -64,17 +64,17 @@ class AiMode(Enum):
 def sanitizeTask(task):
     # Remove digits, dots, dashes, spaces and "Task:" prefixes at the beginning of the task
     task = re.sub(r"^[0-9.\- ]*|^[Tt]ask[:]? *", '', task)
-    
+
     return task
-    
+
 
 def createTaskList(primeDirectives, mission, summary, header):
     context = []
 
     taskListText = core.send_prompt(primeDirectives, GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
-    
-    plugin.printSystemText(header + taskListText + "\n")
-    
+
+    comms.printSystemText(header + taskListText + "\n")
+
     # Remove blank lines and create the task list
     taskList = [line for line in taskListText.splitlines() if line.strip()]
 
@@ -83,10 +83,10 @@ def createTaskList(primeDirectives, mission, summary, header):
 
 def runMagi(primeDirectives, action, context):
     while True:
-        plugin.runAction(primeDirectives, action, context)
+        toolchain.runAction(primeDirectives, action, context)
         aux_context = context[:]
-        action = core.send_prompt(primeDirectives, plugin.CORE_PROTOCOL + MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
-        plugin.printSystemText(ACTION_TAG + action)
+        action = core.send_prompt(primeDirectives, toolchain.CORE_PROTOCOL + MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
+        comms.printSystemText(ACTION_TAG + action)
 
 
 def runNerv(mission):
@@ -94,67 +94,65 @@ def runNerv(mission):
 
     if not nerv_data:
         nerv_data = core.load_mission_data(mission)
-        plugin.printSystemText(MISSION_DATA_TEXT + nerv_data)
+        comms.printSystemText(MISSION_DATA_TEXT + nerv_data)
         agent.displayNervSquad()
 
     orders = agent.captain.issueOrders(DATA_TEXT + nerv_data + MISSION_TEXT + mission)
-    
+
     team_response = agent.runSquadOrders(orders)
 
     nerv_data = core.update_summary(mission, nerv_data, team_response)
-    
-    plugin.printSystemText(PROGRESS_REPORT_TEXT + nerv_data + "\n")
+
+    comms.printSystemText(PROGRESS_REPORT_TEXT + nerv_data + "\n")
 
 
 def runMission(primeDirectives, mission, context):
     summary = core.load_mission_data(mission)
 
     if summary:
-        plugin.printSystemText(MISSION_DATA_TEXT + summary)
+        comms.printSystemText(MISSION_DATA_TEXT + summary)
 
     actionList = createTaskList(primeDirectives, mission, summary, ACTIONS_TEXT)
 
     for action in actionList:
         action = sanitizeTask(action)
-    
-        plugin.printSystemText(ACTION_TAG + action)
+
+        comms.printSystemText(ACTION_TAG + action)
 
         action = ACTION_HELPER_TEXT + action
 
-        response = plugin.runAction(primeDirectives, action, context)
-        
+        response = toolchain.runAction(primeDirectives, action, context)
+
         summary = core.update_summary(mission, summary, response)
-    
-    plugin.printMagiText(SUMMARY_TEXT + summary)
+
+    comms.printMagiText(SUMMARY_TEXT + summary)
 
 
-def checkPrompt(primeDirectives, prompt, context, ai_mode):    
+def checkPrompt(primeDirectives, prompt, context, ai_mode):
     if ai_mode == AiMode.MISSION:
         runMission(primeDirectives, prompt, context)
-    elif ai_mode == AiMode.NERV:        
+    elif ai_mode == AiMode.NERV:
         runNerv(prompt)
     elif ai_mode == AiMode.MAGI:
         runMagi(primeDirectives, prompt, context)
     else:
-        plugin.runAction(primeDirectives, prompt, context)
+        toolchain.runAction(primeDirectives, prompt, context)
 
 
 def switchAiMode(ai_mode):
-    plugin.telegram_input_ready = True
-
     if ai_mode == AiMode.NORMAL:
         ai_mode = AiMode.MISSION
-        plugin.printSystemText(MISSION_MODE_TEXT)
+        comms.printSystemText(MISSION_MODE_TEXT)
     elif ai_mode == AiMode.MISSION:
         ai_mode = AiMode.NERV
-        plugin.printSystemText(NERV_MODE_TEXT)
+        comms.printSystemText(NERV_MODE_TEXT)
     elif ai_mode == AiMode.NERV:
         ai_mode = AiMode.MAGI
-        plugin.printSystemText(MAGI_MODE_TEXT)
+        comms.printSystemText(MAGI_MODE_TEXT)
     else:
         ai_mode = AiMode.NORMAL
-        plugin.printSystemText(NORMAL_MODE_TEXT)        
-        
+        comms.printSystemText(NORMAL_MODE_TEXT)
+
     return ai_mode
 
 
@@ -167,13 +165,13 @@ if __name__ == "__main__":
     primeDirectives = core.read_text_file(core.PRIME_DIRECTIVES_FILE_PATH)
 
     if primeDirectives:
-        plugin.printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives)
+        comms.printSystemText(PRIME_DIRECTIVES_TEXT + primeDirectives)
 
-    plugin.printSystemText(SYSTEM_HINT_TEXT)
-            
+    comms.printSystemText(SYSTEM_HINT_TEXT)
+
     # Main loop
     while True:
-        prompt = plugin.userInput()
+        prompt = comms.userInput()
 
         if prompt == "" or prompt.isspace():
             continue
@@ -181,7 +179,7 @@ if __name__ == "__main__":
         prompt_tokens = core.get_number_of_tokens(prompt)
 
         if prompt_tokens > core.MAX_INPUT_TOKENS:
-            plugin.printSystemText(core.MAX_INPUT_TOKENS_ERROR + str(prompt_tokens))
+            comms.printSystemText(core.MAX_INPUT_TOKENS_ERROR + str(prompt_tokens))
             continue
 
         command = prompt.split()[0]
@@ -194,5 +192,5 @@ if __name__ == "__main__":
         else:
             checkPrompt(primeDirectives, prompt, context, ai_mode)
 
-    plugin.printSystemText(EXIT_MAGI_TEXT)
+    comms.printSystemText(EXIT_MAGI_TEXT)
 

@@ -326,7 +326,7 @@ def scrape(url, depth = 0, scraped_urls = None):
 
         except Exception:
             return ""
-        
+
         # Fetch web page
         response = requests.get(url, headers = REQUESTS_USER_AGENT, timeout = TIMEOUT)
         response.raise_for_status()
