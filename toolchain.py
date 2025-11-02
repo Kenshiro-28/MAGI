@@ -10,6 +10,7 @@ TASK_SECTION_TEXT = "\n---\nTASK: "
 AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE TOOLS: "
 CONTINUE_TEXT = "continue"
 TOOL_SELECTION_TEXT = "\n---\nTOOL SELECTION: Do you want to use a tool? Think about it: Review the context and tools, reflect on your reasoning, then decide. On the last line, write ONLY the exact tool name or '" + CONTINUE_TEXT + "' to proceed without a tool."
+EMPTY_JSON_TEXT = "[]"
 TOOL_NOT_FOUND_ERROR = "\n\n[ERROR] Tool not found: "
 TOOL_NOT_REGISTERED_ERROR = "[ERROR] Tool is not registered: "
 TOOL_NON_CALLABLE_FUNCTION_ERROR = "[ERROR] Tool has non-callable 'function' field: "
@@ -37,7 +38,7 @@ def _sanitize_tool_name(response):
     return tool
 
 
-def _run_core_protocol(primeDirectives, action, context, hide_reasoning = False):
+def run_core_protocol(primeDirectives, action, context, hide_reasoning = False):
     response = core.send_prompt(primeDirectives, CORE_PROTOCOL + action, context, hide_reasoning)
 
     # Remove Core Protocol from context (len(context) is always >= 3 after sending a prompt)
@@ -113,8 +114,10 @@ def add_tool(name: str, description: str, function: Callable[..., str]) -> None:
 
 
 def print_tools() -> str:
+    tools_text = EMPTY_JSON_TEXT
+
     if not TOOLS:
-        return "[]"
+        return tools_text
 
     tool_list = []
 
@@ -160,20 +163,20 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
     while tool_use < TOOL_USE_LIMIT:
         available_tools = print_tools()
 
-        if not available_tools:
+        if available_tools == EMPTY_JSON_TEXT:
             break
 
         # Select tool
         prompt = extended_action + AVAILABLE_TOOLS_TEXT + available_tools + TOOL_SELECTION_TEXT
-        tool = core.send_prompt(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
+        tool = run_core_protocol(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
         tool = _sanitize_tool_name(tool)
 
         if tool == CONTINUE_TEXT:
             break
 
         try:
-            extended_action = run_tool(tool, primeDirectives, extended_action, context, is_agent)
             tool_use += 1
+            extended_action = run_tool(tool, primeDirectives, extended_action, context, is_agent)
 
         except KeyError:
             error = TOOL_NOT_FOUND_ERROR + tool
@@ -186,7 +189,7 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
             comms.printSystemText(error)
 
     # Run action
-    response = _run_core_protocol(primeDirectives, extended_action, context)
+    response = run_core_protocol(primeDirectives, extended_action, context)
 
     # Print the response
     comms.printMagiText("\n" + response)

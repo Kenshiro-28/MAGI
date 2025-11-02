@@ -85,7 +85,7 @@ def runMagi(primeDirectives, action, context):
     while True:
         toolchain.runAction(primeDirectives, action, context)
         aux_context = context[:]
-        action = core.send_prompt(primeDirectives, toolchain.CORE_PROTOCOL + MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
+        action = toolchain.run_core_protocol(primeDirectives, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
         comms.printSystemText(ACTION_TAG + action)
 
 
