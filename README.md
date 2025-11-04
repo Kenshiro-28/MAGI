@@ -10,6 +10,8 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
+TEMPERATURE: model temperature (default: 0.6)
+
 CONTEXT_SIZE: number of tokens in the context window (default: 65536)
 
 ENABLE_CODE_RUNNER_PLUGIN: enable or disable the Code Runner plugin (default: YES)
