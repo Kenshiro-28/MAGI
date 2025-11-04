@@ -2,7 +2,7 @@ import os
 import core
 import comms
 import toolchain
-from PIL import Image
+from PIL import Image  # noqa: TC002
 
 PLUGIN_WORKSPACE_FOLDER = "workspace"
 SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: "
@@ -282,7 +282,7 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
 
 # IMAGE GENERATION OPERATIONS
 
-image_generation_counter = 1
+image_generation_counter: int = 1
 
 def generate_image(primeDirectives: str, action: str, context: list[str]) -> str:
     global image_generation_counter

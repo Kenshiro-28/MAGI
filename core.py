@@ -5,14 +5,12 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.20"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.21"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
 EOS = "\n<|im_end|>\n"
-
-TEMPERATURE = 1.0
 
 SUMMARIZE_SYSTEM_PROMPT = """You are an expert assistant specialized in text summarization. Your task is to generate a concise and accurate summary of the provided text, focusing strictly on the topic specified at the end of the user prompt.
 
@@ -31,6 +29,11 @@ MODEL_TEXT = "\nModel: "
 MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
+
+TEMPERATURE = 0
+TEMPERATURE_KEY = "TEMPERATURE"
+TEMPERATURE_NOT_FOUND_TEXT = "Temperature not found.\n"
+TEMPERATURE_INVALID_TEXT = "Invalid temperature.\n"
 
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
@@ -69,10 +72,10 @@ LOG_ENABLED = False
 ENABLE_LOG_KEY = "ENABLE_LOG"
 
 model = None
-config = None
+config: dict[str, str] = {}
 
 
-def split_text_in_blocks(text):
+def split_text_in_blocks(text: str) -> list[str]:
     index = 0
     blockArray = []
 
@@ -87,21 +90,21 @@ def split_text_in_blocks(text):
     return blockArray
 
 
-def get_number_of_tokens(text):
+def get_number_of_tokens(text: str) -> int:
     tokenized_text = model.tokenize(text.encode('utf-8'))
     text_tokens = len(tokenized_text)
 
     return text_tokens
 
 
-def get_context_data(context):
+def get_context_data(context: list[str]) -> tuple[str, int]:
     text = ''.join(context)
     text_tokens = get_number_of_tokens(text)
 
     return text, text_tokens
 
 
-def get_completion_from_messages(context):
+def get_completion_from_messages(context: list[str]) -> str:
     try:
         text, text_tokens = get_context_data(context)
 
@@ -122,7 +125,7 @@ def get_completion_from_messages(context):
         return ""
 
 
-def remove_reasoning(response):
+def remove_reasoning(response: str) -> str:
     # Remove complete <think>...</think> blocks
     response = THINK_PATTERN.sub('', response)
 
@@ -132,7 +135,7 @@ def remove_reasoning(response):
     return response.strip()
 
 
-def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
+def send_prompt(primeDirectives: str, prompt: str, context: list[str], hide_reasoning: bool = False) -> str:
     # Sanitize input
     primeDirectives = primeDirectives.strip()
     prompt = prompt.strip()
@@ -168,14 +171,14 @@ def send_prompt(primeDirectives, prompt, context, hide_reasoning = False):
         return response
 
 
-def print_system_text(text):
+def print_system_text(text: str) -> None:
     print(END_COLOR + SYSTEM_COLOR + text + END_COLOR)
 
     if LOG_ENABLED:
         save_mission_log(text)
 
 
-def print_magi_text(text):
+def print_magi_text(text: str) -> None:
     print(END_COLOR + MAGI_COLOR, end='')
 
     for char in text:
@@ -188,7 +191,7 @@ def print_magi_text(text):
         save_mission_log(text)
 
 
-def save_mission_log(text):
+def save_mission_log(text: str) -> None:
     timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
     # Use regex to insert timestamp after any leading newlines
@@ -198,7 +201,7 @@ def save_mission_log(text):
         missionFile.write(log_entry + "\n")
 
 
-def user_input():
+def user_input() -> str:
     sys.stdin.flush()
 
     prompt = input(USER_COLOR + "\n$ ")
@@ -209,7 +212,7 @@ def user_input():
     return prompt
 
 
-def summarize(topic, text):
+def summarize(topic: str, text: str) -> str:
     context = []
 
     summary = send_prompt(SUMMARIZE_SYSTEM_PROMPT, text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True)
@@ -217,7 +220,7 @@ def summarize(topic, text):
     return summary
 
 
-def update_summary(topic, summary, text):
+def update_summary(topic: str, summary: str, text: str) -> str:
     if text:
         if summary:
             summary = summarize(topic, summary + "\n" + text)
@@ -227,7 +230,7 @@ def update_summary(topic, summary, text):
     return summary
 
 
-def summarize_block_array(topic, blockArray):
+def summarize_block_array(topic: str, blockArray: list[str]) -> str:
     summary = ""
 
     # Summarize
@@ -237,7 +240,7 @@ def summarize_block_array(topic, blockArray):
     return summary
 
 
-def binary_question(primeDirectives, question, context):
+def binary_question(primeDirectives: str, question: str, context: list[str]) -> bool:
     aux_context = context[:]
 
     response = send_prompt(primeDirectives, question, aux_context, hide_reasoning = True)
@@ -256,7 +259,7 @@ def binary_question(primeDirectives, question, context):
         return False
 
 
-def load_mission_data(prompt):
+def load_mission_data(prompt: str) -> str:
     missionData = read_text_file(MISSION_DATA_FILE_PATH)
 
     if len(missionData.split()) > TEXT_BLOCK_WORDS:
@@ -268,7 +271,7 @@ def load_mission_data(prompt):
     return summary
 
 
-def read_text_file(path):
+def read_text_file(path: str) -> str:
     try:
         with open(path) as textFile:
             text = textFile.read().strip()
@@ -279,7 +282,7 @@ def read_text_file(path):
         return ""
 
 
-def load_model(startup = True):
+def load_model(startup: bool = True) -> None:
     global model
     model = None
 
@@ -313,7 +316,7 @@ def load_model(startup = True):
         exit()
 
 
-def unload_model():
+def unload_model() -> None:
     global model
 
     if model is not None:
@@ -321,9 +324,8 @@ def unload_model():
         model = None
 
 
-def load_config():
+def load_config() -> None:
     global config
-    config = {}
 
     try:
         with open(CONFIG_FILE_PATH, 'r') as file:
@@ -349,36 +351,52 @@ def load_config():
         print_system_text(CONFIG_ERROR + str(e) + "\n")
 
 
-def configure_model():
+def configure_model() -> None:
+    global TEMPERATURE
     global CONTEXT_SIZE
     global MAX_INPUT_TOKENS
     global LOG_ENABLED
     global DISPLAY_EXTENDED_REASONING
 
+    # Set model temperature
+    temperature = config.get(TEMPERATURE_KEY, '')
+
+    if not temperature:
+        print_system_text(CONFIG_ERROR + TEMPERATURE_NOT_FOUND_TEXT)
+        exit()
+
     try:
-        # Set context size
-        context_size = config.get(CONTEXT_SIZE_KEY, '')
+        TEMPERATURE = float(temperature)
 
-        if not context_size:
-            print_system_text(CONFIG_ERROR + CONTEXT_SIZE_NOT_FOUND_TEXT)
-            exit()
+    except ValueError:
+        print_system_text(CONFIG_ERROR + TEMPERATURE_INVALID_TEXT)
+        exit()
 
+    # Set context size
+    context_size = config.get(CONTEXT_SIZE_KEY, '')
+
+    if not context_size:
+        print_system_text(CONFIG_ERROR + CONTEXT_SIZE_NOT_FOUND_TEXT)
+        exit()
+
+    try:
         CONTEXT_SIZE = int(context_size)
-
-        if CONTEXT_SIZE < MIN_CONTEXT_SIZE:
-            raise ValueError
-
-        MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
-
-        # Set logging configuration
-        LOG_ENABLED = config.get(ENABLE_LOG_KEY, "NO").upper() == "YES"
-
-        # Set extended reasoning configuration
-        DISPLAY_EXTENDED_REASONING = config.get(DISPLAY_EXTENDED_REASONING_KEY, "YES").upper() == "YES"
 
     except ValueError:
         print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT)
         exit()
+
+    if CONTEXT_SIZE < MIN_CONTEXT_SIZE:
+        raise ValueError
+
+    # Set max input tokens
+    MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
+
+    # Set logging configuration
+    LOG_ENABLED = config.get(ENABLE_LOG_KEY, "NO").upper() == "YES"
+
+    # Set extended reasoning configuration
+    DISPLAY_EXTENDED_REASONING = config.get(DISPLAY_EXTENDED_REASONING_KEY, "YES").upper() == "YES"
 
 
 # Initialize

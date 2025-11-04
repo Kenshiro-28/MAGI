@@ -19,19 +19,19 @@ TELEGRAM_TAG = "\n[TELEGRAM] "
 TELEGRAM_BOT_TOKEN = ""
 TELEGRAM_USER_ID = ""
 
-telegram_bot_enabled = False
+telegram_bot_enabled: bool = False
 
-telegram_message_queue = []
+telegram_message_queue: list[str] = []
 
 
-def printMagiText(text: str):
+def printMagiText(text: str) -> None:
     if telegram_bot_enabled:
         _send_telegram_bot(text)
 
     core.print_magi_text(text)
 
 
-def printSystemText(text: str):
+def printSystemText(text: str) -> None:
     if telegram_bot_enabled:
         _send_telegram_bot(text)
 
@@ -53,7 +53,7 @@ def userInput() -> str:
 
 # TELEGRAM PLUGIN OPERATIONS
 
-def _send_telegram_bot(text):
+def _send_telegram_bot(text: str) -> None:
     for i in range(0, len(text), TELEGRAM_PLUGIN_CHAR_LIMIT):
         message = text[i:i + TELEGRAM_PLUGIN_CHAR_LIMIT]
 
@@ -67,7 +67,7 @@ def _send_telegram_bot(text):
             print(COMMS_ERROR + str(e))
 
 
-def _receive_telegram_bot():
+def _receive_telegram_bot() -> str:
     global telegram_message_queue
 
     message = ""
@@ -98,7 +98,7 @@ def _receive_telegram_bot():
     return message
 
 
-def initialize_telegram_bot(token: str, user_id: str):
+def initialize_telegram_bot(token: str, user_id: str) -> None:
     global TELEGRAM_BOT_TOKEN
     global TELEGRAM_USER_ID
     global telegram_bot_enabled
@@ -109,7 +109,7 @@ def initialize_telegram_bot(token: str, user_id: str):
     telegram_bot_enabled = True
 
 
-def send_image_telegram_bot(image: Image.Image):
+def send_image_telegram_bot(image: Image.Image) -> None:
     time.sleep(TELEGRAM_PLUGIN_SEND_WAIT_TIME)
 
     try:

@@ -18,5 +18,5 @@ jobs:
       - name: Install Ruff
         run: pip install ruff
       - name: Run Ruff
-        run: ruff check --extend-select=S --ignore=S105 . --target-version py311
+        run: ruff check --extend-select=S,TYP --ignore=S105 . --target-version py311
 

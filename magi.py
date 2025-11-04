@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.20
+Version     : 12.21
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -61,14 +61,14 @@ class AiMode(Enum):
     MAGI    = 3
 
 
-def sanitizeTask(task):
+def sanitizeTask(task: str) -> str:
     # Remove digits, dots, dashes, spaces and "Task:" prefixes at the beginning of the task
     task = re.sub(r"^[0-9.\- ]*|^[Tt]ask[:]? *", '', task)
 
     return task
 
 
-def createTaskList(primeDirectives, mission, summary, header):
+def createTaskList(primeDirectives: str, mission: str, summary: str, header: str) -> list[str]:
     context = []
 
     taskListText = core.send_prompt(primeDirectives, GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
@@ -81,7 +81,7 @@ def createTaskList(primeDirectives, mission, summary, header):
     return taskList
 
 
-def runMagi(primeDirectives, action, context):
+def runMagi(primeDirectives: str, action: str, context: list[str]) -> None:
     while True:
         toolchain.runAction(primeDirectives, action, context)
         aux_context = context[:]
@@ -89,7 +89,7 @@ def runMagi(primeDirectives, action, context):
         comms.printSystemText(ACTION_TAG + action)
 
 
-def runNerv(mission):
+def runNerv(mission: str) -> None:
     global nerv_data
 
     if not nerv_data:
@@ -106,7 +106,7 @@ def runNerv(mission):
     comms.printSystemText(PROGRESS_REPORT_TEXT + nerv_data + "\n")
 
 
-def runMission(primeDirectives, mission, context):
+def runMission(primeDirectives: str, mission: str, context: list[str]) -> None:
     summary = core.load_mission_data(mission)
 
     if summary:
@@ -128,7 +128,7 @@ def runMission(primeDirectives, mission, context):
     comms.printMagiText(SUMMARY_TEXT + summary)
 
 
-def checkPrompt(primeDirectives, prompt, context, ai_mode):
+def checkPrompt(primeDirectives: str, prompt: str, context: list[str], ai_mode: AiMode) -> None:
     if ai_mode == AiMode.MISSION:
         runMission(primeDirectives, prompt, context)
     elif ai_mode == AiMode.NERV:
@@ -139,7 +139,7 @@ def checkPrompt(primeDirectives, prompt, context, ai_mode):
         toolchain.runAction(primeDirectives, prompt, context)
 
 
-def switchAiMode(ai_mode):
+def switchAiMode(ai_mode: AiMode) -> AiMode:
     if ai_mode == AiMode.NORMAL:
         ai_mode = AiMode.MISSION
         comms.printSystemText(MISSION_MODE_TEXT)
@@ -158,9 +158,9 @@ def switchAiMode(ai_mode):
 
 # Main logic
 if __name__ == "__main__":
-    context = []
-    nerv_data = ""
-    ai_mode = AiMode.NORMAL
+    context: list[str] = []
+    nerv_data: str = ""
+    ai_mode: AiMode = AiMode.NORMAL
 
     primeDirectives = core.read_text_file(core.PRIME_DIRECTIVES_FILE_PATH)
 

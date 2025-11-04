@@ -27,7 +27,7 @@ TOOL_USE_LIMIT = 5
 TOOLS: dict[str, dict] = {}
 
 
-def _sanitize_tool_name(response):
+def _sanitize_tool_name(response: str) -> str:
     # Get the last line
     lines = response.split('\n')
     last_line = lines[-1]
@@ -38,7 +38,7 @@ def _sanitize_tool_name(response):
     return tool
 
 
-def run_core_protocol(primeDirectives, action, context, hide_reasoning = False):
+def run_core_protocol(primeDirectives: str, action: str, context: list[str], hide_reasoning: bool = False) -> str:
     response = core.send_prompt(primeDirectives, CORE_PROTOCOL + action, context, hide_reasoning)
 
     # Remove Core Protocol from context (len(context) is always >= 3 after sending a prompt)
@@ -49,7 +49,7 @@ def run_core_protocol(primeDirectives, action, context, hide_reasoning = False):
 
 # Functions are expected to have 3 or 4 parameters (is_agent is optional)
 # Function signature: (primeDirectives: str, action: str, context: list[str], is_agent: bool)-> str)
-def _check_function(function: Callable[..., str]):
+def _check_function(function: Callable[..., str]) -> None:
     # Check function is callable
     if not callable(function):
         raise TypeError(TOOL_NON_CALLABLE_FUNCTION_ERROR)

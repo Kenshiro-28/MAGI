@@ -44,13 +44,13 @@ SOLDIER_3_PRIME_DIRECTIVES_KEY = "SOLDIER_3_PRIME_DIRECTIVES"
 
 class Agent:
 
-    def __init__(self, name, primeDirectives):
+    def __init__(self, name: str, primeDirectives: str) -> None:
         self.name = name
         self.primeDirectives = primeDirectives
         self.context = []
 
 
-    def executeOrders(self, squad_orders, squad_response):
+    def executeOrders(self, squad_orders: str, squad_response: str) -> str:
         if self.name == CAPTAIN_NAME:
             return EXECUTE_ORDERS_ERROR_TEXT
 
@@ -98,7 +98,7 @@ class Agent:
         return response
 
 
-    def issueOrders(self, mission):
+    def issueOrders(self, mission: str) -> str:
         if self.name != CAPTAIN_NAME:
             return ISSUE_ORDERS_ERROR_TEXT
 
@@ -118,15 +118,15 @@ class Agent:
         return response
 
 
-    def tag(self):
+    def tag(self) -> str:
         return "[" + self.name + "] "
 
 
-    def display(self):
+    def display(self) -> None:
         comms.printSystemText("Name: " + self.name + "\nPrime Directives: " + self.primeDirectives + "\n")
 
 
-def displayNervSquad():
+def displayNervSquad() -> None:
     comms.printSystemText(NERV_SQUAD_TEXT)
 
     captain.display()
@@ -135,7 +135,7 @@ def displayNervSquad():
         soldier.display()
 
 
-def runSquadOrders(squad_orders):
+def runSquadOrders(squad_orders: str) -> str:
     squad_orders = captain.tag() + squad_orders
     squad_response = ""
 
@@ -146,7 +146,7 @@ def runSquadOrders(squad_orders):
     return squad_response.strip()
 
 
-def printAgentTag(agent):
+def printAgentTag(agent: Agent) -> None:
     comms.printSystemText("\n[AGENT] " + agent.name)
 
 
@@ -160,8 +160,8 @@ SOLDIER_2_PRIME_DIRECTIVES = core.config.get(SOLDIER_2_PRIME_DIRECTIVES_KEY, '')
 SOLDIER_3_NAME = core.config.get(SOLDIER_3_NAME_KEY, '')
 SOLDIER_3_PRIME_DIRECTIVES = core.config.get(SOLDIER_3_PRIME_DIRECTIVES_KEY, '')
 
-captain = Agent(CAPTAIN_NAME, CAPTAIN_PRIME_DIRECTIVES)
-soldiers = []
+captain: Agent = Agent(CAPTAIN_NAME, CAPTAIN_PRIME_DIRECTIVES)
+soldiers: list[Agent] = []
 soldiers.append(Agent(SOLDIER_1_NAME, SOLDIER_1_PRIME_DIRECTIVES))
 soldiers.append(Agent(SOLDIER_2_NAME, SOLDIER_2_PRIME_DIRECTIVES))
 soldiers.append(Agent(SOLDIER_3_NAME, SOLDIER_3_PRIME_DIRECTIVES))
