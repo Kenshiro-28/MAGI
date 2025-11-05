@@ -1,11 +1,12 @@
 from llama_cpp import Llama
+from collections.abc import Iterator
 import os
 import sys
 import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.21"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.22"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -26,11 +27,12 @@ MISSION_DATA_FILE_PATH = "mission_data.txt"
 CONFIG_FILE_PATH = "config.cfg"
 
 MODEL_TEXT = "\nModel: "
-MODEL_ERROR_TEXT = "\n[WARNING] An exception occurred while trying to get a response from the model: "
+MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
+MODEL_RESPONSE_ERROR = "\n[ERROR] Model response error"
 
-TEMPERATURE = 0
+TEMPERATURE = 0.0
 TEMPERATURE_KEY = "TEMPERATURE"
 TEMPERATURE_NOT_FOUND_TEXT = "Temperature not found.\n"
 TEMPERATURE_INVALID_TEXT = "Invalid temperature.\n"
@@ -71,7 +73,7 @@ THINK_PATTERN = re.compile(
 LOG_ENABLED = False
 ENABLE_LOG_KEY = "ENABLE_LOG"
 
-model = None
+model: Llama = None
 config: dict[str, str] = {}
 
 
@@ -116,7 +118,10 @@ def get_completion_from_messages(context: list[str]) -> str:
 
         max_tokens = min(CONTEXT_SIZE - text_tokens, MAX_RESPONSE_SIZE)
 
-        response = model(text, max_tokens = max_tokens, temperature = TEMPERATURE)
+        response = model(text, max_tokens = max_tokens, temperature = TEMPERATURE, stream = False)
+
+        if isinstance(response, Iterator):
+            raise ValueError(MODEL_RESPONSE_ERROR)
 
         return response['choices'][0]['text'].strip()
 
@@ -213,7 +218,7 @@ def user_input() -> str:
 
 
 def summarize(topic: str, text: str) -> str:
-    context = []
+    context: list[str] = []
 
     summary = send_prompt(SUMMARIZE_SYSTEM_PROMPT, text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True)
 

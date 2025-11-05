@@ -44,7 +44,7 @@ IGNORED_FILE_ENDINGS = {'.js', '.git', '.gitignore', 'license'}
 FILE_CONTENT_SEGMENTS = {'blob', 'raw'}
 BLACKLISTED_DOMAINS = {'youtube.com', 'youtu.be', 'facebook.com', 'fb.com', 'instagram.com', 'tiktok.com', 'twitter.com', 'x.com', 'linkedin.com', 'vimeo.com', 'twitch.tv', 'netflix.com', 'hulu.com', 'spotify.com', 'soundcloud.com', 'pinterest.com', 'reddit.com', 'amazon.com', 'ebay.com'}
 ROBOTS_CACHE_TTL = 86400 # 24 hours in seconds
-ROBOTS_CACHE = {}  # Key: domain, Value: (RobotFileParser, timestamp)
+ROBOTS_CACHE: dict = {}  # Key: domain, Value: (RobotFileParser, timestamp)
 
 
 last_cache_sweep = time.time()

@@ -4,12 +4,24 @@ import inspect
 import comms
 import core
 
-TOOL_SELECTION_SYSTEM_PROMPT = "You are an AI assistant focused on tool selection. Respond strictly as instructed without explanations, questions, or additional text."
+TOOL_SELECTION_SYSTEM_PROMPT = "You are an AI assistant focused on tool selection. Reason step-by-step as instructed in the user prompt."
 CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
 TASK_SECTION_TEXT = "\n---\nTASK: "
 AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE TOOLS: "
 CONTINUE_TEXT = "continue"
-TOOL_SELECTION_TEXT = "\n---\nTOOL SELECTION: Do you want to use a tool? Think about it: Review the context and tools, reflect on your reasoning, then decide. On the last line, write ONLY the exact tool name or '" + CONTINUE_TEXT + "' to proceed without a tool."
+TOOL_SELECTION_TEXT = f"""\n---\nTOOL SELECTION: Review the task description above, the provided conversation history, and the list of available tools. Follow these steps:
+
+Step 1: Determine if any tool is necessary to complete or advance the task, considering information gaps, requirements, enhancements from history, or if the task can be resolved with existing knowledge.
+
+Step 2: If a tool is needed, select the single best match by comparing the task to each tool's description. Evaluate based on:
+   - Relevance: Direct alignment with the task's core needs.
+   - Specificity: Prefer tools that precisely address the gap over general ones.
+   - Tie-breaker: If multiple seem equally suitable, prefer the first listed tool.
+   Only choose from the listed tools—do not invent new ones. Select only one tool per evaluation; chaining happens automatically if needed.
+
+Step 3: If no tool is suitable, none is required, or the task can proceed without one, select '{CONTINUE_TEXT}'.
+
+Reason step-by-step based on these steps. Then, on the final line, output ONLY the exact tool name (no additional text) or '{CONTINUE_TEXT}' to proceed without a tool."""  # noqa: S608
 EMPTY_JSON_TEXT = "[]"
 TOOL_NOT_FOUND_ERROR = "\n\n[ERROR] Tool not found: "
 TOOL_NOT_REGISTERED_ERROR = "[ERROR] Tool is not registered: "
@@ -73,7 +85,7 @@ def _check_function(function: Callable[..., str]) -> None:
     expected_parameters = [str, str, list[str]]
 
     if num_params == 4:
-        expected_parameters.append(bool)
+        expected_parameters.append(bool)  # type: ignore[arg-type]
 
     for i, param in enumerate(params):
         actual = param.annotation
@@ -167,8 +179,8 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
             break
 
         # Select tool
-        prompt = extended_action + AVAILABLE_TOOLS_TEXT + available_tools + TOOL_SELECTION_TEXT
-        tool = run_core_protocol(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
+        prompt = TASK_SECTION_TEXT + extended_action + AVAILABLE_TOOLS_TEXT + available_tools + TOOL_SELECTION_TEXT
+        tool = core.send_prompt(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
         tool = _sanitize_tool_name(tool)
 
         if tool == CONTINUE_TEXT:

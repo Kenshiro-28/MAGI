@@ -1,5 +1,6 @@
 import unittest
 import sys
+import types
 from unittest.mock import patch
 
 # Create a mock for the Llama class that will be imported in core.py
@@ -22,7 +23,9 @@ class MockLlama:
         }
 
 # Create and inject the mock llama_cpp module
-sys.modules['llama_cpp'] = type('llama_cpp', (), {'Llama': MockLlama})
+mock_llama_cpp = types.ModuleType('llama_cpp')
+setattr(mock_llama_cpp, 'Llama', MockLlama)
+sys.modules['llama_cpp'] = mock_llama_cpp
 
 # Import core with mocked os.listdir to ensure a model file is found
 with patch('os.listdir', return_value=['model.gguf']):

@@ -45,9 +45,9 @@ SOLDIER_3_PRIME_DIRECTIVES_KEY = "SOLDIER_3_PRIME_DIRECTIVES"
 class Agent:
 
     def __init__(self, name: str, primeDirectives: str) -> None:
-        self.name = name
-        self.primeDirectives = primeDirectives
-        self.context = []
+        self.name: str = name
+        self.primeDirectives: str = primeDirectives
+        self.context: list[str] = []
 
 
     def executeOrders(self, squad_orders: str, squad_response: str) -> str:

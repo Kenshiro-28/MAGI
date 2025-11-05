@@ -1,6 +1,7 @@
 import gc
 import torch
-from diffusers import StableDiffusion3Pipeline, logging
+from diffusers import StableDiffusion3Pipeline
+from diffusers.utils import logging
 
 IMAGE_GENERATION_ERROR = "\n[ERROR] An exception occurred while trying to generate an image: "
 
@@ -55,7 +56,7 @@ def generate_image(
             prompt = image_specs + ". " + prompt
 
         # Generate image
-        image = pipe(
+        image = pipe(  # type: ignore[operator]
             prompt = prompt,
             negative_prompt = negative_prompt,
             width = width,

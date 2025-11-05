@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.21
+Version     : 12.22
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -69,7 +69,7 @@ def sanitizeTask(task: str) -> str:
 
 
 def createTaskList(primeDirectives: str, mission: str, summary: str, header: str) -> list[str]:
-    context = []
+    context: list[str] = []
 
     taskListText = core.send_prompt(primeDirectives, GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
 
