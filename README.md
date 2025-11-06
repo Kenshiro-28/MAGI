@@ -358,4 +358,3 @@ If you want to print the log of the last run, use this command:
 $ sudo docker logs $(sudo docker ps -l -q)
 ```
 
-

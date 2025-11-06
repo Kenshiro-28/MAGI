@@ -6,7 +6,7 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.22"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.23"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -27,10 +27,10 @@ MISSION_DATA_FILE_PATH = "mission_data.txt"
 CONFIG_FILE_PATH = "config.cfg"
 
 MODEL_TEXT = "\nModel: "
-MODEL_ERROR_TEXT = "\n[ERROR] An exception occurred while trying to get a response from the model: "
+MODEL_RESPONSE_ERROR = "\n[ERROR] An exception occurred while trying to get a response from the model: "
+MODEL_RESPONSE_FORMAT_ERROR = "\n[ERROR] Response format error."
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
-MODEL_RESPONSE_ERROR = "\n[ERROR] Model response error"
 
 TEMPERATURE = 0.0
 TEMPERATURE_KEY = "TEMPERATURE"
@@ -108,6 +108,7 @@ def get_context_data(context: list[str]) -> tuple[str, int]:
 
 def get_completion_from_messages(context: list[str]) -> str:
     try:
+        # Get context data
         text, text_tokens = get_context_data(context)
 
         # Check context size
@@ -116,18 +117,22 @@ def get_completion_from_messages(context: list[str]) -> str:
             context.pop(1)
             text, text_tokens = get_context_data(context)
 
+        # Compute response token limit
         max_tokens = min(CONTEXT_SIZE - text_tokens, MAX_RESPONSE_SIZE)
 
+        # Get model response
         response = model(text, max_tokens = max_tokens, temperature = TEMPERATURE, stream = False)
 
+        # Check response format
         if isinstance(response, Iterator):
-            raise ValueError(MODEL_RESPONSE_ERROR)
+            raise ValueError(MODEL_RESPONSE_FORMAT_ERROR)
 
         return response['choices'][0]['text'].strip()
 
     except Exception as e:
-        print_system_text(MODEL_ERROR_TEXT + str(e))
-        return ""
+        error = MODEL_RESPONSE_ERROR + str(e)
+        print_system_text(error)
+        exit()
 
 
 def remove_reasoning(response: str) -> str:
