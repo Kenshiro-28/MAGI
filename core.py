@@ -6,7 +6,7 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.23"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.24"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"

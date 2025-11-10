@@ -2,6 +2,7 @@
 import subprocess
 import os
 import sys
+import stat
 import shutil
 
 PROGRAM_TIMEOUT = 1800
@@ -21,10 +22,16 @@ def _install_packages(package_list):
     return result
 
 
+def _remove_readonly(func, path, exc_info):
+    if func in (os.unlink, os.rmdir):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
+
 def _create_venv():
     # Delete previous environment and cache
-    shutil.rmtree(VENV_PATH, ignore_errors = True)
-    shutil.rmtree(PYCACHE_PATH, ignore_errors = True)
+    shutil.rmtree(VENV_PATH, onerror = _remove_readonly)
+    shutil.rmtree(PYCACHE_PATH, onerror = _remove_readonly)
 
     # Create new environment
     subprocess.check_call([sys.executable, '-m', 'venv', VENV_PATH])
@@ -100,7 +107,7 @@ def run_python_code(program: str):
 # INITIALIZE
 
 try:
-    CURRENT_PATH = os.getcwd()
+    CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
     # Get path of Python virtual environment
     VENV_PATH = os.path.join(CURRENT_PATH, 'venv')
@@ -114,7 +121,7 @@ try:
     RUFF_EXEC_PATH = os.path.join(VENV_PATH, 'bin', 'ruff')
 
     # Check Python virtual environment
-    if os.path.exists(VENV_PATH):
+    if os.path.exists(VENV_PATH) and os.path.exists(PIP_EXEC_PATH):
         # Upgrade Ruff
         subprocess.check_call([PIP_EXEC_PATH, 'install', '--upgrade', '--quiet', 'ruff'])
     else:
