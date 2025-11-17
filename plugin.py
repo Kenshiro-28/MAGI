@@ -61,9 +61,19 @@ IMAGE_GENERATION_TOOL_DESCRIPTION = """Generate a static image based on a textua
 - Explicitly instructs to 'generate an image', 'create a picture', or similar actions.
 
 Do not use this tool for non-visual descriptions or tasks that do not involve visuals, or if the request explicitly instructs NOT to generate images (e.g., "no images", "don't generate an image")."""
-GENERATE_IMAGE_TEXT = """Think about what static image best represents TEXT. Generate a concise, visual-focused description (max 200 words). Focus on key visible elements, styles, and scenes. Output ONLY the image description. TEXT: """
-GENERATE_IMAGE_PROMPT_TEXT = """First, think about what static image best represents TEXT. Then think about the best single composition for that image. Use standard terms like the following examples:
+GENERATE_IMAGE_TEXT = """Analyze TEXT and determine its nature:
 
+If TEXT already contains visual descriptions (subjects, objects, scenes, physical attributes, colors, materials, compositions, etc.):
+- PRESERVE all specified details exactly as given
+- You may ADD complementary visual details that enhance the scene
+- NEVER contradict, oppose, or modify any user-specified attributes
+
+If TEXT is conceptual, abstract, or non-visual (ideas, emotions, stories without visual details):
+- Think about what static image best represents it
+- Create a clear visual description from scratch
+
+Generate an image description (max 200 words). Focus on key visible elements, styles, and scenes. Output ONLY the image description. TEXT: """
+GENERATE_IMAGE_PROMPT_TEXT = """First, think about what static image best represents TEXT. Then think about the best single composition for that image. Use standard terms like the following examples:
 - extreme close-up (isolates a single, small detail)
 - close-up (a person's head and shoulders)
 - medium shot (a person from the hips to head)
@@ -72,28 +82,40 @@ GENERATE_IMAGE_PROMPT_TEXT = """First, think about what static image best repres
 - wide shot (the subject is small in a large environment)
 - panoramic (a vast landscape or cityscape)
 
-If none of these are the best fit, you can use other standard compositional terms. The final prompt should be a clear, physical description of the scene. If the TEXT includes a specific artistic style (like "in the style of H.R. Giger" or "gritty"), you should include it.
+If none of these are the best fit, you can use other standard compositional terms. The final prompt should be a clear, physical description of the scene, including any physical descriptions of people (body type, physique, facial features, proportions).
+
+If the TEXT includes a specific artistic style (like "in the style of H.R. Giger" or "gritty"), you should include it.
 
 Crucially, if the TEXT describes a specific, physical light source that is part of the scene (like a 'candle', 'fireplace', 'neon sign', or 'flashlight'), you SHOULD include it.
 
+Remove general lighting style terms like 'dramatic lighting', 'cinematic lighting', or 'moody lighting'. Keep specific details about light sources.
+
 Here are examples of how to correctly format the final prompt:
 ---
-EXAMPLE 1 (Keeping a physical light source)
-TEXT = a beautiful woman in a dark room lit only by a single candle
-CORRECT PROMPT = close-up: A beautiful woman's face, lit by a single candle.
-
-EXAMPLE 2 (Removing a stylistic light description)
+EXAMPLE 1 (Removing a stylistic light description)
 TEXT = a knight in shining armor on a horse, under dramatic, moody lighting
 CORRECT PROMPT = full shot: A knight in shining armor on a horse.
 
-EXAMPLE 3 (Style Included)
-TEXT = a portrait of a biomechanoid in the style of H.R. Giger
-CORRECT PROMPT = medium shot: A portrait of a biomechanoid in the style of H.R. Giger.
+EXAMPLE 2 (Keeping light source details)
+TEXT = a slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern under cinematic lighting
+CORRECT PROMPT = full shot: A slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern.
+
+EXAMPLE 3 (Honoring framing request and keeping physical descriptions)
+TEXT = a medium shot of a curvy woman with a voluptuous figure, blue eyes and long blonde hair in a room lit only by a single candle
+CORRECT PROMPT = medium shot: A curvy woman with a voluptuous figure, blue eyes and long blonde hair, lit by a single candle.
+
+EXAMPLE 4 (Style Included)
+TEXT = a biomechanoid inside a big alien ship in the style of H.R. Giger
+CORRECT PROMPT = wide shot: A biomechanoid inside a big alien ship in the style of H.R. Giger.
+
+EXAMPLE 5 (Panoramic for vast scenes)
+TEXT = a futuristic Tokyo cityscape with neon skyscrapers stretching to the horizon
+CORRECT PROMPT = panoramic: A futuristic Tokyo cityscape with neon skyscrapers stretching to the horizon.
 ---
 
 Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements, the requested style, and any physical light sources.
 
-Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't describe general atmospheric or stylistic lighting. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 90 words. Don't write the number of words.\n\nTEXT = """
+Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 95 words. Don't write the number of words.\n\nTEXT = """
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 IMAGE_GENERATION_OK_TEXT_1 = "\n---\n" + IMAGE_GENERATION_TOOL_NAME + ": image generated successfully.\n\nImage description: "
 IMAGE_GENERATION_OK_TEXT_2 = "\n\nImage generation prompt: "
