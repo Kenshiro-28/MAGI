@@ -82,7 +82,17 @@ GENERATE_IMAGE_PROMPT_TEXT = """First, think about what static image best repres
 - wide shot (the subject is small in a large environment)
 - panoramic (a vast landscape or cityscape)
 
+When using close-up for people or humanoids, include "head and shoulders" to maintain framing.
+
+When using medium shot for people or humanoids, include "waist up" to maintain framing.
+
+When using medium long shot for people or humanoids, include "knees up" to maintain framing.
+
+When using full shot for people or humanoids, include "full body in frame".
+
 If none of these are the best fit, you can use other standard compositional terms. The final prompt should be a clear, physical description of the scene, including any physical descriptions of people (body type, physique, facial features, proportions).
+
+IMPORTANT: The chosen composition must show all described details. If the TEXT describes elements that would be cut off by the requested framing (e.g., thigh-high stockings in a "waist up" shot, bare feet in a "knees up" shot, floor-length dress in a "head and shoulders" shot), use a wider composition that can include those details.
 
 If the TEXT includes a specific artistic style (like "in the style of H.R. Giger" or "gritty"), you should include it.
 
@@ -94,15 +104,15 @@ Here are examples of how to correctly format the final prompt:
 ---
 EXAMPLE 1 (Removing a stylistic light description)
 TEXT = a knight in shining armor on a horse, under dramatic, moody lighting
-CORRECT PROMPT = full shot: A knight in shining armor on a horse.
+CORRECT PROMPT = full body in frame: A knight in shining armor on a horse.
 
 EXAMPLE 2 (Keeping light source details)
 TEXT = a slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern under cinematic lighting
-CORRECT PROMPT = full shot: A slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern.
+CORRECT PROMPT = full body in frame: A slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern.
 
 EXAMPLE 3 (Honoring framing request and keeping physical descriptions)
 TEXT = a medium shot of a curvy woman with a voluptuous figure, blue eyes and long blonde hair in a room lit only by a single candle
-CORRECT PROMPT = medium shot: A curvy woman with a voluptuous figure, blue eyes and long blonde hair, lit by a single candle.
+CORRECT PROMPT = waist up: A curvy woman with blue eyes and long blonde hair, lit by a single candle.
 
 EXAMPLE 4 (Style Included)
 TEXT = a biomechanoid inside a big alien ship in the style of H.R. Giger
@@ -111,11 +121,22 @@ CORRECT PROMPT = wide shot: A biomechanoid inside a big alien ship in the style 
 EXAMPLE 5 (Panoramic for vast scenes)
 TEXT = a futuristic Tokyo cityscape with neon skyscrapers stretching to the horizon
 CORRECT PROMPT = panoramic: A futuristic Tokyo cityscape with neon skyscrapers stretching to the horizon.
----
 
+EXAMPLE 6 (Adjusting composition to show described details)
+TEXT = a close-up of a curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings
+CORRECT PROMPT = full body in frame: A curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings.
+
+EXAMPLE 7 (Adjusting composition to show described details)
+TEXT = a medium shot of a Roman centurion in polished lorica segmentata and leather caligae standing on marble steps
+CORRECT PROMPT = full body in frame: A Roman centurion in polished lorica segmentata and leather caligae standing on marble steps.
+
+EXAMPLE 8 (Adjusting composition to show described details)
+TEXT = a headshot of a woman in an elegant floor-length gown
+CORRECT PROMPT = full body in frame: A woman in an elegant floor-length gown.
+---
 Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements, the requested style, and any physical light sources.
 
-Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 95 words. Don't write the number of words.\n\nTEXT = """
+Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 91 words. Don't write the number of words.\n\nTEXT = """
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 IMAGE_GENERATION_OK_TEXT_1 = "\n---\n" + IMAGE_GENERATION_TOOL_NAME + ": image generated successfully.\n\nImage description: "
 IMAGE_GENERATION_OK_TEXT_2 = "\n\nImage generation prompt: "

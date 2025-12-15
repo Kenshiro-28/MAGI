@@ -1,5 +1,7 @@
 # MAGI
 
+[![MAGI intro video](https://ipfs.io/ipfs/bafybeicplzuyad3stsfd5nz4l6s4df7czyocfmqgxujruugyxby7pmmkpm)](https://ipfs.io/ipfs/bafybeihhurksv4whiocfumnqxl4we7y4baonkj4ryami4nx2jhvvvpg2oa)
+
 MAGI (マギ) is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware.
 
 Key features include a customizable Core Protocol for enhanced reasoning, a modular Toolchain for dynamic tool chaining (code execution, web browsing, and image generation), and teleoperation via Telegram for remote access.
@@ -10,7 +12,7 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-TEMPERATURE: model temperature (default: 0.8)
+TEMPERATURE: model temperature (default: 0.6)
 
 CONTEXT_SIZE: number of tokens in the context window (default: 65536)
 
@@ -157,9 +159,9 @@ IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stab
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, sharp focus, deep focus, highly detailed, intricate details, realistic textures, realistic proportions, volumetric lighting, cinematic color grading)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo shot on Hasselblad X2D 100C, 50mm lens, realistic proportions, razor-sharp focus, highly detailed, intricate details, realistic textures, volumetric lighting, cinematic color grading)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: lowres, blurry, out of focus, soft focus, shallow depth of field, jpeg artifacts, noisy, grainy, deformed, disfigured, bad proportions, gross proportions, bad anatomy, malformed body, poorly drawn face, asymmetrical eyes, lifeless eyes, unnatural skin, contorted)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: lowres, blurry, out of focus, soft focus, shallow depth of field, jpeg artifacts, noisy, grainy, worst quality, low quality, deformed, disfigured, bad proportions, gross proportions, bad anatomy, poorly drawn face, asymmetrical eyes, lifeless eyes, colored sclera)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 768)
 
@@ -213,23 +215,41 @@ The model must enclose its extended reasoning between `<think>` tags:
 <think>Okay, so I need to explain who was Sun Tzu.</think>
 ```
 
-### Recommended model
+### Recommended models
 
-#### Qwen3-30B-A3B-Thinking-2507-GGUF
+Hint: As a rule of thumb, your combined RAM + VRAM should be at least 50% larger than the GGUF file size.
 
-Qwen3-30B-A3B-Thinking-2507-GGUF is a 30-billion parameter model from Alibaba Cloud's Qwen series.
+#### Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA-GGUF
 
-It features significantly improved performance on reasoning tasks, including logical reasoning, mathematics, science, coding, and academic benchmarks that typically require human expertise.
+![Qwen3-Deckard-Large](https://ipfs.io/ipfs/bafybeifhmkvn2idrf2v343eq3aflxcwzut3dhfwjj4y7pgqb7ckwy25avm)
 
-https://huggingface.co/unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF/blob/main/Qwen3-30B-A3B-Thinking-2507-Q8_0.gguf
+Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA is a 6-billion parameter model created by DavidAU, based on the Qwen3 architecture.
+
+The "Deckard" series (named after the Blade Runner protagonist) features training on an in-house dataset derived from Philip K. Dick's writings. The "Almost Human" variant adds biographical data, letters, and notes from the author, resulting in enhanced tone, thinking patterns, and prose quality.
+
+https://huggingface.co/mradermacher/Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA-GGUF/blob/main/Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA.Q8_0.gguf
 
 *System requirements:*
 
-As a rule of thumb, the combined total of RAM and VRAM (if used) should be at least 50% larger than the GGUF file size.
+CPU-only: 32GB of system RAM.
 
-CPU-only: 48GB of system RAM.
+GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
 
-GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 48GB.
+#### Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF
+
+![Qwen3-TOTAL-RECALL](https://ipfs.io/ipfs/bafybeic3p7ux4lqk64xcvaynxxewsnljmkycl4xaz46hr3cdxnxunv3dty)
+
+Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF is based on Qwen3-30B-A3B-2507-Thinking from Alibaba Cloud's Qwen series.
+
+It features significantly improved performance on reasoning tasks, including logical reasoning, mathematics, science, coding, and academic benchmarks that typically require human expertise.
+
+https://huggingface.co/mradermacher/Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF/blob/main/Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER.Q8_0.gguf
+
+*System requirements:*
+
+CPU-only: 64GB of system RAM.
+
+GPU: NVIDIA GPU with at least 16GB VRAM. Aim for a combined RAM + VRAM of at least 64GB.
 
 ## Debian installation
 
@@ -357,4 +377,8 @@ If you want to print the log of the last run, use this command:
 ```
 $ sudo docker logs $(sudo docker ps -l -q)
 ```
+
+## Disclaimer
+
+This project is open-source and non-commercial. I do not own the rights to any images, videos, linked resources (such as recommended AI models), or other external media used herein; they are included for illustrative, educational, functional, or transformative purposes only and belong to their respective owners. No copyright infringement is intended. If you are the rights holder and have concerns, please file a report via GitHub's DMCA process for removal.
 

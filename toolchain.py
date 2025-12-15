@@ -21,7 +21,17 @@ Step 2: If a tool is needed, select the single best match by comparing the task 
 
 Step 3: If no tool is suitable, none is required, or the task can proceed without one, select '{CONTINUE_TEXT}'.
 
-Reason step-by-step based on these steps. Then, on the final line, output ONLY the exact tool name (no additional text) or '{CONTINUE_TEXT}' to proceed without a tool."""  # noqa: S608
+OUTPUT FORMAT:
+First, write your step-by-step reasoning.
+Then, your final line must contain ONLY the tool name or '{CONTINUE_TEXT}'—nothing else.
+
+WRONG (do not do this):
+Selected tool: my_tool
+Tool: my_tool
+The answer is my_tool
+
+CORRECT (do this):
+my_tool"""  # noqa: S608
 EMPTY_JSON_TEXT = "[]"
 TOOL_NOT_FOUND_ERROR = "\n\n[ERROR] Tool not found: "
 TOOL_NOT_REGISTERED_ERROR = "[ERROR] Tool is not registered: "
