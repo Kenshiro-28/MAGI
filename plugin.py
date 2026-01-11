@@ -112,7 +112,7 @@ CORRECT PROMPT = full body in frame: A slender elven archer with long auburn hai
 
 EXAMPLE 3 (Honoring framing request and keeping physical descriptions)
 TEXT = a medium shot of a curvy woman with a voluptuous figure, blue eyes and long blonde hair in a room lit only by a single candle
-CORRECT PROMPT = waist up: A curvy woman with blue eyes and long blonde hair, lit by a single candle.
+CORRECT PROMPT = waist up: A curvy woman with a voluptuous figure, blue eyes and long blonde hair, in a room lit only by a single candle.
 
 EXAMPLE 4 (Style Included)
 TEXT = a biomechanoid inside a big alien ship in the style of H.R. Giger
