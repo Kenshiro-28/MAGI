@@ -5,22 +5,24 @@ PDF_URL = "https://ia803407.us.archive.org/35/items/TheArtOfWarBySunTzu/ArtOfWar
 CODE_URL = "https://github.com/Kenshiro-28/MAGI/blob/main/agent.py"
 MAX_URLS = 3
 
-print("\nWeb search: " + WEB_SEARCH)
 
-urls = web.search(WEB_SEARCH, MAX_URLS)
+if __name__ == "__main__":
+    print("\nWeb search: " + WEB_SEARCH)
 
-# Search & html scraping test
-for url in urls:
-    print("\n" + url)
-    text = web.scrape(url)
-    print("\n" + text)
+    urls = web.search(WEB_SEARCH, MAX_URLS)
 
-# PDF scraping test
-text = web.scrape(PDF_URL)
-print("\n\nPDF scraping:\n\n" + text)
+    # Search & html scraping test
+    for url in urls:
+        print("\n" + url)
+        text = web.scrape(url)
+        print("\n" + text)
 
-# Code scraping test
-text = web.scrape(CODE_URL)
-print("\n\nCode scraping:\n\n" + text)
+    # PDF scraping test
+    text = web.scrape(PDF_URL)
+    print("\n\nPDF scraping:\n\n" + text)
+
+    # Code scraping test
+    text = web.scrape(CODE_URL)
+    print("\n\nCode scraping:\n\n" + text)
 
 

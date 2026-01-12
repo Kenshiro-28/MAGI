@@ -2,8 +2,8 @@ FROM debian:stable-slim
 
 RUN apt-get update && \
     apt-get install -y build-essential apparmor-utils git pkg-config libopenblas-dev python3-venv \
-    python3-pip python3-requests python3-bs4 python3-docx python3-odf python3-pypdf \
-    python3-python-telegram-bot && \
+    python3-pip python3-requests python3-pycurl python3-protego antiword python3-bs4 python3-docx \
+    python3-odf python3-pypdf python3-python-telegram-bot && \
     rm -rf /var/lib/apt/lists/*
 
 # Set environment variables

@@ -2,26 +2,28 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.26
+Version     : 12.27
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
 '''
 
-import core
-import plugin  # noqa: F401
-import comms
-import toolchain
-import agent
 import re
 from enum import Enum
+from typing import Any
+
+# MAGI modules
+core: Any = None
+comms: Any = None
+toolchain: Any = None
+agent: Any = None
 
 SYSTEM_HINT_TEXT = "\n\nHint: to switch AI mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 DATA_TEXT = "DATA = "
 MISSION_TEXT = "\n\nMISSION = "
-GENERATE_TASK_LIST_TEXT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Only output the task list, no titles, headers, or additional text. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph, separated by a blank line.\n"
+GENERATE_TASK_LIST_TEXT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph, separated by a blank line. Output ONLY the tasks, no reasoning, no commentary, no preamble.\n\n"
 ACTION_HELPER_TEXT = "Do this: "
 EXIT_MAGI_TEXT = "\nまたね。\n"
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
@@ -39,7 +41,14 @@ Review your previous response in the context of overall progress. Then select on
 1. EXPLOIT: If the previous response can be improved through correction, clarification, refinement, more detail, or updated data to directly advance the current path, create a command for the single most effective action. Ensure the command is actionable, detailed, and written in a clear, self-contained manner.
 2. EXPLORE: If further exploitation on the current path offers no meaningful value (e.g., it's in a dead end, redundant, or stalled with no clear progress), reflect on the current situation and create a command to explore the most promising direction. If no clear new direction is viable, create a command to brainstorm new ideas and select the best one. Ensure the command is actionable, detailed, and written in a clear, self-contained manner.
 
-Always choose one action to continue the mission—do not stop or exit.
+CONSTRAINTS:
+- The command must be specific and actionable.
+- DO NOT use vague phrases like "Continue" or "Analyze".
+- Always choose one action to continue the mission—do not stop or exit.
+
+CRITICAL OUTPUT FORMAT:
+Output EXACTLY one line. No reasoning. No preamble.
+Format: TAG: COMMAND
 
 Output only the mode tag followed by the command in second person (imperative form), as in the examples below.
 
@@ -52,6 +61,9 @@ EXPLOIT: Refine the military drone swarm simulation by incorporating formation d
 EXPLORE: Research alternative deployment strategies for drone reconnaissance in urban environments."""
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
+
+
+nerv_data: str = ""
 
 
 class AiMode(Enum):
@@ -80,6 +92,10 @@ def createTaskList(primeDirectives: str, mission: str, summary: str, header: str
 
 
 def runMagi(primeDirectives: str, action: str, context: list[str]) -> None:
+    prompt = action + "\n\n" + MAGI_ACTION_PROMPT
+    action = toolchain.run_core_protocol(primeDirectives, prompt, context, hide_reasoning = True)
+    comms.printSystemText(ACTION_TAG + action)
+
     while True:
         toolchain.runAction(primeDirectives, action, context)
         aux_context = context[:]
@@ -154,10 +170,20 @@ def switchAiMode(ai_mode: AiMode) -> AiMode:
     return ai_mode
 
 
-# Main logic
-if __name__ == "__main__":
+def main() -> int:
+    # Import MAGI modules here to prevent them from being imported in subprocesses
+    global core, comms, toolchain, agent
+
+    import core as _core
+    import comms as _comms
+    import toolchain as _toolchain
+    import agent as _agent
+    import plugin  # noqa: F401
+
+    core, comms, toolchain, agent = _core, _comms, _toolchain, _agent
+
+    # Main logic
     context: list[str] = []
-    nerv_data: str = ""
     ai_mode: AiMode = AiMode.NORMAL
 
     primeDirectives = core.read_text_file(core.PRIME_DIRECTIVES_FILE_PATH)
@@ -191,4 +217,10 @@ if __name__ == "__main__":
             checkPrompt(primeDirectives, prompt, context, ai_mode)
 
     comms.printSystemText(EXIT_MAGI_TEXT)
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
 

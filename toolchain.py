@@ -4,34 +4,36 @@ import inspect
 import comms
 import core
 
-TOOL_SELECTION_SYSTEM_PROMPT = "You are an AI assistant focused on tool selection. Reason step-by-step as instructed in the user prompt."
+TOOL_SELECTION_SYSTEM_PROMPT = "\n\nOutput EXACTLY ONE line containing ONLY one item from ALLOWED_OPTIONS. No other text."
 CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
 TASK_SECTION_TEXT = "\n---\nTASK: "
 AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE TOOLS: "
 CONTINUE_TEXT = "continue"
-TOOL_SELECTION_TEXT = f"""\n---\nTOOL SELECTION: Review the task description above, the provided conversation history, and the list of available tools. Follow these steps:
+TOOL_SELECTION_TEXT = f"""\n---\nTOOL ROUTER
 
-Step 1: Determine if any tool is necessary to complete or advance the task, considering information gaps, requirements, enhancements from history, or if the task can be resolved with existing knowledge.
+Goal: choose ONE tool to call now, or choose '{CONTINUE_TEXT}' to call no tool and proceed normally.
 
-Step 2: If a tool is needed, select the single best match by comparing the task to each tool's description. Evaluate based on:
-   - Relevance: Direct alignment with the task's core needs.
-   - Specificity: Prefer tools that precisely address the gap over general ones.
-   - Tie-breaker: If multiple seem equally suitable, prefer the first listed tool.
-   Only choose from the listed tools—do not invent new ones. Select only one tool per evaluation; chaining happens automatically if needed.
+AVAILABLE TOOLS is a JSON array of objects: {{ "name": ..., "description": ... }}.
 
-Step 3: If no tool is suitable, none is required, or the task can proceed without one, select '{CONTINUE_TEXT}'.
+You must output the tool "name" EXACTLY as shown (or '{CONTINUE_TEXT}').
 
-OUTPUT FORMAT:
-First, write your step-by-step reasoning.
-Then, your final line must contain ONLY the tool name or '{CONTINUE_TEXT}'—nothing else.
+Decision rules (EVALUATE IN ORDER):
+1. [STOP] If the last tool output FULLY solves the specific request (e.g., action completed or info found), choose '{CONTINUE_TEXT}'.
+2. [SELECT] If the task explicitly requests an action that ONLY a tool can perform, choose the corresponding tool.
+   Examples:
+   - "Generate an image / create a picture" -> generate_image
+   - "Run code / execute python" -> code_runner
+   - "Search the web / check for updates" -> web_search
+3. [CHECK CONTEXT] If the information is already present in the context AND no update is requested, choose '{CONTINUE_TEXT}'.
+4. [AVOID LOOPS] Do NOT repeat a tool if it already provided sufficient information; repeat only if the last result was an error.
+5. [DEFAULT] If uncertain, choose '{CONTINUE_TEXT}'.
 
-WRONG (do not do this):
-Selected tool: my_tool
-Tool: my_tool
-The answer is my_tool
+Output rules (STRICT):
+- Output MUST be exactly one of the strings in ALLOWED_OPTIONS.
+- Output ONLY that string on a single line.
+- No explanations, no JSON, no extra words.
 
-CORRECT (do this):
-my_tool"""  # noqa: S608
+ALLOWED_OPTIONS:\n"""  # noqa: S608
 EMPTY_JSON_TEXT = "[]"
 TOOL_NOT_FOUND_ERROR = "\n\n[ERROR] Tool not found: "
 TOOL_NOT_REGISTERED_ERROR = "[ERROR] Tool is not registered: "
@@ -189,8 +191,17 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
             break
 
         # Select tool
-        prompt = TASK_SECTION_TEXT + extended_action + AVAILABLE_TOOLS_TEXT + available_tools + TOOL_SELECTION_TEXT
-        tool = core.send_prompt(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
+        allowed_options = "\n".join(list(TOOLS.keys()) + [CONTINUE_TEXT])
+
+        system_prompt = primeDirectives + TOOL_SELECTION_SYSTEM_PROMPT
+
+        prompt = (
+            TASK_SECTION_TEXT + extended_action +
+            AVAILABLE_TOOLS_TEXT + available_tools +
+            TOOL_SELECTION_TEXT + allowed_options
+        )
+
+        tool = core.send_prompt(system_prompt, prompt, context[:], hide_reasoning = True)
         tool = _sanitize_tool_name(tool)
 
         if tool == CONTINUE_TEXT:
@@ -198,7 +209,7 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
 
         try:
             tool_use += 1
-            extended_action = run_tool(tool, primeDirectives, extended_action, context, is_agent)
+            extended_action = run_tool(tool, primeDirectives, extended_action, context[:], is_agent)
 
         except KeyError:
             error = TOOL_NOT_FOUND_ERROR + tool

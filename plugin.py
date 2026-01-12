@@ -9,27 +9,50 @@ SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: 
 
 # WEB PLUGIN
 WEB_SEARCH_PAGE_LIMIT = 5 # Number of web pages per search
-WEB_MAX_SIZE = 20 # Max text blocks per web page
+WEB_MAX_SIZE = 45 # Max text blocks per web page
 WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
 WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
 WEB_SEARCH_TOOL_NAME = "web_search"
-WEB_SEARCH_TOOL_DESCRIPTION = """Search the web for current information. This tool provides text-based information only. Use when needing up-to-date facts, specifically if the request:
+WEB_SEARCH_TOOL_DESCRIPTION = """Search the web for current information. This tool extracts text content from web pages and online documents found via web search (HTML, PDF, DOCX, DOC, ODT). Use when needing up-to-date facts, specifically if the request:
 
 - Requires current or up-to-date information on real-world events, topics, or entities via web browsing (read-only), OR
 - Explicitly instructs to 'browse the web', 'search the internet', or similar actions, OR
 - Involves specific real-world factual details that could be outdated, incomplete, or imprecise, such as statistics, addresses, attributes of entities (e.g., biographical details, company metrics), identifiers (e.g., contract addresses, prices, current dates, coordinates), or ongoing/debated topics (e.g., emerging scientific discoveries, policy developments, technological advancements, social trends, economic shifts, or historical facts with scholarly debate/recent findings).
 
-Do not use this tool if the request explicitly instructs NOT to browse the web, search the internet, or use similar actions (e.g., "don't browse the web", "no internet search", "offline search")."""
-WEB_SEARCH_QUERY = """Write a web search query (max 20 words) to obtain relevant results on the following topic. Output ONLY the query string.
+CONSTRAINTS:
+- Text-only: This tool retrieves text only. It does NOT retrieve images, videos, or visual layouts.
+- Read-only: This tool cannot interact with forms, log in, or execute dynamic page actions (non-interactive).
+- Console-based: The extracted content is returned as plain text summaries.
+
+DO NOT USE this tool if the request explicitly instructs NOT to browse the web, search the internet, or use similar actions (e.g., "don't browse the web", "no internet search", "offline search")."""
+WEB_SEARCH_SYSTEM_PROMPT = "You write a web search query to obtain relevant results."
+WEB_SEARCH_GENERATE_QUERY = """Write a web search query (max 20 words) to obtain relevant results on the following topic.
 
 Examples:
 TOPIC = python errors → "common python programming bugs fixes"
 TOPIC = japanese festivals → "traditional japanese festivals history celebrations"
 
+Reason step-by-step. Reflect about your reasoning. Then, on the final line, output ONLY the query string. Don't write titles, headings or comments.
+
 TOPIC = """
-WEB_SEARCH_REVIEW_1 = "Does the following WEB SUMMARY provide relevant information for the QUERY? Reason step-by-step: 1. Identify key query elements. 2. Check if summary matches them. 3. Decide if it's sufficient. Reflect about your reasoning: Ensure it is based strictly on relevance and sufficiency. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text.\n\nQUERY = "
-WEB_SEARCH_REVIEW_2 = "\n\nWEB SUMMARY = "
+WEB_SEARCH_TARGET_SYSTEM_PROMPT = "You are a research manager. Your job is to tell a junior researcher exactly what information to look for."
+WEB_SEARCH_GENERATE_TARGET = """Analyze the USER_REQUEST.
+Define a clear, concise "Extraction Goal" for the summarizer.
+This goal must specify exactly what facts, numbers, or details to extract from the web pages.
+
+Reason step-by-step. Reflect about your reasoning. Then, on the final line, output ONLY the extraction goal string. Don't write titles, headings or comments.
+
+USER_REQUEST = """
+WEB_SEARCH_REVIEW_1 = """Does the following WEB_SUMMARY provide relevant information for the REQUESTED_GOAL? Reason step-by-step:
+1. Identify key goal elements.
+2. Check if summary matches them.
+3. Decide if it's sufficient.
+
+Reflect about your reasoning: Ensure it is based strictly on relevance and sufficiency. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text.
+
+REQUESTED_GOAL = """
+WEB_SEARCH_REVIEW_2 = "\n\nWEB_SUMMARY = "
 WEB_SEARCH_ERROR = "\nUnable to parse web page."
 WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_REVIEW_1 = "\n---\n" + WEB_SEARCH_TOOL_NAME + ": you have performed a web search.\n\nWeb search query: "
@@ -60,7 +83,7 @@ IMAGE_GENERATION_TOOL_DESCRIPTION = """Generate a static image based on a textua
 - Involves describing visual content that benefits from image generation, such as illustrations, representations of scenes/objects, or visualizing elements like characters, landscapes, or nature scenes in a story (e.g., settings or key moments), OR
 - Explicitly instructs to 'generate an image', 'create a picture', or similar actions.
 
-Do not use this tool for non-visual descriptions or tasks that do not involve visuals, or if the request explicitly instructs NOT to generate images (e.g., "no images", "don't generate an image")."""
+DO NOT USE this tool for non-visual descriptions or tasks that do not involve visuals, or if the request explicitly instructs NOT to generate images (e.g., "no images", "don't generate an image")."""
 GENERATE_IMAGE_TEXT = """Analyze TEXT and determine its nature:
 
 If TEXT already contains visual descriptions (subjects, objects, scenes, physical attributes, colors, materials, compositions, etc.):
@@ -154,53 +177,23 @@ CODE_RUNNER_TOOL_DESCRIPTION = """Write and run Python code. Use this tool only 
 - Requires data analysis with meaningful computation (e.g., processing for trends or stats), OR
 - Requires network operations, OR
 - Requires interacting with external systems (e.g., public APIs), OR
-- Requires complex logic that benefits from code execution for accuracy and reliability (e.g., beyond simple comparisons or prints), OR
 - Explicitly instructs to 'write a program', 'run code', or similar actions.
 
-Do not use this tool if the request explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming", "no code execution")."""
+CONSTRAINTS:
+- Console-only: This tool runs in a headless environment. NO GUIs, NO image display (plots must be saved to files), NO audio.
+- Non-interactive: NO user input (no input() functions).
+- Text-based output: Results must be printed to the console (print functions).
+- Single-pass: The code must run to completion without waiting.
+
+DO NOT USE this tool if the request explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming", "no code execution")."""
 CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution.
 
-CORE REQUIREMENTS:
-• Single-pass execution: Run once, terminate immediately (no while True:, no polling, no persistent loops)
-• Console-only: All output via print() - no files or GUIs
-• Non-interactive: Zero user input (no input(), no prompts)
-• Real implementation: Use actual APIs/operations unless mission explicitly says 'simulate' or 'mock'
-
-PACKAGE MANAGEMENT:
-• If external packages needed: Add comment at top → # pip install package1 package2
-• If only stdlib used: No pip comment needed
-• Import all packages after pip comment
-
-AUTHENTICATION:
-• Only use APIs/services that are public/unauthenticated OR where exact credentials are provided
-• NEVER use placeholders ('YOUR_API_KEY_HERE', 'REPLACE_THIS', etc.)
-• If credentials needed but not provided: Print clear error explaining what's missing
-
-ERROR HANDLING:
-• Wrap risky operations (API calls, parsing, math) in try/except blocks
-• Print informative error messages with context
-• Handle edge cases: empty inputs, None values, invalid data, zero/negative numbers
-
-OUTPUT FORMATTING:
-Print detailed, standalone results with full context:
-❌ Bad:  print(result)
-❌ Bad:  print("Result:", 42)
-✅ Good: print(f"Final calculation result: {result} meters - This represents the distance traveled over {time} seconds at {speed} m/s")
-
-Include for each output:
-• Label describing what the value represents
-• Units/context (meters, seconds, USD, etc.)
-• Brief explanation connecting to the mission
-• Summary at the end if multiple outputs
-
-STATE PERSISTENCE:
-At program end, ALWAYS print an 'INTERNAL STATE:' section with relevant variables for future runs:
-```python
-print("\nINTERNAL STATE:")
-print(f"wallet_balance: {balance}")
-print(f"last_transaction_id: {tx_id}")
-print(f"game_level: {level}")
-```"""
+CORE CONSTRAINTS:
+• Single-pass execution: Run once, terminate immediately (no while True:, no polling).
+• Console-only: All output via print() - no files (except explicit saves), no GUIs.
+• Non-interactive: Zero user input (no input(), no prompts).
+• Real implementation: Use actual APIs/operations. Do not use placeholders (e.g., 'YOUR_KEY_HERE').
+• Detailed Output: Print labeled, complete results with units and context."""
 CODE_RUNNER_COT_TEXT = """Follow all system guidelines.
 
 Before writing the code, reason step-by-step in a structured way to ensure clean, efficient, and error-free results:
@@ -246,29 +239,38 @@ Before writing the code, reason step-by-step in a structured way to ensure clean
    - Test 2: Input=[Edge case] → Expected=[Y] → Reason=[Z]
 
 9. **Implementation Strategy**: Choose the approach and explain:
-   - Libraries needed: [List with pip comment]
-   - Why this approach over alternatives: [Brief comparison]
+   - Libraries needed: [List with pip comment if external]
+   - Authentication: [CONFIRM: Do you have the API keys? If NO, print an error. NEVER use placeholders like 'YOUR_KEY_HERE'.]
    - Performance considerations: [Time/space complexity]
 
-10. **Self-Review Checklist**: Before finalizing, verify:
+10. **Output & State Strategy**: Plan the exact print statements.
+    - **Detailed Results**: "Final Value: [X] [Units]" (Never print just numbers).
+    - **Internal State**: Write the EXACT code block to preserve state for the next run:
+      ```python
+      print("\\nINTERNAL STATE:")
+      print(f"variable_name: {value}")
+      ```
+
+11. **Self-Review Checklist**: Before finalizing, verify:
     - [ ] All imports listed correctly?
     - [ ] No user input() calls?
     - [ ] All print() statements are detailed with labels?
     - [ ] No infinite loops or long-running processes?
     - [ ] Error handling with try/except for risky operations?
-    - [ ] INTERNAL STATE section planned if needed?
-    - [ ] Prior state parsing logic if applicable?
-    - [ ] All edge cases handled?
+    - [ ] INTERNAL STATE section planned exactly as specified?
+    - [ ] NO PLACEHOLDERS (like 'YOUR_KEY') used?
     - [ ] Code is single-pass execution (no while True)?
 
-11. **Final Code Structure Preview**: Outline the file structure:
-    ```
+12. **Final Code Structure Preview**: Outline the file structure:
+    ```python
     # pip install [packages]
     # imports
     # constants/config
     # helper functions
     # main logic
-    # INTERNAL STATE output
+    # print detailed results
+    # print("\nINTERNAL STATE:")
+    # print(f"key: {value}")
     ```
 
 Finally, output the Python code wrapped in a markdown block (e.g., ```python ... ```)."""
@@ -276,25 +278,45 @@ CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the f
 CODE_RUNNER_RUN_PROGRAM_TEXT = "発進！\n"
 CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Fix the program to correctly solve the MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
 CODE_RUNNER_MISSION_TEXT = "\n\nMISSION: "
-CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = "Does the following program output fully complete the MISSION, including the 'INTERNAL STATE:' section with relevant variables, proper handling of any prior state, and avoidance of infinite/long-running loops? Think step-by-step: Verify completeness, state output, error handling, and termination. Reflect on any gaps. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text.\n\nProgram:\n\n"
+CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = """Analyze the execution results to determine if the MISSION is complete.
+
+CRITERIA:
+1. Execution Success: Did the program run without errors?
+2. State Preservation: Is the 'INTERNAL STATE:' section present and correct?
+3. Mission Fulfillment: Do the results fully answer the request?
+
+Think step-by-step. Reflect on each criterion.
+
+CRITICAL: The very last line of your response must be exactly "YES" or "NO".
+
+PROGRAM_CODE:
+"""
 CODE_RUNNER_EXTENDED_ACTION_TEXT = "\n---\n" + CODE_RUNNER_TOOL_NAME + ": you have written and executed a Python program for this task.\n\nSource code:\n\n"
 CODE_RUNNER_FAILED_TEXT = "\n---\n" + CODE_RUNNER_TOOL_NAME + ": you were not able to write a Python program for this task."
 CODE_RUNNER_TAG = "\n[CODE RUNNER]\n\n"
 CODE_RUNNER_MAX_REVIEWS = 10
+CODE_RUNNER_LINT_OUTPUT_LIMIT = 5000  # Chars
+CODE_RUNNER_PROGRAM_OUTPUT_LIMIT = 30000  # Chars
+CODE_RUNNER_PROGRAM_OUTPUT_ERROR = "\n\n[ERROR: Program output truncated. Refine the code to print specific data points or summaries instead of raw dumps.]"
 
 
 # WEB PLUGIN OPERATIONS
+
 
 def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     aux_context = context[:]
     mission_completed = False
     summary = ""
 
+    # Compute web search target
+    target_prompt = WEB_SEARCH_GENERATE_TARGET + action
+    target = core.send_prompt(WEB_SEARCH_TARGET_SYSTEM_PROMPT, target_prompt, aux_context, hide_reasoning = True)
+
     # Generate web search query
-    query = core.send_prompt(primeDirectives, WEB_SEARCH_QUERY + action, aux_context, hide_reasoning = True)
+    query = core.send_prompt(WEB_SEARCH_SYSTEM_PROMPT, WEB_SEARCH_GENERATE_QUERY + target, aux_context, hide_reasoning = True)
     query = query.replace('"', '')
 
-    comms.printSystemText(WEB_SEARCH_TAG + query)
+    comms.printSystemText(WEB_SEARCH_TAG + query + "\n\n" + target)
 
     # Run the web search
     urls = web.search(query, WEB_SEARCH_PAGE_LIMIT)
@@ -304,11 +326,11 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
         text = web.scrape(url)
         blockArray = core.split_text_in_blocks(text)
 
-        web_summary = core.summarize_block_array(query, blockArray[:WEB_MAX_SIZE])
+        web_summary = core.summarize_block_array(target, blockArray[:WEB_MAX_SIZE])
 
         if web_summary:
-            summary = core.update_summary(query, summary, web_summary)
-            mission_completed = core.binary_question(primeDirectives, WEB_SEARCH_REVIEW_1 + query + WEB_SEARCH_REVIEW_2 + summary, aux_context)
+            summary = core.update_summary(target, summary, web_summary)
+            mission_completed = core.binary_question(primeDirectives, WEB_SEARCH_REVIEW_1 + target + WEB_SEARCH_REVIEW_2 + summary, aux_context)
         else:
             comms.printSystemText(WEB_SEARCH_ERROR)
 
@@ -416,6 +438,14 @@ def code_runner_action(primeDirectives: str, action: str, context: list[str], is
         # Run program
         comms.printSystemText(CODE_RUNNER_RUN_PROGRAM_TEXT)
         lint_output, program_output = code_runner.run_python_code(program)
+
+        # Check lint output size
+        if len(lint_output) > CODE_RUNNER_LINT_OUTPUT_LIMIT:
+            lint_output = lint_output[:CODE_RUNNER_LINT_OUTPUT_LIMIT]
+
+        # Check program output size
+        if len(program_output) > CODE_RUNNER_PROGRAM_OUTPUT_LIMIT:
+            program_output = program_output[:CODE_RUNNER_PROGRAM_OUTPUT_LIMIT] + CODE_RUNNER_PROGRAM_OUTPUT_ERROR
 
         # Review the program output
         if program_output:

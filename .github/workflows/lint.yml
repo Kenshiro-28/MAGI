@@ -18,7 +18,7 @@ jobs:
       - name: Install Ruff
         run: pip install ruff
       - name: Run Ruff
-        run: ruff check --extend-select=S,TYP --ignore=S105 . --target-version py311
+        run: ruff check --extend-select=S,TYP --ignore=S105,S110 --target-version py311 --per-file-ignores "plugins/web/web.py:S104,plugins/web/web.py:S108,plugins/web/web.py:S112,plugins/web/web.py:S607" .
       - name: Install mypy
         run: pip install mypy
       - name: Run mypy

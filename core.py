@@ -6,20 +6,18 @@ import time
 import re
 import datetime
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.26"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.27"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
 EOS = "\n<|im_end|>\n"
 
-SUMMARIZE_SYSTEM_PROMPT = """You are an expert assistant specialized in text summarization. Your task is to generate a concise and accurate summary of the provided text, focusing strictly on the topic specified at the end of the user prompt.
+SUMMARIZE_SYSTEM_PROMPT = "You are a summarizer. Summarize ONLY the information relevant to the TOPIC at the end. If the TOPIC includes output rules or a required format, follow it exactly. Do NOT invent facts, numbers, dates, names, or attribution. Preserve names/numbers/dates exactly. Prefer clear, self-contained bullet points OR clear sentences (choose whichever fits the TOPIC). Include enough context in each point/sentence to be understandable on its own (avoid vague pronouns when possible). Do not over-compress: keep key qualifiers, quantities, and constraints that affect meaning. Avoid preamble unless TOPIC asks; if you add one, keep it to a single short line. If the input contains PREVIOUS_SUMMARY and NEW_TEXT, keep relevant facts from PREVIOUS_SUMMARY and integrate relevant new facts from NEW_TEXT."
 
-When the provided text includes new information following an earlier summary, integrate the relevant details from the new information, while ensuring all key information relevant to the topic from the earlier text is carried forward and included. Ensure the final summary is comprehensive and accurately reflects all relevant points gathered so far.
-
-Output only the final, unified summary text."""
-
-SUMMARIZE_TEXT = "\n\nSummarize the information from the above text that is relevant to this topic: "
+SUMMARIZE_TEXT = "\n\nTOPIC:\n"
+PREVIOUS_SUMMARY = "PREVIOUS_SUMMARY:\n"
+NEW_TEXT = "\n\nNEW_TEXT:\n"
 
 PRIME_DIRECTIVES_FILE_PATH = "prime_directives.txt"
 MISSION_LOG_FILE_PATH = "mission_log.txt"
@@ -56,7 +54,7 @@ MAGI_COLOR = "\033[99m"
 USER_COLOR = "\033[93m"
 END_COLOR = "\x1b[0m"
 
-TEXT_BLOCK_WORDS = 10000
+TEXT_BLOCK_WORDS = 3000
 
 CONFIG_ERROR = "\n[ERROR] Configuration error: "
 
@@ -231,13 +229,15 @@ def summarize(topic: str, text: str) -> str:
 
 
 def update_summary(topic: str, summary: str, text: str) -> str:
-    if text:
-        if summary:
-            summary = summarize(topic, summary + "\n" + text)
-        else:
-            summary = text
+    if not text:
+        return summary
 
-    return summary
+    if not summary:
+        return text
+
+    merged = PREVIOUS_SUMMARY + summary + NEW_TEXT + text
+
+    return summarize(topic, merged)
 
 
 def summarize_block_array(topic: str, blockArray: list[str]) -> str:

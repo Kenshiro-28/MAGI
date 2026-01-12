@@ -293,7 +293,7 @@ class TestSummary(unittest.TestCase):
         # Case 3: Both summary and text exist - should summarize combined text
         with patch.object(core, 'summarize', return_value="Updated summary") as mock_summarize:
             result = core.update_summary(topic, "Existing summary", "New text")
-            mock_summarize.assert_called_once_with(topic, "Existing summary\nNew text")
+            mock_summarize.assert_called_once_with(topic, "PREVIOUS_SUMMARY:\nExisting summary\n\nNEW_TEXT:\nNew text")
             self.assertEqual(result, "Updated summary")
 
     def test_summarize_block_array(self):

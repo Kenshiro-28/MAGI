@@ -2,9 +2,19 @@
 
 [![MAGI intro video](https://ipfs.io/ipfs/bafybeicplzuyad3stsfd5nz4l6s4df7czyocfmqgxujruugyxby7pmmkpm)](https://ipfs.io/ipfs/bafybeihhurksv4whiocfumnqxl4we7y4baonkj4ryami4nx2jhvvvpg2oa)
 
-MAGI (マギ) is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware.
+<p align="center">
+  <a href="https://github.com/Kenshiro-28/MAGI/actions"><img src="https://img.shields.io/github/actions/workflow/status/Kenshiro-28/MAGI/lint.yml?branch=main&style=for-the-badge&label=Lint" alt="Lint Status"></a>
+  <a href="https://github.com/Kenshiro-28/MAGI/actions"><img src="https://img.shields.io/github/actions/workflow/status/Kenshiro-28/MAGI/test.yml?branch=main&style=for-the-badge&label=Test" alt="Test Status"></a>
+  <a href="https://github.com/Kenshiro-28/MAGI/actions"><img src="https://img.shields.io/github/actions/workflow/status/Kenshiro-28/MAGI/docker.yml?branch=main&style=for-the-badge&label=Docker" alt="Docker Status"></a>
+  <a href="https://github.com/Kenshiro-28/MAGI/releases"><img src="https://img.shields.io/github/v/release/Kenshiro-28/MAGI?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
+  <a href="https://github.com/Kenshiro-28/MAGI/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Kenshiro-28/MAGI?style=for-the-badge&color=blue" alt="License"></a>
+</p>
+
+**MAGI (マギ)** is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware.
 
 Key features include a customizable Core Protocol for enhanced reasoning, a modular Toolchain for dynamic tool chaining (code execution, web browsing, and image generation), and teleoperation via Telegram for remote access.
+
+Built and tested on **Debian stable** (recommended). On other OSes, use the Docker setup.
 
 ## Configuration
 
@@ -159,13 +169,13 @@ IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stab
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo shot on Hasselblad X2D 100C, 50mm lens, realistic proportions, razor-sharp focus, highly detailed, intricate details, realistic textures, volumetric lighting, cinematic color grading)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, 50mm lens, f/8 aperture, high-end commercial photography, razor-sharp focus, highly detailed, intricate details, realistic textures, volumetric lighting, cinematic color grading)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: lowres, blurry, out of focus, soft focus, shallow depth of field, jpeg artifacts, noisy, grainy, worst quality, low quality, deformed, disfigured, bad proportions, gross proportions, bad anatomy, poorly drawn face, asymmetrical eyes, lifeless eyes, colored sclera)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: worst quality, low quality, lowres, muddy textures, blurry, out of focus, soft focus, jpeg artifacts, deformed, bad proportions, gross proportions, bad anatomy, poorly drawn face, asymmetrical eyes, lifeless eyes, colored sclera)
 
-IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 768)
+IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 896)
 
-IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 768)
+IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 1344)
 
 ### Telegram plugin
 
@@ -225,6 +235,8 @@ Hint: As a rule of thumb, your combined RAM + VRAM should be at least 50% larger
 
 Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA is a 6-billion parameter model created by DavidAU, based on the Qwen3 architecture.
 
+This model is good for general usage and basic coding.
+
 The "Deckard" series (named after the Blade Runner protagonist) features training on an in-house dataset derived from Philip K. Dick's writings. The "Almost Human" variant adds biographical data, letters, and notes from the author, resulting in enhanced tone, thinking patterns, and prose quality.
 
 https://huggingface.co/mradermacher/Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA-GGUF/blob/main/Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA.Q8_0.gguf
@@ -239,9 +251,9 @@ GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at leas
 
 ![Qwen3-TOTAL-RECALL](https://ipfs.io/ipfs/bafybeic3p7ux4lqk64xcvaynxxewsnljmkycl4xaz46hr3cdxnxunv3dty)
 
-Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF is based on Qwen3-30B-A3B-2507-Thinking from Alibaba Cloud's Qwen series.
+Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF is a 42-billion parameter model created by DavidAU, based on Qwen3-30B-A3B-2507-Thinking from Alibaba Cloud's Qwen series.
 
-It features significantly improved performance on reasoning tasks, including logical reasoning, mathematics, science, coding, and academic benchmarks that typically require human expertise.
+This model is recommended for use cases that require high reasoning skills.
 
 https://huggingface.co/mradermacher/Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF/blob/main/Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER.Q8_0.gguf
 
@@ -258,13 +270,31 @@ GPU: NVIDIA GPU with at least 16GB VRAM. Aim for a combined RAM + VRAM of at lea
 Install the following packages:
 
 ```
-$ sudo apt install build-essential apparmor-utils git pkg-config libopenblas-dev python3-venv python3-pip python3-requests python3-bs4 python3-docx python3-odf python3-pypdf python3-python-telegram-bot
+$ sudo apt install build-essential apparmor-utils git pkg-config libopenblas-dev python3-venv python3-pip python3-requests python3-pycurl python3-protego antiword python3-bs4 python3-docx python3-odf python3-pypdf python3-python-telegram-bot
 ```
 
 To use your NVIDIA graphics card, you need to install CUDA:
 
 ```
 $ sudo apt install nvidia-cuda-toolkit
+```
+
+### Security
+
+Since MAGI installs third-party Python packages and generates and executes code, running it under your personal user account poses a security risk.
+
+I strongly advise running MAGI as a dedicated, unprivileged user to isolate these processes.
+
+After installing prerequisites, create a new user, for example `magi`:
+
+```
+$ sudo adduser magi
+```
+
+When you want to install or run MAGI, switch to the new user:
+
+```
+$ su - magi
 ```
 
 ### Install
@@ -380,5 +410,9 @@ $ sudo docker logs $(sudo docker ps -l -q)
 
 ## Disclaimer
 
-This project is open-source and non-commercial. I do not own the rights to any images, videos, linked resources (such as recommended AI models), or other external media used herein; they are included for illustrative, educational, functional, or transformative purposes only and belong to their respective owners. No copyright infringement is intended. If you are the rights holder and have concerns, please file a report via GitHub's DMCA process for removal.
+MAGI is a non-commercial, open-source project created for educational and research purposes.
+
+This project is a fan tribute. All references to characters, organizations, terminology, and visual assets from existing media are used solely as a homage. All original media and intellectual property belong to their respective owners.
+
+This software is provided "as is", without warranty of any kind. The user assumes full responsibility for any code execution or system modifications performed by the AI.
 
