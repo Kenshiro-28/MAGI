@@ -136,7 +136,7 @@ MAGI will review and refine the generated code and its output up to 10 times to 
 
 This plugin adds a tool to generate images.
 
-Only Stable Diffusion 3 checkpoints are supported.
+Only Stable Diffusion 3.5 checkpoints are supported.
 
 It automatically downloads the specified image generation model from Hugging Face.
 
