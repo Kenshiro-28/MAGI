@@ -14,6 +14,8 @@
 
 Key features include a customizable Core Protocol for enhanced reasoning, a modular Toolchain for dynamic tool chaining (code execution, web browsing, and image generation), and teleoperation via Telegram for remote access.
 
+If left idle, MAGI will proactively assess the situation to decide whether to continue ongoing tasks, engage in conversation, or remain silent, based on its personality and the current context.
+
 Built and tested on **Debian stable** (recommended). On other OSes, use the Docker setup.
 
 ## Configuration
@@ -25,6 +27,8 @@ The main options are:
 TEMPERATURE: model temperature (default: 0.6)
 
 CONTEXT_SIZE: number of tokens in the context window (default: 65536)
+
+HEARTBEAT_SECONDS: seconds since the last action start before MAGI runs a background thought loop to determine whether further action is required. If an action is in progress, the loop is deferred until the action completes. (default: 1800)
 
 ENABLE_CODE_RUNNER_PLUGIN: enable or disable the Code Runner plugin (default: YES)
 
@@ -64,7 +68,7 @@ To revert to the default model reasoning without applying any custom protocol, s
 
 ## Toolchain
 
-MAGI's toolchain acts as a modular system for registering and calling tools, similar to frameworks like Langchain. It allows MAGI to dynamically select and execute tools based on task needs, chaining their outputs into responses. Tools are enabled through the plugin system by editing the file **config.cfg**.
+MAGI's toolchain acts as a modular system for registering and calling tools, similar to frameworks like LangChain. It allows MAGI to dynamically select and execute tools based on task needs, chaining their outputs into responses. Tools are enabled through the plugin system by editing the file **config.cfg**.
 
 The plugin system includes the following tools:
 
@@ -169,9 +173,9 @@ IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stab
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, 50mm lens, f/8 aperture, high-end commercial photography, razor-sharp focus, highly detailed, intricate details, realistic textures, volumetric lighting, cinematic color grading)
+IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, 50mm lens, f/8 aperture, high-end commercial photography, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: worst quality, low quality, lowres, muddy textures, blurry, out of focus, soft focus, jpeg artifacts, deformed, bad proportions, gross proportions, bad anatomy, poorly drawn face, asymmetrical eyes, lifeless eyes, colored sclera)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: lowres, muddy textures, blurry, out of focus, soft focus, jpeg artifacts, deformed, bad proportions, gross proportions, bad anatomy, poorly drawn face, asymmetrical eyes, lifeless eyes, colored sclera)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 896)
 
@@ -183,7 +187,7 @@ This plugin enables you to teleoperate MAGI via Telegram, allowing you to have A
 
 If you have both the Telegram plugin and the image generation plugin enabled, you will receive the generated images via Telegram.
 
-To use this plugin you have to create a Telegram bot with BotFather (username: @BotFather) and save the token assigned to your bot. 
+To use this plugin, you must create a Telegram bot with BotFather (username: @BotFather) and save the token assigned to your bot.
 
 You must also write to userinfobot (username: @userinfobot) to get your user ID. MAGI will only communicate with your Telegram user and will ignore other users.
 
@@ -202,6 +206,8 @@ MAGI will search, scrape, and summarize relevant pages with automatic early stop
 It uses Dux Distributed Global Search (DDGS), a metasearch library that aggregates results from diverse web search services.
 
 It only scrapes websites that explicitly authorize it in robots.txt.
+
+You can instruct MAGI to browse specific pages by including one or more URLs in your prompt (e.g., Compare the data from www.site-a.com and www.site-b.com). If valid addresses (starting with http://, https://, or www.) are detected, MAGI will skip the search engine and navigate directly to the provided links.
 
 ## Model 
 

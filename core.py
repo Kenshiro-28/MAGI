@@ -5,8 +5,9 @@ import sys
 import time
 import re
 import datetime
+import select
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.27"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.28"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -58,7 +59,8 @@ TEXT_BLOCK_WORDS = 3000
 
 CONFIG_ERROR = "\n[ERROR] Configuration error: "
 
-MAGI_TEXT_SLEEP_TIME = 0.045 # Sleep seconds per char
+CONSOLE_INPUT_TIMEOUT = 0.1  # Seconds
+CONSOLE_OUTPUT_SPEED = 0.045  # Seconds per char
 
 THINK_START = "<think>"
 THINK_END = "</think>"
@@ -191,7 +193,7 @@ def print_magi_text(text: str) -> None:
 
     for char in text:
         print(char, end='', flush=True)
-        time.sleep(MAGI_TEXT_SLEEP_TIME)
+        time.sleep(CONSOLE_OUTPUT_SPEED)
 
     print(END_COLOR)
 
@@ -210,14 +212,29 @@ def save_mission_log(text: str) -> None:
 
 
 def user_input() -> str:
-    sys.stdin.flush()
+    """
+    Non-blocking read. Returns the input string ONLY if the user has pressed Enter.
+    Otherwise returns an empty string.
+    """
+    text: str = ""
 
-    prompt = input(USER_COLOR + "\n$ ")
+    # Ensure any previous stdout (like the prompt cursor) is visible
+    sys.stdout.flush()
 
-    if LOG_ENABLED:
-        save_mission_log("\n" + prompt)
+    # Check if stdin has data waiting
+    ready, _, _ = select.select([sys.stdin], [], [], CONSOLE_INPUT_TIMEOUT)
 
-    return prompt
+    if ready:
+        try:
+            text = sys.stdin.readline().strip()
+
+            if LOG_ENABLED:
+                save_mission_log("\n" + text)
+
+        except Exception:
+            return ""
+
+    return text
 
 
 def summarize(topic: str, text: str) -> str:
@@ -413,4 +430,3 @@ def configure_model() -> None:
 load_config()
 configure_model()
 load_model()
-

@@ -1,4 +1,5 @@
 import os
+import re
 import core
 import comms
 import toolchain
@@ -16,6 +17,7 @@ ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
 WEB_SEARCH_TOOL_NAME = "web_search"
 WEB_SEARCH_TOOL_DESCRIPTION = """Search the web for current information. This tool extracts text content from web pages and online documents found via web search (HTML, PDF, DOCX, DOC, ODT). Use when needing up-to-date facts, specifically if the request:
 
+- Explicitly provides a URL to read or summarize, OR
 - Requires current or up-to-date information on real-world events, topics, or entities via web browsing (read-only), OR
 - Explicitly instructs to 'browse the web', 'search the internet', or similar actions, OR
 - Involves specific real-world factual details that could be outdated, incomplete, or imprecise, such as statistics, addresses, attributes of entities (e.g., biographical details, company metrics), identifiers (e.g., contract addresses, prices, current dates, coordinates), or ongoing/debated topics (e.g., emerging scientific discoveries, policy developments, technological advancements, social trends, economic shifts, or historical facts with scholarly debate/recent findings).
@@ -58,6 +60,8 @@ WEB_SEARCH_TAG = "\n[WEB SEARCH] "
 WEB_SUMMARY_REVIEW_1 = "\n---\n" + WEB_SEARCH_TOOL_NAME + ": you have performed a web search.\n\nWeb search query: "
 WEB_SUMMARY_REVIEW_2 = "\n\nWeb search result: "
 WEB_SEARCH_FAILED_TEXT = "\n---\n" + WEB_SEARCH_TOOL_NAME + ": you performed a web search but it didn't return any results."
+WEB_DIRECT_SEARCH = "Direct Link Navigation"
+WEB_URL_PATTERN = r'(https?://[^\s<>"]+|www\.[^\s<>"]+)'
 
 # TELEGRAM PLUGIN
 TELEGRAM_PLUGIN_ENABLED_TEXT = "\nTelegram plugin: enabled"
@@ -307,19 +311,27 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     aux_context = context[:]
     mission_completed = False
     summary = ""
+    urls: list[str] = []
+    query = WEB_DIRECT_SEARCH
 
     # Compute web search target
     target_prompt = WEB_SEARCH_GENERATE_TARGET + action
     target = core.send_prompt(WEB_SEARCH_TARGET_SYSTEM_PROMPT, target_prompt, aux_context, hide_reasoning = True)
 
-    # Generate web search query
-    query = core.send_prompt(WEB_SEARCH_SYSTEM_PROMPT, WEB_SEARCH_GENERATE_QUERY + target, aux_context, hide_reasoning = True)
-    query = query.replace('"', '')
+    # Check if action provided specific URLs
+    urls = re.findall(WEB_URL_PATTERN, action)
 
-    comms.printSystemText(WEB_SEARCH_TAG + query + "\n\n" + target)
+    if urls:
+        comms.printSystemText(WEB_SEARCH_TAG + query + "\n\n" + target)
+    else:
+        # Generate web search query
+        query = core.send_prompt(WEB_SEARCH_SYSTEM_PROMPT, WEB_SEARCH_GENERATE_QUERY + target, aux_context, hide_reasoning = True)
+        query = query.replace('"', '')
 
-    # Run the web search
-    urls = web.search(query, WEB_SEARCH_PAGE_LIMIT)
+        comms.printSystemText(WEB_SEARCH_TAG + query + "\n\n" + target)
+
+        # Run the web search
+        urls = web.search(query, WEB_SEARCH_PAGE_LIMIT)
 
     for url in urls:
         comms.printSystemText("\n" + url)
@@ -338,6 +350,7 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
             break
 
     if summary:
+        comms.printSystemText("\n" + summary)
         extended_action = action + WEB_SUMMARY_REVIEW_1 + query + WEB_SUMMARY_REVIEW_2 + summary
     else:
         extended_action = action + WEB_SEARCH_FAILED_TEXT
