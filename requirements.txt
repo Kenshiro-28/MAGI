@@ -1,5 +1,5 @@
 # Core
-llama-cpp-python
+llama-cpp-python @ git+https://github.com/JamePeng/llama-cpp-python.git@v0.3.25-cu130-Basic-linux-20260215
 
 # Web plugin
 ddgs
@@ -9,5 +9,3 @@ transformers
 torch
 diffusers
 accelerate
-protobuf
-sentencepiece

@@ -1,34 +1,75 @@
 import gc
 import torch
-from diffusers import StableDiffusion3Pipeline
+from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
 from diffusers.utils import logging
 
 IMAGE_GENERATION_ERROR = "\n[ERROR] An exception occurred while trying to generate an image: "
 
-INFERENCE_STEPS = 30
-RECOMMENDED_VRAM = 16 * (1024 ** 3)  # 16GB
-MIN_VRAM = 8 * (1024 ** 3)  # 8GB
-GUIDANCE_SCALE = 3.5
-MAX_SEQUENCE_LENGTH = 512
+INFERENCE_STEPS = 40
+RECOMMENDED_VRAM = 24 * (1024 ** 3) 
+MIN_VRAM = 12 * (1024 ** 3)
+GUIDANCE_SCALE = 5.0
+ALGORITHM_TYPE = "dpmsolver++"  # DPM++ 2M Karras
 
 
 def _load_pipeline(model: str, lora: str):
-    if torch.cuda.is_available() and torch.cuda.get_device_properties(0).total_memory >= RECOMMENDED_VRAM:
-        # Best quality
-        pipe = StableDiffusion3Pipeline.from_pretrained(model, dtype = torch.bfloat16)
-        pipe.enable_model_cpu_offload()
-    elif torch.cuda.is_available() and torch.cuda.get_device_properties(0).total_memory >= MIN_VRAM:
-        # For lower VRAM, use float16 and more aggressive optimizations
-        pipe = StableDiffusion3Pipeline.from_pretrained(model, dtype = torch.float16)
-        pipe.enable_model_cpu_offload()
-        pipe.enable_attention_slicing()
-    else:
-        # Force CPU mode for low VRAM or no CUDA
-        pipe = StableDiffusion3Pipeline.from_pretrained(model, dtype = torch.float32)
-        pipe.to("cpu")
+    pipe = None
 
+    # GPU MODE (If available)
+    if torch.cuda.is_available():
+        total_vram = torch.cuda.get_device_properties(0).total_memory
+        
+        # Check total VRAM
+        if total_vram >= RECOMMENDED_VRAM:
+            pipe = StableDiffusionXLPipeline.from_pretrained(model, torch_dtype=torch.float16)
+            pipe.enable_model_cpu_offload()
+        elif total_vram >= MIN_VRAM:
+            pipe = StableDiffusionXLPipeline.from_pretrained(model, torch_dtype=torch.float16)
+            pipe.enable_model_cpu_offload()
+            pipe.enable_vae_tiling()
+        else:
+            # Fallback for weak GPUs -> CPU
+            pipe = _load_cpu_pipeline(model)
+            
+    # CPU MODE
+    else:
+        pipe = _load_cpu_pipeline(model)
+
+    # Apply Lora if needed
     if lora:
+        print(f"Loading LoRA weights: {lora}...")
         pipe.load_lora_weights(lora)
+
+    # Set scheduler
+    pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+        pipe.scheduler.config,
+        algorithm_type=ALGORITHM_TYPE,
+        use_karras_sigmas=True
+    )
+
+    return pipe
+
+
+def _load_cpu_pipeline(model: str):
+    print(f"Loading {model} (SDXL) in High-Quality CPU Mode (Float32)...")
+    
+    # Load SDXL Pipeline with strict 32-bit precision
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+        model,
+        torch_dtype=torch.float32,
+        variant=None, 
+        use_safetensors=True
+    )
+
+    # Force strict 32-bit casting
+    pipe.to(dtype=torch.float32)
+    pipe.to("cpu")
+
+    # ENABLE TILING (Mandatory for SDXL on CPU)
+    pipe.enable_vae_tiling()
+    
+    # Memory Optimization
+    pipe.enable_attention_slicing()
 
     return pipe
 
@@ -38,11 +79,12 @@ def generate_image(
     negative_prompt: str,
     model: str,
     lora: str,
+    image_type: str,
     image_specs: str,
     width: int,
     height: int
 ):
-    pipe: StableDiffusion3Pipeline = None
+    pipe: StableDiffusionXLPipeline = None
     image = None
 
     try:
@@ -51,19 +93,32 @@ def generate_image(
         # Load pipeline
         pipe = _load_pipeline(model, lora)
 
-        # Add image specs
+        # Add image type (i.e. "4K RAW photo")
+        if image_type:
+            prompt = image_type + ", " + prompt
+
+        # Add image specs (i.e. "50mm lens, ...")
         if image_specs:
-            prompt = image_specs + ", " + prompt
+            prompt = prompt.removesuffix('.') + ", " + image_specs
+
+        # Print positive and negative prompts
+        print("\n" + "=" * 50)
+        print("[POSITIVE PROMPT]")
+        print(prompt)
+        print("-" * 50)
+        print("[NEGATIVE PROMPT]")
+        print(negative_prompt)
+        print("=" * 50 + "\n")
 
         # Generate image
-        image = pipe(  # type: ignore[operator]
-            prompt = prompt,
-            negative_prompt = negative_prompt,
-            width = width,
-            height = height,
-            guidance_scale = GUIDANCE_SCALE,
-            num_inference_steps = INFERENCE_STEPS,
-            max_sequence_length = MAX_SEQUENCE_LENGTH,
+        print(f"Generating SDXL image (Steps: {INFERENCE_STEPS}, CFG: {GUIDANCE_SCALE})...")
+        image = pipe(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            width=width,
+            height=height,
+            guidance_scale=GUIDANCE_SCALE,
+            num_inference_steps=INFERENCE_STEPS
         ).images[0]
 
         return image
@@ -74,11 +129,10 @@ def generate_image(
 
     finally:
         # Cleanup
-        pipe = None
+        if pipe is not None:
+            del pipe
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
         gc.collect()
-
-

@@ -6,14 +6,14 @@ import core
 
 TOOL_SELECTION_SYSTEM_PROMPT = "\n\nOutput EXACTLY ONE line containing ONLY one item from ALLOWED_OPTIONS. No other text."
 CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
-TASK_SECTION_TEXT = "\n---\nTASK: "
-AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE TOOLS: "
+TASK_SECTION_TEXT = "\n---\nTASK:\n"
+AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE_TOOLS:\n"
 CONTINUE_TEXT = "continue"
-TOOL_SELECTION_TEXT = f"""\n---\nTOOL ROUTER
+TOOL_SELECTION_TEXT = f"""\n---\nTOOL_ROUTER:
 
 Goal: choose ONE tool to call now, or choose '{CONTINUE_TEXT}' to call no tool and proceed normally.
 
-AVAILABLE TOOLS is a JSON array of objects: {{ "name": ..., "description": ... }}.
+AVAILABLE_TOOLS is a JSON array of objects: {{ "name": ..., "description": ... }}.
 
 You must output the tool "name" EXACTLY as shown (or '{CONTINUE_TEXT}').
 

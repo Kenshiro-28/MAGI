@@ -10,9 +10,10 @@ MESSAGE_RECEIVED_TEXT_2 = "」"
 COMMS_ERROR = "\n[ERROR] Comms error: "
 
 # TELEGRAM PLUGIN
-TELEGRAM_PLUGIN_SEND_WAIT_TIME = 1
+TELEGRAM_PLUGIN_SEND_WAIT_TIME = 2
 TELEGRAM_PLUGIN_RECEIVE_WAIT_TIME = 5
 TELEGRAM_PLUGIN_CHAR_LIMIT = 4096
+TELEGRAM_PLUGIN_SAFE_CHAR_LIMIT = 4000
 TELEGRAM_MESSAGE_QUEUE_LIMIT = 100
 TELEGRAM_TAG = "\n[TELEGRAM] "
 
@@ -54,17 +55,33 @@ def userInput() -> str:
 # TELEGRAM PLUGIN OPERATIONS
 
 def _send_telegram_bot(text: str) -> None:
-    for i in range(0, len(text), TELEGRAM_PLUGIN_CHAR_LIMIT):
-        message = text[i:i + TELEGRAM_PLUGIN_CHAR_LIMIT]
-
-        time.sleep(TELEGRAM_PLUGIN_SEND_WAIT_TIME)
-
-        try:
+    try:
+        while len(text) > 0:
+            time.sleep(TELEGRAM_PLUGIN_SEND_WAIT_TIME)
             bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)
-            asyncio.run(bot.send(message))
 
-        except Exception as e:
-            print(COMMS_ERROR + str(e))
+            if len(text) <= TELEGRAM_PLUGIN_CHAR_LIMIT:
+                chunk = text
+                text = ""
+            else:
+                # Look backward from the limit to find the last space
+                cut_index = text.rfind(' ', 0, TELEGRAM_PLUGIN_CHAR_LIMIT)
+
+                # If no space is found, OR the space is too far back (less than 4000),
+                # force a maximum hard cut so we don't send unnecessarily short chunks.
+                if cut_index == -1 or cut_index < TELEGRAM_PLUGIN_SAFE_CHAR_LIMIT:
+                    chunk = text[:TELEGRAM_PLUGIN_CHAR_LIMIT]
+                    text = text[TELEGRAM_PLUGIN_CHAR_LIMIT:]
+                else:
+                    chunk = text[:cut_index]
+                    # Skip the space we just cut on, so the next chunk doesn't start with it
+                    text = text[cut_index + 1:]
+
+            # Send the chunk
+            asyncio.run(bot.send(chunk))
+
+    except Exception as e:
+        print(COMMS_ERROR + str(e))
 
 
 def _receive_telegram_bot() -> str:
@@ -91,9 +108,35 @@ def _receive_telegram_bot() -> str:
     if len(telegram_message_queue) > TELEGRAM_MESSAGE_QUEUE_LIMIT:
         telegram_message_queue = telegram_message_queue[-TELEGRAM_MESSAGE_QUEUE_LIMIT:]
 
-    # Dequeue oldest message
+    # Dequeue next message
     if telegram_message_queue:
         message = telegram_message_queue.pop(0)
+        last_chunk_len = len(message)
+
+        # If the extracted message hits the limit, it was cut off.
+        # Keep popping from the queue and stitching until we get a complete thought.
+        while last_chunk_len >= TELEGRAM_PLUGIN_SAFE_CHAR_LIMIT:
+            # --- NETWORK RACE CONDITION FIX ---
+            # If we expect another chunk but the queue is empty, Telegram is lagging.
+            if len(telegram_message_queue) == 0:
+                time.sleep(TELEGRAM_PLUGIN_RECEIVE_WAIT_TIME)  # Give the server 5 seconds to catch up
+
+                try:
+                    bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)
+                    pending_messages = asyncio.run(bot.receive())
+                    telegram_message_queue.extend(pending_messages)
+                except Exception as e:
+                    print(COMMS_ERROR + str(e))
+
+                # If it is STILL empty after waiting, the message actually ended there.
+                if len(telegram_message_queue) == 0:
+                    break
+            # --------------------------------------
+
+            # Get next chunk
+            next_chunk = telegram_message_queue.pop(0)
+            message += " " + next_chunk
+            last_chunk_len = len(next_chunk)
 
     return message
 

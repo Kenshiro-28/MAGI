@@ -24,9 +24,9 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-TEMPERATURE: model temperature (default: 0.6)
+TEMPERATURE: model temperature (default: 0.8)
 
-CONTEXT_SIZE: number of tokens in the context window (default: 65536)
+CONTEXT_SIZE: number of tokens in the context window (default: 32768)
 
 HEARTBEAT_SECONDS: seconds since the last action start before MAGI runs a background thought loop to determine whether further action is required. If an action is in progress, the loop is deferred until the action completes. (default: 1800)
 
@@ -140,7 +140,7 @@ MAGI will review and refine the generated code and its output up to 10 times to 
 
 This plugin adds a tool to generate images.
 
-Only Stable Diffusion 3.5 checkpoints are supported.
+Only Stable Diffusion XL (SDXL) checkpoints are supported.
 
 It automatically downloads the specified image generation model from Hugging Face.
 
@@ -150,7 +150,7 @@ If the folder contains images from previous sessions, they will be overwritten.
 
 *System requirements:*
 
-CPU-only: 64GB of system RAM (due to float32 usage instead of float16).
+CPU-only: 32GB of system RAM.
 
 GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
 
@@ -158,24 +158,26 @@ GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at leas
 
 Some models require authentication. To access these gated models:
 
-- Visit the model's page on Hugging Face (e.g., https://huggingface.co/black-forest-labs/FLUX.1-dev).
+- Visit the model's page on Hugging Face (e.g., https://huggingface.co/SG161222/RealVisXL_V5.0).
 - Complete the required access agreement.
 - Generate an access token in your Hugging Face account settings.
 - Authenticate your local environment by running the following command in the project directory (with your Python environment activated):
 
 ```
-$ huggingface-cli login
+$ hf auth login
 ```
 
 #### Configuration
 
-IMAGE_GENERATION_MODEL: this is the model used to generate images (default: stabilityai/stable-diffusion-3.5-large)
+IMAGE_GENERATION_MODEL: this is the model used to generate images (default: SG161222/RealVisXL_V5.0)
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_SPECS: these are the general features of the images you want to generate. This text will be prepended to the prompt used to generate each image (default: 4K RAW photo, 50mm lens, f/8 aperture, high-end commercial photography, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading)
+IMAGE_GENERATION_TYPE: this defines the base medium or style of the image (acting as a foundational anchor). This text will be prepended to the beginning of the prompt used to generate each image (default: 4K RAW photo, high-end commercial photography)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features of the images you want to generate (default: lowres, muddy textures, blurry, out of focus, soft focus, jpeg artifacts, deformed, bad proportions, gross proportions, bad anatomy, poorly drawn face, asymmetrical eyes, lifeless eyes, colored sclera)
+IMAGE_GENERATION_SPECS: these are the overarching photographic or artistic specifications you want to apply to the images. This text will be appended to the end of the prompt used to generate each image (default: 50mm lens, f/8 aperture, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading)
+
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, gross proportions, missing limbs, poorly drawn face, lifeless eyes)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 896)
 
@@ -231,43 +233,29 @@ The model must enclose its extended reasoning between `<think>` tags:
 <think>Okay, so I need to explain who was Sun Tzu.</think>
 ```
 
-### Recommended models
+### Recommended model
 
 Hint: As a rule of thumb, your combined RAM + VRAM should be at least 50% larger than the GGUF file size.
 
-#### Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA-GGUF
+#### Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2
 
-![Qwen3-Deckard-Large](https://ipfs.io/ipfs/bafybeifhmkvn2idrf2v343eq3aflxcwzut3dhfwjj4y7pgqb7ckwy25avm)
+![Model Image](https://ipfs.io/ipfs/bafybeigbdiktl2kyuy2e27uptxv6ys6opgrixuprxngzfj4y3calp65f5e)
 
-Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA is a 6-billion parameter model created by DavidAU, based on the Qwen3 architecture.
+The reasoning capabilities of Claude 4.5 Opus High Reasoning combined with the MoE power and speed of Qwen 30B-A3B 2507 Thinking.
 
-This model is good for general usage and basic coding.
+**Model Highlights:**
+* **Architecture:** 30B total parameters, 3B active. 128 experts (8 active by default).
+* **Context Window:** 256k tokens.
+* **Capabilities:** All math, science, and reasoning features are fully intact. Designed to run efficiently on GPU, CPU, or split layers with reasonable token/second speeds.
+* **Behavior:** Compact, to the point, and powerful reasoning.
 
-The "Deckard" series (named after the Blade Runner protagonist) features training on an in-house dataset derived from Philip K. Dick's writings. The "Almost Human" variant adds biographical data, letters, and notes from the author, resulting in enhanced tone, thinking patterns, and prose quality.
+**[Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2.Q5_K_M.gguf](https://huggingface.co/mradermacher/Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2-GGUF/blob/main/Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2.Q5_K_M.gguf)**
 
-https://huggingface.co/mradermacher/Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA-GGUF/blob/main/Qwen3-Deckard-Large-Almost-Human-6B-III-Final-OMEGA.Q8_0.gguf
+**System Requirements:**
 
-*System requirements:*
+* **CPU-only:** 32GB of system RAM.
 
-CPU-only: 32GB of system RAM.
-
-GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
-
-#### Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF
-
-![Qwen3-TOTAL-RECALL](https://ipfs.io/ipfs/bafybeic3p7ux4lqk64xcvaynxxewsnljmkycl4xaz46hr3cdxnxunv3dty)
-
-Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF is a 42-billion parameter model created by DavidAU, based on Qwen3-30B-A3B-2507-Thinking from Alibaba Cloud's Qwen series.
-
-This model is recommended for use cases that require high reasoning skills.
-
-https://huggingface.co/mradermacher/Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER-GGUF/blob/main/Qwen3-42B-A3B-2507-Thinking-TOTAL-RECALL-v2-Medium-MASTER-CODER.Q8_0.gguf
-
-*System requirements:*
-
-CPU-only: 64GB of system RAM.
-
-GPU: NVIDIA GPU with at least 16GB VRAM. Aim for a combined RAM + VRAM of at least 64GB.
+* **GPU:** NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
 
 ## Debian installation
 

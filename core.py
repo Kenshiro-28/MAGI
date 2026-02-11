@@ -1,13 +1,13 @@
-from llama_cpp import Llama
-from collections.abc import Iterator
 import os
 import sys
 import time
 import re
 import datetime
 import select
+from llama_cpp import Llama
+from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.28"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.29"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -38,12 +38,13 @@ TEMPERATURE_INVALID_TEXT = "Invalid temperature.\n"
 
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
-MAX_INPUT_TOKENS_ERROR = "\n[ERROR] You have entered too many tokens: "
+MIN_CONTEXT_SIZE = 32768
+MIN_RESPONSE_SIZE = 16384
 MAX_RESPONSE_SIZE = 32768
-MIN_CONTEXT_SIZE = MAX_RESPONSE_SIZE * 2
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
 CONTEXT_SIZE_INVALID_TEXT = "Invalid context size.\n"
+MAX_INPUT_TOKENS_WARNING = "\n[WARNING] You have exceeded optimal input tokens: "
 
 DISPLAY_EXTENDED_REASONING = True
 DISPLAY_EXTENDED_REASONING_KEY = "DISPLAY_EXTENDED_REASONING"
@@ -116,6 +117,10 @@ def get_completion_from_messages(context: list[str]) -> str:
             context.pop(1)
             context.pop(1)
             text, text_tokens = get_context_data(context)
+
+        # Catch oversized initial prompt
+        if text_tokens > MAX_INPUT_TOKENS:
+            print_system_text(MAX_INPUT_TOKENS_WARNING + str(text_tokens))
 
         # Compute response token limit
         max_tokens = min(CONTEXT_SIZE - text_tokens, MAX_RESPONSE_SIZE)
@@ -332,11 +337,24 @@ def load_model(startup: bool = True) -> None:
         print()
 
         # Load model
-        model = Llama(model_path = modelFile, n_ctx = CONTEXT_SIZE, verbose = False)
+        model = Llama(
+            model_path = modelFile,
+            n_ctx = CONTEXT_SIZE,
+            n_gpu_layers = -1,
+            verbose = False
+        )
 
         if startup:
             print_system_text(SYSTEM_VERSION_TEXT)
             print_system_text(MODEL_TEXT + modelName)
+
+            # Print config
+            config_info = (
+                f"\nContext: {CONTEXT_SIZE:,} tokens\n"
+                f"\nTemperature: {TEMPERATURE}"
+            )
+
+            print_system_text(config_info)
 
     except Exception as e:
         print_system_text(MODEL_LOAD_ERROR + str(e))
@@ -413,11 +431,13 @@ def configure_model() -> None:
         print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT)
         exit()
 
+    # Check minimum context size
     if CONTEXT_SIZE < MIN_CONTEXT_SIZE:
-        raise ValueError
+        print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT)
+        exit()
 
     # Set max input tokens
-    MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
+    MAX_INPUT_TOKENS = CONTEXT_SIZE - MIN_RESPONSE_SIZE
 
     # Set logging configuration
     LOG_ENABLED = config.get(ENABLE_LOG_KEY, "NO").upper() == "YES"

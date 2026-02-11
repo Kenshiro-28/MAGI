@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.28
+Version     : 12.29
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -273,7 +273,7 @@ def main() -> int:
 
         # Check prompt lenght
         if prompt_tokens > core.MAX_INPUT_TOKENS:
-            comms.printSystemText(core.MAX_INPUT_TOKENS_ERROR + str(prompt_tokens))
+            comms.printSystemText(core.MAX_INPUT_TOKENS_WARNING + str(prompt_tokens))
             print_cli_symbol()
             continue
 

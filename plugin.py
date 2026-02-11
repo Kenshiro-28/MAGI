@@ -76,6 +76,7 @@ IMAGE_GENERATION_PLUGIN_DISABLED_TEXT = "\nImage generation plugin: disabled"
 ENABLE_IMAGE_GENERATION_PLUGIN_KEY = "ENABLE_IMAGE_GENERATION_PLUGIN"
 IMAGE_GENERATION_MODEL_KEY = "IMAGE_GENERATION_MODEL"
 IMAGE_GENERATION_LORA_KEY = "IMAGE_GENERATION_LORA"
+IMAGE_GENERATION_TYPE_KEY = "IMAGE_GENERATION_TYPE"
 IMAGE_GENERATION_SPECS_KEY = "IMAGE_GENERATION_SPECS"
 IMAGE_GENERATION_NEGATIVE_PROMPT_KEY = "IMAGE_GENERATION_NEGATIVE_PROMPT"
 IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
@@ -131,39 +132,39 @@ Here are examples of how to correctly format the final prompt:
 ---
 EXAMPLE 1 (Removing a stylistic light description)
 TEXT = a knight in shining armor on a horse, under dramatic, moody lighting
-CORRECT PROMPT = full body in frame: A knight in shining armor on a horse.
+CORRECT PROMPT = full body in frame: knight in shining armor riding horse.
 
 EXAMPLE 2 (Keeping light source details)
 TEXT = a slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern under cinematic lighting
-CORRECT PROMPT = full body in frame: A slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern.
+CORRECT PROMPT = full body in frame: slender elven archer with long auburn hair and emerald eyes, by flickering oil lantern.
 
 EXAMPLE 3 (Honoring framing request and keeping physical descriptions)
 TEXT = a medium shot of a curvy woman with a voluptuous figure, blue eyes and long blonde hair in a room lit only by a single candle
-CORRECT PROMPT = waist up: A curvy woman with a voluptuous figure, blue eyes and long blonde hair, in a room lit only by a single candle.
+CORRECT PROMPT = waist up: curvy woman with voluptuous figure, blue eyes, and long blonde hair, in room lit only by single candle.
 
 EXAMPLE 4 (Style Included)
 TEXT = a biomechanoid inside a big alien ship in the style of H.R. Giger
-CORRECT PROMPT = wide shot: A biomechanoid inside a big alien ship in the style of H.R. Giger.
+CORRECT PROMPT = wide shot: biomechanoid inside big alien ship, H.R. Giger style.
 
 EXAMPLE 5 (Panoramic for vast scenes)
 TEXT = a futuristic Tokyo cityscape with neon skyscrapers stretching to the horizon
-CORRECT PROMPT = panoramic: A futuristic Tokyo cityscape with neon skyscrapers stretching to the horizon.
+CORRECT PROMPT = panoramic: futuristic Tokyo cityscape with neon skyscrapers stretching to horizon.
 
 EXAMPLE 6 (Adjusting composition to show described details)
 TEXT = a close-up of a curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings
-CORRECT PROMPT = full body in frame: A curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings.
+CORRECT PROMPT = full body in frame: curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings.
 
 EXAMPLE 7 (Adjusting composition to show described details)
 TEXT = a medium shot of a Roman centurion in polished lorica segmentata and leather caligae standing on marble steps
-CORRECT PROMPT = full body in frame: A Roman centurion in polished lorica segmentata and leather caligae standing on marble steps.
+CORRECT PROMPT = full body in frame: Roman centurion in polished lorica segmentata and leather caligae, standing on marble steps.
 
 EXAMPLE 8 (Adjusting composition to show described details)
 TEXT = a headshot of a woman in an elegant floor-length gown
-CORRECT PROMPT = full body in frame: A woman in an elegant floor-length gown.
+CORRECT PROMPT = full body in frame: woman wearing elegant floor-length gown.
 ---
 Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements, the requested style, and any physical light sources.
 
-Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write less than 91 words. Don't write the number of words.\n\nTEXT = """
+Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write exactly one highly condensed sentence. Use telegraphic phrasing: bind attributes, details, and clothing to the subject using words like "with" or "wearing", but use commas to separate the main subject from the background and lighting. Drop unnecessary filler words (like "a", "an", "the") to strictly limit your response to 30 words or fewer. Don't write the number of words.\n\nTEXT = """
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 IMAGE_GENERATION_OK_TEXT_1 = "\n---\n" + IMAGE_GENERATION_TOOL_NAME + ": image generated successfully.\n\nImage description: "
 IMAGE_GENERATION_OK_TEXT_2 = "\n\nImage generation prompt: "
@@ -177,7 +178,7 @@ ENABLE_CODE_RUNNER_PLUGIN_KEY = "ENABLE_CODE_RUNNER_PLUGIN"
 CODE_RUNNER_TOOL_NAME = "code_runner"
 CODE_RUNNER_TOOL_DESCRIPTION = """Write and run Python code. Use this tool only if the task:
 
-- Requires mathematical operations, OR
+- Requires complex mathematical operations, OR
 - Requires data analysis with meaningful computation (e.g., processing for trends or stats), OR
 - Requires network operations, OR
 - Requires interacting with external systems (e.g., public APIs), OR
@@ -189,7 +190,12 @@ CONSTRAINTS:
 - Text-based output: Results must be printed to the console (print functions).
 - Single-pass: The code must run to completion without waiting.
 
-DO NOT USE this tool if the request explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming", "no code execution")."""
+DO NOT USE this tool for:
+- Logical puzzles, riddles, or brain teasers that can be solved via deduction.
+- Simple math or motion problems (e.g., calculating travel time given speed and distance) that do not require a formal algorithm.
+- Situational reasoning where the answer depends on interpreting a story or set of rules.
+- Any task that a person could solve with a simple pen-and-paper calculation in under a minute.
+- Requests where the user explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming")."""
 CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution.
 
 CORE CONSTRAINTS:
@@ -381,7 +387,7 @@ def generate_image(primeDirectives: str, action: str, context: list[str]) -> str
     core.unload_model()
 
     # Generate image
-    image = image_generation.generate_image(image_generation_prompt, IMAGE_GENERATION_NEGATIVE_PROMPT, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_LORA, IMAGE_GENERATION_SPECS, IMAGE_GENERATION_WIDTH, IMAGE_GENERATION_HEIGHT)
+    image = image_generation.generate_image(image_generation_prompt, IMAGE_GENERATION_NEGATIVE_PROMPT, IMAGE_GENERATION_MODEL, IMAGE_GENERATION_LORA, IMAGE_GENERATION_TYPE, IMAGE_GENERATION_SPECS, IMAGE_GENERATION_WIDTH, IMAGE_GENERATION_HEIGHT)
 
     # Reload main model
     core.load_model(startup = False)
@@ -498,6 +504,7 @@ try:
         from plugins.image_generation import image_generation
         IMAGE_GENERATION_MODEL = core.config.get(IMAGE_GENERATION_MODEL_KEY, '')
         IMAGE_GENERATION_LORA = core.config.get(IMAGE_GENERATION_LORA_KEY, '')
+        IMAGE_GENERATION_TYPE = core.config.get(IMAGE_GENERATION_TYPE_KEY, '')
         IMAGE_GENERATION_SPECS = core.config.get(IMAGE_GENERATION_SPECS_KEY, '')
         IMAGE_GENERATION_NEGATIVE_PROMPT = core.config.get(IMAGE_GENERATION_NEGATIVE_PROMPT_KEY, '')
         IMAGE_GENERATION_WIDTH = int(core.config.get(IMAGE_GENERATION_WIDTH_KEY, '0'))
