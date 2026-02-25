@@ -1,5 +1,5 @@
 # Core
-llama-cpp-python @ git+https://github.com/JamePeng/llama-cpp-python.git@v0.3.25-cu130-Basic-linux-20260215
+llama-cpp-python @ git+https://github.com/JamePeng/llama-cpp-python.git@v0.3.27-cu130-Basic-linux-20260222
 
 # Web plugin
 ddgs
