@@ -86,7 +86,13 @@ def run_python_code(program: str):
             return lint_output.strip(), ""
 
         # Execute program
-        program_output_data = subprocess.run([PYTHON_EXEC_PATH, '-c', program], capture_output = True, text = True, timeout = PROGRAM_TIMEOUT)
+        program_output_data = subprocess.run(
+            [PYTHON_EXEC_PATH, '-c', program],
+            capture_output = True,
+            text = True,
+            timeout = PROGRAM_TIMEOUT,
+            cwd = WORKSPACE_PATH
+        )
         program_output = PROGRAM_OUTPUT_TEXT + program_output_data.stdout.strip()
 
         # Append error data to program output
@@ -108,6 +114,13 @@ def run_python_code(program: str):
 
 try:
     CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
+
+    # Get path of MAGI root folder
+    ROOT_PATH = os.path.dirname(os.path.dirname(CURRENT_PATH))
+
+    # Get path of workspace folder
+    WORKSPACE_PATH = os.path.join(ROOT_PATH, 'workspace')
+    os.makedirs(WORKSPACE_PATH, exist_ok = True)
 
     # Get path of Python virtual environment
     VENV_PATH = os.path.join(CURRENT_PATH, 'venv')

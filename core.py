@@ -7,7 +7,7 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.29"
+SYSTEM_VERSION_TEXT = "\nSystem: v12.30"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"

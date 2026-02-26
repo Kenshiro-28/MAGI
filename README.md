@@ -96,7 +96,9 @@ The system will extract useful information from the file **mission_data.txt**.
 
 NERV is a virtual organization composed of AI agents.
 
-The agents are organized following a military structure. The Captain receives the user's prompt, analyzes it, and issues orders to each Soldier.
+The agents are organized following a military structure, consisting of one Captain and three Soldiers.
+
+The Captain receives the user's prompt, analyzes it, and issues orders to each Soldier.
 
 The Captain will evaluate each Soldier's response and provide additional guidance when necessary.
 
@@ -135,6 +137,10 @@ The generated code will run non-interactively, printing all results to the conso
 Moreover, the generated code will also print its relevant internal state at the end of each execution for reuse in multi-step tasks.
 
 MAGI will review and refine the generated code and its output up to 10 times to ensure it functions correctly and fully completes the task.
+
+Any local files saved by the code (such as data exports, logs, or plots) will automatically be routed to the **workspace** folder.
+
+While dependencies are isolated, the OS file system is not strictly sandboxed. See the Security section for best practices.
 
 ### Image generation plugin
 
@@ -237,21 +243,20 @@ The model must enclose its extended reasoning between `<think>` tags:
 
 Hint: As a rule of thumb, your combined RAM + VRAM should be at least 50% larger than the GGUF file size.
 
-#### Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2
+#### Qwen3-30B-A3B-Thinking-2507
 
-![Model Image](https://ipfs.io/ipfs/bafybeigbdiktl2kyuy2e27uptxv6ys6opgrixuprxngzfj4y3calp65f5e)
+**[Qwen3-30B-A3B-Thinking-2507.Q5_K_M.gguf](https://huggingface.co/mradermacher/Qwen3-30B-A3B-Thinking-2507-GGUF/blob/main/Qwen3-30B-A3B-Thinking-2507.Q5_K_M.gguf)**
 
-The reasoning capabilities of Claude 4.5 Opus High Reasoning combined with the MoE power and speed of Qwen 30B-A3B 2507 Thinking.
+Qwen3-30B-A3B-Thinking-2507 represents a breakthrough in open-weight models, specifically engineered for complex agentic workflows. By leveraging a highly efficient Mixture-of-Experts (MoE) architecture alongside advanced Reinforcement Learning (RL) optimized for deep reasoning, it achieves state-of-the-art performance in logic, mathematics, and code generation.
 
 **Model Highlights:**
-* **Architecture:** 30B total parameters, 3B active. 128 experts (8 active by default).
-* **Context Window:** 256k tokens.
-* **Capabilities:** All math, science, and reasoning features are fully intact. Designed to run efficiently on GPU, CPU, or split layers with reasonable token/second speeds.
-* **Behavior:** Compact, to the point, and powerful reasoning.
-
-**[Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2.Q5_K_M.gguf](https://huggingface.co/mradermacher/Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2-GGUF/blob/main/Qwen3-30B-A3B-Claude-4.5-Opus-High-Reasoning-2507-V2.Q5_K_M.gguf)**
+* **Architecture:** 30B total parameters with only 3B active during inference. This MoE design drastically reduces compute overhead while utilizing the vast knowledge embedded in the full parameter count.
+* **Native Reasoning:** Trained heavily on reasoning-specific datasets using RL techniques, it naturally excels at generating strict Chain-of-Thought processes within its `<think>` tags to break down complex tasks step-by-step.
+* **Context Window:** Up to 256k tokens. *(Note: Utilizing the full context window requires highly elevated amounts of RAM/VRAM. The default 32k context is recommended for standard hardware).*
 
 **System Requirements:**
+
+*(Suitable for the default 32k context size)*
 
 * **CPU-only:** 32GB of system RAM.
 

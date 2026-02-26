@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.29
+Version     : 12.30
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -61,7 +61,6 @@ EXPLORE: Brainstorm alternative trading strategies for volatile stocks.
 EXPLOIT: Refine the military drone swarm simulation by incorporating formation data with drone counts 10, 20, 30 and positions at (40.7128, -74.0060), (34.0522, -118.2437).
 EXPLORE: Research alternative deployment strategies for drone reconnaissance in urban environments."""
 HEARTBEAT_SECONDS_KEY = "HEARTBEAT_SECONDS"
-HEARTBEAT_TAG = "\n\n[HEARTBEAT]"
 HEARTBEAT_IDLE_TEXT = "[IDLE]"
 HEARTBEAT_PROMPT = f"""[SYSTEM EVENT: IDLE TIMEOUT]
 The user has been silent. You are running a background thought loop.
@@ -142,9 +141,8 @@ def runNerv(mission: str) -> None:
         comms.printSystemText(MISSION_DATA_TEXT + _nerv_data)
         agent.displayNervSquad()
 
-    orders = agent.captain.issueOrders(DATA_TEXT + _nerv_data + MISSION_TEXT + mission)
-    team_response = agent.runSquadOrders(orders)
-    _nerv_data = core.update_summary(mission, _nerv_data, team_response)
+    squad_response = agent.runMission(mission, _nerv_data)
+    _nerv_data = core.update_summary(mission, _nerv_data, squad_response)
     comms.printSystemText(PROGRESS_REPORT_TEXT + _nerv_data + "\n")
 
 
@@ -194,12 +192,14 @@ def switchAiMode(ai_mode: AiMode) -> AiMode:
     return ai_mode
 
 
-def run_heartbeat(primeDirectives: str, context: list[str]):
-    comms.printSystemText(HEARTBEAT_TAG)
+def run_heartbeat(primeDirectives: str, context: list[str]) -> bool:
     action = core.send_prompt(primeDirectives, HEARTBEAT_PROMPT, context[:], hide_reasoning = True)
 
     if HEARTBEAT_IDLE_TEXT not in action:
         toolchain.runAction(primeDirectives, action, context)
+        return True
+
+    return False
 
 
 def print_cli_symbol():
@@ -256,8 +256,10 @@ def main() -> int:
 
         if heartbeat_seconds > 0 and elapsed_time >= heartbeat_seconds:
             last_heartbeat = time.time()
-            run_heartbeat(primeDirectives, context)
-            print_cli_symbol()
+
+            # Print a new CLI symbol if the heartbeat executed an action
+            if run_heartbeat(primeDirectives, context):
+                print_cli_symbol()
 
         # Check user input
         prompt = comms.userInput()
