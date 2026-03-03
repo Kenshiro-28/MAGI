@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -eu
+cd "$(dirname "${BASH_SOURCE[0]}")"
+TEMPLATES=(config.cfg prime_directives.txt core_protocol.txt mission_data.txt)
+
+# Get latest release
+git fetch --all --tags
+LATEST=$(git tag --sort=-creatordate | head -n1)
+if [[ -z "$LATEST" ]]; then
+    echo "Error: no release tags found."
+    exit 1
+fi
+git reset --hard "$LATEST"
+
+# Create config files from examples if they don't exist yet
+for f in "${TEMPLATES[@]}"; do
+    if [[ ! -f "$f" ]]; then
+        cp "${f}.example" "$f"
+        echo "Created $f from ${f}.example"
+    fi
+done
+
+# Warn only if config.cfg is missing parameters present in the example
+echo ""
+while IFS= read -r line; do
+    param=$(echo "$line" | grep -oP '^[A-Z_]+(?=\s*=)' || true)
+    if [[ -n "$param" ]] && ! grep -q "^${param}" config.cfg; then
+        echo "Warning: config.cfg is missing parameter: $param"
+        echo "  Example value: $line"
+    fi
+done < config.cfg.example
+echo ""
+
+# Uninstall llama-cpp-python to ensure a clean update
+./venv/bin/pip show llama-cpp-python &>/dev/null && ./venv/bin/pip uninstall -y llama-cpp-python
+
+# Install pip packages
+if [[ "${1:-}" == "--nvidia" ]]; then
+    CMAKE_ARGS="-DGGML_CUDA=on" ./venv/bin/pip install --upgrade -r requirements.txt
+else
+    CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS" ./venv/bin/pip install --upgrade -r requirements.txt
+fi
+echo "Done."
+

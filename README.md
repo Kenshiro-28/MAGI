@@ -24,7 +24,7 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-TEMPERATURE: model temperature (default: 0.8)
+TEMPERATURE: model temperature (default: 0.6)
 
 CONTEXT_SIZE: number of tokens in the context window (default: 32768)
 
@@ -46,7 +46,7 @@ ENABLE_LOG: enable or disable logging to the file **mission_log.txt** (default: 
 
 Prime Directives serve as the system prompt or behavioral guidelines, defining MAGI's personality, rules, and operational ethos. This is where you imprint MAGI with a specific identity—whether as a helpful assistant, a fictional character, or a specialized agent.
 
-You can set your Prime Directives in the file **prime_directives.txt**. 
+You can set your Prime Directives in the file **prime_directives.txt**.
 
 ## Core Protocol
 
@@ -217,7 +217,7 @@ It only scrapes websites that explicitly authorize it in robots.txt.
 
 You can instruct MAGI to browse specific pages by including one or more URLs in your prompt (e.g., Compare the data from www.site-a.com and www.site-b.com). If valid addresses (starting with http://, https://, or www.) are detected, MAGI will skip the search engine and navigate directly to the provided links.
 
-## Model 
+## Model
 
 You can use any GGUF model supported by llama-cpp-python, as long as it adheres to the ChatML prompt format:
 
@@ -245,7 +245,7 @@ Hint: As a rule of thumb, your combined RAM + VRAM should be at least 50% larger
 
 #### Qwen3-30B-A3B-Thinking-2507
 
-**[Qwen3-30B-A3B-Thinking-2507.Q5_K_M.gguf](https://huggingface.co/mradermacher/Qwen3-30B-A3B-Thinking-2507-GGUF/blob/main/Qwen3-30B-A3B-Thinking-2507.Q5_K_M.gguf)**
+**[Qwen3-30B-A3B-Thinking-2507-UD-Q5_K_XL.gguf](https://huggingface.co/unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF/blob/main/Qwen3-30B-A3B-Thinking-2507-UD-Q5_K_XL.gguf)**
 
 Qwen3-30B-A3B-Thinking-2507 represents a breakthrough in open-weight models, specifically engineered for complex agentic workflows. By leveraging a highly efficient Mixture-of-Experts (MoE) architecture alongside advanced Reinforcement Learning (RL) optimized for deep reasoning, it achieves state-of-the-art performance in logic, mathematics, and code generation.
 
@@ -302,50 +302,41 @@ $ su - magi
 
 - Place a GGUF model in the root folder.
 
-- Run the following commands in the root folder:
+- Create a Python virtual environment:
 
 ```
 $ python3 -m venv venv --system-site-packages
-$ source venv/bin/activate
 ```
 
 - To use only the CPU, run the following command:
 
 ```
-$ CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS" pip install --upgrade -r requirements.txt
+$ ./update
 ```
 
 - If you want to use your NVIDIA graphics card, run the following command:
 
 ```
-$ CMAKE_ARGS="-DGGML_CUDA=on" pip install --upgrade -r requirements.txt
+$ ./update --nvidia
 ```
+
+The update script will automatically create **config.cfg**, **prime_directives.txt**, **core_protocol.txt**, and **mission_data.txt** from their `.example` templates on first run.
+
+Installation is now complete. Use the same command to pull future changes and keep packages up to date.
 
 ### Run
 
 - Open a console and navigate to the project root folder.
 
-- If the Python virtual environment is not already active, activate it with the following command:
-
-```
-$ source venv/bin/activate
-```
-
 - To start MAGI, run this command:
 
 ```
-$ python magi.py
+$ ./magi
 ```
 
 ### Exit MAGI
 
-- To exit MAGI, type the command **exit** or press Ctrl + C.
-
-- After running MAGI, deactivate the Python virtual environment with the following command:
-
-```
-$ deactivate
-```
+To exit MAGI, type the command **exit** or press Ctrl + C.
 
 ## Docker installation (CPU-only)
 
