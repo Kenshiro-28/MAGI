@@ -12,7 +12,7 @@
 
 **MAGI (マギ)** is an advanced AI system powered by open-source large language models. It operates through a conversational interface and is designed to run efficiently on consumer-grade hardware.
 
-Key features include a customizable Core Protocol for enhanced reasoning, a modular Toolchain for dynamic tool chaining (code execution, web browsing, and image generation), and teleoperation via Telegram for remote access.
+Key features include a customizable Core Protocol for enhanced reasoning, a modular Toolchain for dynamic tool chaining (code execution, web browsing, and image generation), a long-term memory Codex, and teleoperation via Telegram for remote access.
 
 If left idle, MAGI will proactively assess the situation to decide whether to continue ongoing tasks, engage in conversation, or remain silent, based on its personality and the current context.
 
@@ -24,13 +24,15 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-TEMPERATURE: model temperature (default: 0.6)
+TEMPERATURE: model temperature (default: 1.0)
 
 CONTEXT_SIZE: number of tokens in the context window (default: 32768)
 
 HEARTBEAT_SECONDS: seconds since the last action start before MAGI runs a background thought loop to determine whether further action is required. If an action is in progress, the loop is deferred until the action completes. (default: 1800)
 
 ENABLE_CODE_RUNNER_PLUGIN: enable or disable the Code Runner plugin (default: YES)
+
+ENABLE_CODEX_PLUGIN: enable or disable the long-term memory Codex (default: YES)
 
 ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: YES)
 
@@ -75,6 +77,16 @@ The plugin system includes the following tools:
 - Code Runner plugin: adds a tool to generate and execute Python code.
 - Image generation plugin: adds a tool to generate images.
 - Web plugin: adds a tool to browse the web.
+
+## Codex
+
+The Codex is MAGI's long-term memory. It automatically saves valuable knowledge across sessions — working code snippets, research findings, and solutions to recurring problems — and retrieves it when relevant to the current task.
+
+Retrieval is embedding-based, so what is recalled is contextually appropriate rather than just keyword-matched.
+
+The Codex is stored in the file **codex.json** in the project root folder. You can reuse the same Codex with different models. MAGI will continue building its knowledge and understanding of you over time.
+
+You can inspect or edit it manually; entries added without embeddings will have their embeddings generated automatically on the next access. If you edit an entry's title or content, also delete its `"embedding"` key to ensure it is regenerated correctly on the next access.
 
 ## AI modes
 
@@ -233,7 +245,7 @@ Sun Tzu was the author of The Art of War.
 <|im_end|>
 ```
 
-The model must enclose its extended reasoning between `<think>` tags:
+The model must generate extended reasoning enclosed between `<think>...</think>` tags:
 
 ```
 <think>Okay, so I need to explain who was Sun Tzu.</think>
@@ -243,24 +255,19 @@ The model must enclose its extended reasoning between `<think>` tags:
 
 Hint: As a rule of thumb, your combined RAM + VRAM should be at least 50% larger than the GGUF file size.
 
-#### Qwen3-30B-A3B-Thinking-2507
+#### Qwen3.5-9B
 
-**[Qwen3-30B-A3B-Thinking-2507-UD-Q5_K_XL.gguf](https://huggingface.co/unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF/blob/main/Qwen3-30B-A3B-Thinking-2507-UD-Q5_K_XL.gguf)**
+**[Qwen3.5-9B-Q8_0.gguf](https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/blob/main/Qwen3.5-9B-Q8_0.gguf)**
 
-Qwen3-30B-A3B-Thinking-2507 represents a breakthrough in open-weight models, specifically engineered for complex agentic workflows. By leveraging a highly efficient Mixture-of-Experts (MoE) architecture alongside advanced Reinforcement Learning (RL) optimized for deep reasoning, it achieves state-of-the-art performance in logic, mathematics, and code generation.
-
-**Model Highlights:**
-* **Architecture:** 30B total parameters with only 3B active during inference. This MoE design drastically reduces compute overhead while utilizing the vast knowledge embedded in the full parameter count.
-* **Native Reasoning:** Trained heavily on reasoning-specific datasets using RL techniques, it naturally excels at generating strict Chain-of-Thought processes within its `<think>` tags to break down complex tasks step-by-step.
-* **Context Window:** Up to 256k tokens. *(Note: Utilizing the full context window requires highly elevated amounts of RAM/VRAM. The default 32k context is recommended for standard hardware).*
+Qwen3.5 represents a significant leap forward, well-suited for agentic workflows on modest hardware. It delivers solid reasoning, coding, and instruction-following performance while fitting comfortably within consumer-grade memory budgets.
 
 **System Requirements:**
 
 *(Suitable for the default 32k context size)*
 
-* **CPU-only:** 32GB of system RAM.
+* **CPU-only:** System RAM: minimum: 16GB, recommended: 32GB.
 
-* **GPU:** NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
+* **NVIDIA GPU:** Minimum 12GB VRAM for full offload. Partial offload is possible with 8GB VRAM combined with at least 16GB system RAM.
 
 ## Debian installation
 

@@ -160,7 +160,8 @@ cython_debug/
 #.idea/
 
 # MAGI
-config.cfg
-prime_directives.txt
-core_protocol.txt
-mission_data.txt
+*.cfg
+*.txt
+*.log
+*.json
+/workspace/

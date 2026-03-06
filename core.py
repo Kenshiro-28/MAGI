@@ -7,7 +7,8 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\nSystem: v12.31"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.32 ]"
+CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
@@ -25,7 +26,6 @@ MISSION_LOG_FILE_PATH = "mission_log.txt"
 MISSION_DATA_FILE_PATH = "mission_data.txt"
 CONFIG_FILE_PATH = "config.cfg"
 
-MODEL_TEXT = "\nModel: "
 MODEL_RESPONSE_ERROR = "\n[ERROR] An exception occurred while trying to get a response from the model: "
 MODEL_RESPONSE_FORMAT_ERROR = "\n[ERROR] Response format error."
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
@@ -36,11 +36,26 @@ TEMPERATURE_KEY = "TEMPERATURE"
 TEMPERATURE_NOT_FOUND_TEXT = "Temperature not found.\n"
 TEMPERATURE_INVALID_TEXT = "Invalid temperature.\n"
 
+# Sampling
+TOP_P = 0.95
+TOP_K = 20
+MIN_P = 0.0
+
+# Repetition control
+DRY_MULTIPLIER = 0.8
+DRY_BASE = 1.75
+DRY_ALLOWED_LENGTH = 32
+DRY_PENALTY_PAST_N = 2048
+DRY_SEQ_BREAKERS: list[str] = []
+PRESENCE_PENALTY = 0.0
+REPETITION_PENALTY = 1.0
+
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
 MIN_CONTEXT_SIZE = 32768
 MIN_RESPONSE_SIZE = 16384
 MAX_RESPONSE_SIZE = 32768
+CONTEXT_HEADROOM = 16
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
 CONTEXT_SIZE_INVALID_TEXT = "Invalid context size.\n"
@@ -69,7 +84,7 @@ THINK_PATTERN = re.compile(
     rf'({re.escape(THINK_START)}.*?{re.escape(THINK_END)}\n?)',
     flags=re.DOTALL
 )
-
+THINK_TRIGGER = THINK_START + "\nLet's think step by step:\n\n- "
 
 LOG_ENABLED = False
 ENABLE_LOG_KEY = "ENABLE_LOG"
@@ -109,30 +124,60 @@ def get_context_data(context: list[str]) -> tuple[str, int]:
 
 def get_completion_from_messages(context: list[str]) -> str:
     try:
+        # Append extended reasoning trigger
+        context[-1] += THINK_TRIGGER
+
         # Get context data
         text, text_tokens = get_context_data(context)
 
         # Check context size
         while len(context) > 3 and text_tokens > MAX_INPUT_TOKENS:
-            context.pop(1)
-            context.pop(1)
+            # Remove oldest conversation turn
+            del context[1:3]
             text, text_tokens = get_context_data(context)
 
-        # Catch oversized initial prompt
+        # Catch oversized prompt
         if text_tokens > MAX_INPUT_TOKENS:
             print_system_text(MAX_INPUT_TOKENS_WARNING + str(text_tokens))
 
+            # Trim excess tokens (newest part)
+            excess_ratio = (text_tokens - MAX_INPUT_TOKENS) / text_tokens
+            allowed_chars = int(len(text) * (1 - excess_ratio))
+
+            text = text[:allowed_chars].rstrip()
+            text_tokens = get_number_of_tokens(text)
+
         # Compute response token limit
-        max_tokens = min(CONTEXT_SIZE - text_tokens, MAX_RESPONSE_SIZE)
+        max_tokens = min(CONTEXT_SIZE - text_tokens - CONTEXT_HEADROOM, MAX_RESPONSE_SIZE)
 
         # Get model response
-        response = model(text, max_tokens = max_tokens, temperature = TEMPERATURE, stream = False)
+        response_data = model(
+                            text,
+                            max_tokens = max_tokens,
+                            temperature = TEMPERATURE,
+                            top_p = TOP_P,
+                            top_k = TOP_K,
+                            min_p = MIN_P,
+                            dry_multiplier = DRY_MULTIPLIER,
+                            dry_base = DRY_BASE,
+                            dry_allowed_length = DRY_ALLOWED_LENGTH,
+                            dry_penalty_last_n = DRY_PENALTY_PAST_N,
+                            dry_seq_breakers = DRY_SEQ_BREAKERS,
+                            present_penalty = PRESENCE_PENALTY,
+                            repeat_penalty = REPETITION_PENALTY
+                        )
 
         # Check response format
-        if isinstance(response, Iterator):
+        if isinstance(response_data, Iterator):
             raise ValueError(MODEL_RESPONSE_FORMAT_ERROR)
 
-        return response['choices'][0]['text'].strip()
+        # Remove extended reasoning trigger from context
+        context[-1] = context[-1].removesuffix(THINK_TRIGGER)
+
+        # Prepend extended reasoning trigger to response
+        response = THINK_TRIGGER + response_data['choices'][0]['text'].strip()
+
+        return response
 
     except Exception as e:
         error = MODEL_RESPONSE_ERROR + str(e)
@@ -336,22 +381,26 @@ def load_model(startup: bool = True) -> None:
 
         print()
 
+        cpu_cores = os.cpu_count() or 4  # safe fallback
+
         # Load model
         model = Llama(
             model_path = modelFile,
             n_ctx = CONTEXT_SIZE,
             n_gpu_layers = -1,
+            n_threads = max(cpu_cores - 2, 1),
             verbose = False
         )
 
+        # Print config
         if startup:
             print_system_text(SYSTEM_VERSION_TEXT)
-            print_system_text(MODEL_TEXT + modelName)
+            print_system_text(CONFIG_HEADER_TEXT)
 
-            # Print config
             config_info = (
-                f"\nContext: {CONTEXT_SIZE:,} tokens\n"
-                f"\nTemperature: {TEMPERATURE}"
+                f"Model  : {modelName}\n"
+                f"Context: {CONTEXT_SIZE:,} tokens\n"
+                f"Temp   : {TEMPERATURE}"
             )
 
             print_system_text(config_info)

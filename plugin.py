@@ -6,13 +6,14 @@ import toolchain
 from PIL import Image  # noqa: TC002
 
 PLUGIN_WORKSPACE_FOLDER = "workspace"
+PLUGINS_TEXT = "\n\n----- Plugins -----\n"
 SAVE_FILE_ERROR = "\n[ERROR] An exception occurred while trying to save a file: "
 
 # WEB PLUGIN
 WEB_SEARCH_PAGE_LIMIT = 5 # Number of web pages per search
 WEB_MAX_SIZE = 45 # Max text blocks per web page
-WEB_PLUGIN_ENABLED_TEXT = "\nWeb plugin: enabled"
-WEB_PLUGIN_DISABLED_TEXT = "\nWeb plugin: disabled"
+WEB_PLUGIN_ENABLED_TEXT  = "Web        : enabled"
+WEB_PLUGIN_DISABLED_TEXT = "Web        : disabled"
 ENABLE_WEB_PLUGIN_KEY = "ENABLE_WEB_PLUGIN"
 WEB_SEARCH_TOOL_NAME = "web_search"
 WEB_SEARCH_TOOL_DESCRIPTION = """Search the web for current information. This tool extracts text content from web pages and online documents found via web search (HTML, PDF, DOCX, DOC, ODT). Use when needing up-to-date facts, specifically if the request:
@@ -64,15 +65,15 @@ WEB_DIRECT_SEARCH = "Direct Link Navigation"
 WEB_URL_PATTERN = r'(https?://[^\s<>"]+|www\.[^\s<>"]+)'
 
 # TELEGRAM PLUGIN
-TELEGRAM_PLUGIN_ENABLED_TEXT = "\nTelegram plugin: enabled"
-TELEGRAM_PLUGIN_DISABLED_TEXT = "\nTelegram plugin: disabled"
+TELEGRAM_PLUGIN_ENABLED_TEXT  = "Telegram   : enabled"
+TELEGRAM_PLUGIN_DISABLED_TEXT = "Telegram   : disabled"
 ENABLE_TELEGRAM_PLUGIN_KEY = "ENABLE_TELEGRAM_PLUGIN"
 TELEGRAM_BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN"
 TELEGRAM_USER_ID_KEY = "TELEGRAM_USER_ID"
 
 # IMAGE GENERATION PLUGIN
-IMAGE_GENERATION_PLUGIN_ENABLED_TEXT = "\nImage generation plugin: enabled"
-IMAGE_GENERATION_PLUGIN_DISABLED_TEXT = "\nImage generation plugin: disabled"
+IMAGE_GENERATION_PLUGIN_ENABLED_TEXT  = "Image Gen  : enabled"
+IMAGE_GENERATION_PLUGIN_DISABLED_TEXT = "Image Gen  : disabled"
 ENABLE_IMAGE_GENERATION_PLUGIN_KEY = "ENABLE_IMAGE_GENERATION_PLUGIN"
 IMAGE_GENERATION_MODEL_KEY = "IMAGE_GENERATION_MODEL"
 IMAGE_GENERATION_LORA_KEY = "IMAGE_GENERATION_LORA"
@@ -172,8 +173,8 @@ IMAGE_GENERATION_OK_TEXT_3 = "\n\nImage name: "
 IMAGE_GENERATION_ERROR = "\n---\n" + IMAGE_GENERATION_TOOL_NAME + ": unable to generate image."
 
 # CODE RUNNER PLUGIN
-CODE_RUNNER_PLUGIN_ENABLED_TEXT = "\nCode Runner plugin: enabled"
-CODE_RUNNER_PLUGIN_DISABLED_TEXT = "\nCode Runner plugin: disabled"
+CODE_RUNNER_PLUGIN_ENABLED_TEXT  = "Code Runner: enabled"
+CODE_RUNNER_PLUGIN_DISABLED_TEXT = "Code Runner: disabled"
 ENABLE_CODE_RUNNER_PLUGIN_KEY = "ENABLE_CODE_RUNNER_PLUGIN"
 CODE_RUNNER_TOOL_NAME = "code_runner"
 CODE_RUNNER_TOOL_DESCRIPTION = """Write and run Python code. Use this tool only if the task:
@@ -273,18 +274,18 @@ Before writing the code, reason step-by-step in a structured way to ensure clean
     - [ ] Code is single-pass execution (no while True)?
 
 12. **Final Code Structure Preview**: Outline the file structure:
-    ```python
+    ```
     # pip install [packages]
     # imports
     # constants/config
     # helper functions
     # main logic
     # print detailed results
-    # print("\nINTERNAL STATE:")
+    # print("\\nINTERNAL STATE:")
     # print(f"key: {value}")
     ```
 
-Finally, output the Python code wrapped in a markdown block (e.g., ```python ... ```)."""
+Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write — no text, comments, or additional blocks after it."""
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
 CODE_RUNNER_RUN_PROGRAM_TEXT = "発進！\n"
 CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Fix the program to correctly solve the MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
@@ -310,9 +311,13 @@ CODE_RUNNER_LINT_OUTPUT_LIMIT = 5000  # Chars
 CODE_RUNNER_PROGRAM_OUTPUT_LIMIT = 30000  # Chars
 CODE_RUNNER_PROGRAM_OUTPUT_ERROR = "\n\n[ERROR: Program output truncated. Refine the code to print specific data points or summaries instead of raw dumps.]"
 
+# CODEX PLUGIN
+CODEX_PLUGIN_ENABLED_TEXT  = "Codex      : enabled"
+CODEX_PLUGIN_DISABLED_TEXT = "Codex      : disabled"
+ENABLE_CODEX_PLUGIN_KEY = "ENABLE_CODEX_PLUGIN"
 
-# WEB PLUGIN OPERATIONS
 
+# WEB PLUGIN TOOL
 
 def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     aux_context = context[:]
@@ -365,7 +370,7 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     return extended_action
 
 
-# IMAGE GENERATION OPERATIONS
+# IMAGE GENERATION TOOL
 
 image_generation_counter: int = 1
 
@@ -418,7 +423,7 @@ def generate_image(primeDirectives: str, action: str, context: list[str]) -> str
     return extended_action
 
 
-# CODE RUNNER OPERATIONS
+# CODE RUNNER TOOL
 
 def code_runner_action(primeDirectives: str, action: str, context: list[str], is_agent: bool = False) -> str:
     aux_context = context[:]
@@ -492,6 +497,8 @@ try:
     if not os.path.exists(PLUGIN_WORKSPACE_FOLDER):
         os.makedirs(PLUGIN_WORKSPACE_FOLDER)
 
+    core.print_system_text(PLUGINS_TEXT)
+
     # Code Runner plugin
     if core.config.get(ENABLE_CODE_RUNNER_PLUGIN_KEY, '').upper() == "YES":
         from plugins.code_runner import code_runner
@@ -499,6 +506,14 @@ try:
         toolchain.add_tool(CODE_RUNNER_TOOL_NAME, CODE_RUNNER_TOOL_DESCRIPTION, code_runner_action)
     else:
         core.print_system_text(CODE_RUNNER_PLUGIN_DISABLED_TEXT)
+
+    # Codex plugin
+    if core.config.get(ENABLE_CODEX_PLUGIN_KEY, '').upper() == "YES":
+        toolchain.codex_enabled = True
+
+        core.print_system_text(CODEX_PLUGIN_ENABLED_TEXT)
+    else:
+        core.print_system_text(CODEX_PLUGIN_DISABLED_TEXT)
 
     # Image generation plugin
     if core.config.get(ENABLE_IMAGE_GENERATION_PLUGIN_KEY, '').upper() == "YES":
@@ -539,5 +554,4 @@ try:
 except Exception as e:
     print(core.CONFIG_ERROR + str(e) + "\n")
     exit()
-
 

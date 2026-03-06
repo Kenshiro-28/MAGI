@@ -18,7 +18,7 @@ class MockLlama:
     def __call__(self, prompt, max_tokens=100, temperature=1.0, **kwargs):
         return {
             'choices': [
-                {'text': NORMAL_RESPONSE}
+                {'text': MOCK_MODEL_OUTPUT}
             ]
         }
 
@@ -43,7 +43,10 @@ BINARY_QUESTION = "Is this a test?"
 
 # Test responses
 BASIC_RESPONSE = "I'm a helpful assistant."
-NORMAL_RESPONSE = "<think>This is a thought.</think>" + BASIC_RESPONSE
+# The raw continuation the mock model returns (no opening <think>, that comes from THINK_TRIGGER)
+MOCK_MODEL_OUTPUT = "This is a thought.\n</think>\n" + BASIC_RESPONSE
+# What send_prompt actually returns with DISPLAY_EXTENDED_REASONING=True
+NORMAL_RESPONSE = core.THINK_TRIGGER + MOCK_MODEL_OUTPUT
 BASIC_MULTIPLE_THINKING_RESPONSE = "Hello there!"
 MULTIPLE_THINKING_RESPONSE = "<think>First thought.</think>\nHello<think>\nAnother thought.\n</think>\n there!"
 PREVIOUS_RESPONSE = "Previous response"

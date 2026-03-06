@@ -3,7 +3,36 @@ from typing import Callable
 import inspect
 import comms
 import core
+import codex
 
+# CODEX
+CODEX_WRITE_PROMPT = """\n---\nDo you want to save a valuable piece of knowledge to the Codex long-term memory? Save when ANY of these apply:
+
+- Useful code that was just executed successfully (e.g. API calls, utilities, scripts)
+- Factual discoveries (e.g. API endpoints, URLs, current events, research findings)
+- Personal facts about the user (e.g. name, location, occupation, projects, interests) — save even if stated casually
+- Solutions to non-trivial problems that may recur
+- Updates or corrections to previously stored knowledge (e.g. profile changes, outdated info)
+- Anything the user explicitly asks to remember or save
+
+**SKIP ONLY if** the content is trivial chitchat, a failed attempt, an image generation prompt, purely conversational with no reuse potential, or a solved puzzle/riddle/brain teaser with no general-purpose utility.
+
+When in doubt, prefer saving. Lost knowledge is harder to recover than removing a redundant entry.
+
+Reflect about your reasoning. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text."""
+CODEX_DELETE_PROMPT = """\n---\nDo you want to delete an entry from the Codex long-term memory? Use this tool to keep the Codex clean:
+
+- When an entry is outdated or superseded by a better version
+- When an entry turned out to be incorrect or no longer works
+- When a tool, API, library, or approach is confirmed deprecated, removed, or permanently replaced — not just temporarily unavailable
+- When the user explicitly asks to forget something
+
+After deleting, you will have the possibility to write new/updated information.
+
+Reflect about your reasoning. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text."""
+CODEX_CONVERSATION_TEXT = "\n---\nResponse:\n\n"
+
+# TOOLS
 TOOL_SELECTION_SYSTEM_PROMPT = "\n\nOutput EXACTLY ONE line containing ONLY one item from ALLOWED_OPTIONS. No other text."
 CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
 TASK_SECTION_TEXT = "\n---\nTASK:\n"
@@ -49,6 +78,8 @@ TOOL_RETURN_TYPE_ERROR = "[ERROR] Function must return {expected}, got {actual} 
 TOOL_USE_LIMIT = 5
 
 TOOLS: dict[str, dict] = {}
+
+codex_enabled: bool = False
 
 
 def _sanitize_tool_name(response: str) -> str:
@@ -183,6 +214,10 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
 
     tool_use = 0
 
+    # Read Codex
+    if codex_enabled:
+        extended_action = codex.read_codex(extended_action, context)
+
     # Use tools
     while tool_use < TOOL_USE_LIMIT:
         available_tools = print_tools()
@@ -230,6 +265,22 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
     # Remove extended reasoning
     response = core.remove_reasoning(response)
 
+    # Update Codex
+    if codex_enabled:
+        conversation = TASK_SECTION_TEXT + extended_action + CODEX_CONVERSATION_TEXT + response
+
+        # Delete outdated memory
+        delete_codex = core.binary_question(primeDirectives, conversation + CODEX_DELETE_PROMPT, context)
+
+        if delete_codex:
+            codex.delete_codex(conversation, context)
+
+        # Write new memory
+        write_codex = core.binary_question(primeDirectives, conversation + CODEX_WRITE_PROMPT, context)
+
+        if write_codex:
+            codex.write_codex(conversation, context)
+
     return response
 
 
@@ -242,5 +293,4 @@ if core_protocol_text:
     CORE_PROTOCOL = core_protocol_text + TASK_SECTION_TEXT
 else:
     CORE_PROTOCOL = ""
-
 
