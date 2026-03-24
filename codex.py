@@ -32,7 +32,7 @@ CODEX_TOOL_TEXT = "Codex long-term memory tool"
 CODEX_READ_TEXT = "\n---\n" + CODEX_TOOL_TEXT + ": you have performed a memory read operation:\n\nQuery: "
 CODEX_RESULT_TEXT = "\n\nResult: "
 CODEX_NOT_FOUND_TEXT = "No relevant entries found."
-CODEX_WRITE_TEXT_1 = "\n---\n" + CODEX_TOOL_TEXT + ": you have performed a memory write operation:\n\nTitle: "
+CODEX_WRITE_TEXT = "\n---\n" + CODEX_TOOL_TEXT + ": you have performed a memory write operation:\n\nTitle: "
 CODEX_CONTENT_TEXT = "\n\nContent: "
 CODEX_TAGS_TEXT = "\n\nTags: "
 CODEX_WRITE_EXTRACT_ERROR = "\n[CODEX] Write\n\nERROR: Could not extract title or content."
@@ -127,7 +127,7 @@ def write_codex(action: str, context: list[str]) -> str:
 
     comms.printSystemText(CODEX_WRITE_TAG + write_data)
 
-    return action + CODEX_WRITE_TEXT_1 + write_data
+    return action + CODEX_WRITE_TEXT + write_data
 
 
 def delete_codex(action: str, context: list[str]) -> str:

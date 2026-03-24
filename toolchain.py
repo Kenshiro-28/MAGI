@@ -273,7 +273,7 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
         delete_codex = core.binary_question(primeDirectives, conversation + CODEX_DELETE_PROMPT, context)
 
         if delete_codex:
-            codex.delete_codex(conversation, context)
+            conversation = codex.delete_codex(conversation, context)
 
         # Write new memory
         write_codex = core.binary_question(primeDirectives, conversation + CODEX_WRITE_PROMPT, context)

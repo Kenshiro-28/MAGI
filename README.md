@@ -24,9 +24,9 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-TEMPERATURE: model temperature (default: 1.0)
+TEMPERATURE: model temperature (default: 0.6)
 
-CONTEXT_SIZE: number of tokens in the context window (default: 32768)
+CONTEXT_SIZE: number of tokens in the context window (default: 65536)
 
 HEARTBEAT_SECONDS: seconds since the last action start before MAGI runs a background thought loop to determine whether further action is required. If an action is in progress, the loop is deferred until the action completes. (default: 1800)
 
@@ -253,21 +253,25 @@ The model must generate extended reasoning enclosed between `<think>...</think>`
 
 ### Recommended model
 
-Hint: As a rule of thumb, your combined RAM + VRAM should be at least 50% larger than the GGUF file size.
+Hint: As a rule of thumb, your available memory (system RAM for CPU-only, or VRAM for GPU offload) should be at least 50% larger than the GGUF file size.
 
-#### Qwen3.5-9B
+#### Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking
 
-**[Qwen3.5-9B-Q8_0.gguf](https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/blob/main/Qwen3.5-9B-Q8_0.gguf)**
+![Deckard](https://ipfs.io/ipfs/bafybeifhmkvn2idrf2v343eq3aflxcwzut3dhfwjj4y7pgqb7ckwy25avm)
 
-Qwen3.5 represents a significant leap forward, well-suited for agentic workflows on modest hardware. It delivers solid reasoning, coding, and instruction-following performance while fitting comfortably within consumer-grade memory budgets.
+**[Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking](https://huggingface.co/DavidAU/Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking-GGUF/blob/main/Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking-Q8_0.gguf)**
+
+Qwen 3.5 represents a significant leap forward, well-suited for agentic workflows on modest hardware. It delivers solid reasoning, coding, and instruction-following performance while fitting comfortably within consumer-grade memory budgets.
+
+This is a high-quality fine-tune by DavidAU of the Qwen 3.5 9B dense model, using Claude-4.6 Opus dataset and Deckard (5 datasets). The Claude dataset trims Qwen's native reasoning — reducing hesitation and looping — while Deckard adds depth and character.
 
 **System Requirements:**
 
-*(Suitable for the default 32k context size)*
+*(Suitable for the default 65k context size)*
 
 * **CPU-only:** System RAM: minimum: 16GB, recommended: 32GB.
 
-* **NVIDIA GPU:** Minimum 12GB VRAM for full offload. Partial offload is possible with 8GB VRAM combined with at least 16GB system RAM.
+* **NVIDIA GPU:** Minimum 16GB VRAM for full offload.
 
 ## Debian installation
 

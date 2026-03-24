@@ -2,8 +2,8 @@
 ### GENERAL SETTINGS
 ################################################################################
 
-TEMPERATURE = 1.0
-CONTEXT_SIZE = 32768
+TEMPERATURE = 0.6
+CONTEXT_SIZE = 65536
 HEARTBEAT_SECONDS = 1800
 
 ENABLE_CODEX_PLUGIN = YES
