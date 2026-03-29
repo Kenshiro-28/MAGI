@@ -168,14 +168,6 @@ class TestWrite(CodexTestBase):
         self.assertIn("semantically related", result)
         self.assertEqual(len(self.raw_entries()), 2)
 
-    def test_long_content_embedding_chunked(self):
-        """Content exceeding _CHUNK_SIZE exercises the chunk-averaging embedding path."""
-        content = "def foo(): pass\n" * 200  # ~3200 chars, exceeds _CHUNK_SIZE
-        result = self.write("Long code entry", content[:_codex_module._MAX_ENTRY_CHARS], "python")
-        self.assertIn("Entry saved", result)
-        emb = self.raw_entries()[0]["embedding"]
-        self.assertEqual(len(emb), 768)
-
 
 # -----------------------------------------------------------------------------
 class TestRead(CodexTestBase):
@@ -342,20 +334,20 @@ class TestEdgeCases(CodexTestBase):
         self.read("legacy old content")
         raw = self.raw_entries()
         self.assertIn("embedding", raw[0])
-        self.assertEqual(len(raw[0]["embedding"]), 768)
+        self.assertEqual(len(raw[0]["embedding"]), 1024)
 
     def test_embedding_dimension(self):
-        """Newly created entries have the expected vector length (all-mpnet-base-v2 = 768)."""
+        """Newly created entries have the expected vector length."""
         self.write("Dim check", "some code")
         emb = self.raw_entries()[0]["embedding"]
-        self.assertEqual(len(emb), 768)
+        self.assertEqual(len(emb), 1024)
 
     def test_long_content_embedding_dimension(self):
         """Chunked-averaged embeddings have the same dimension as single-chunk embeddings."""
-        content = "def foo(): pass\n" * 200
+        content = "def foo(): pass\n" * 2100  # ~33600 chars, exceeds _CHUNK_SIZE=32000
         self.write("Chunked embed dim", content[:_codex_module._MAX_ENTRY_CHARS], "python")
         emb = self.raw_entries()[0]["embedding"]
-        self.assertEqual(len(emb), 768)
+        self.assertEqual(len(emb), 1024)
 
     def test_write_returns_string(self):
         self.assertIsInstance(self.write("Type check", "content", "test"), str)
@@ -373,7 +365,7 @@ class TestEdgeCases(CodexTestBase):
         malformed = [
             {"title": "Valid entry", "content": "good content", "tags": ["ok"],
              "created": "2024-01-01 00:00", "updated": "2024-01-01 00:00",
-             "hash": "aabbccdd", "embedding": [0.1] * 768},
+             "hash": "aabbccdd", "embedding": [0.1] * 1024},
             {"broken": True}  # missing required fields
         ]
         with open(_codex_module.CODEX_FILE, "w") as f:

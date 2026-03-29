@@ -17,7 +17,7 @@ CODEX_EXTRACT_WRITE_PROMPT = f"""Extract the following fields from ACTION and ou
 - "content":
   - If the ACTION contains a full Python script that executed successfully, store the ENTIRE script as-is without any summarization or extraction.
   - For any other knowledge, store the most reusable, self-contained portion of the knowledge.
-  - If the full content exceeds 6000 characters, keep the most important and reusable parts (imports, key functions/classes, main logic, critical information) while preserving structure and readability — precision and reusability matter more than completeness.
+  - If the full content exceeds 32000 characters, keep the most important and reusable parts (imports, key functions/classes, main logic, critical information) while preserving structure and readability — precision and reusability matter more than completeness.
   - For personal facts about the user, consolidate as a list of sentences (e.g. "User's name is Akira. User lives in Tokyo. User practices Wushu.").
 - "tags": comma-separated lowercase keywords
 If a field is not clearly present in ACTION, infer a reasonable value from context.

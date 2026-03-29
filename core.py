@@ -7,7 +7,7 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\n[ MAGI 12.33 ]"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.34 ]"
 CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
@@ -45,7 +45,7 @@ MIN_P = 0.0
 DRY_MULTIPLIER = 0.8
 DRY_BASE = 1.75
 DRY_ALLOWED_LENGTH = 32
-DRY_PENALTY_PAST_N = 2048
+DRY_PENALTY_PAST_N = 8192
 DRY_SEQ_BREAKERS: list[str] = []
 PRESENCE_PENALTY = 0.0
 REPETITION_PENALTY = 1.0

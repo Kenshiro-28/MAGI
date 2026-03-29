@@ -9,6 +9,9 @@ transformers
 torch
 diffusers
 accelerate
+peft
+huggingface_hub
+torchvision
 
 # Web plugin
 ddgs

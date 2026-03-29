@@ -6,18 +6,20 @@ import core
 import codex
 
 # CODEX
-CODEX_WRITE_PROMPT = """\n---\nDo you want to save a valuable piece of knowledge to the Codex long-term memory? Save when ANY of these apply:
+CODEX_WRITE_PROMPT = """\n---\nDo you want to save this knowledge to the Codex long-term memory?
 
-- Useful code that was just executed successfully (e.g. API calls, utilities, scripts)
-- Factual discoveries (e.g. API endpoints, URLs, current events, research findings)
-- Personal facts about the user (e.g. name, location, occupation, projects, interests) — save even if stated casually
-- Solutions to non-trivial problems that may recur
-- Updates or corrections to previously stored knowledge (e.g. profile changes, outdated info)
-- Anything the user explicitly asks to remember or save
+**STRICT DECISION RULES** (apply in this exact order):
 
-**SKIP ONLY if** the content is trivial chitchat, a failed attempt, an image generation prompt, purely conversational with no reuse potential, or a solved puzzle/riddle/brain teaser with no general-purpose utility.
+1. Did the user explicitly ask to remember, save, keep, or not forget something? → ALWAYS YES
 
-When in doubt, prefer saving. Lost knowledge is harder to recover than removing a redundant entry.
+2. Did you just successfully create and execute Python code (via the code_runner tool) that ran without errors and gave correct output? → ALWAYS YES
+   (This includes any reusable utilities, helper functions, scripts, API wrappers, or working code)
+
+3. Does this contain factual discoveries, URLs, current data, or important personal facts about the user? → YES
+
+**NEVER** save normal conversation, greetings, jokes, riddles, one-time answers, or failed attempts.
+
+Goal: keep the Codex clean and extremely high-value.
 
 Reflect about your reasoning. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text."""
 CODEX_DELETE_PROMPT = """\n---\nDo you want to delete an entry from the Codex long-term memory? Use this tool to keep the Codex clean:

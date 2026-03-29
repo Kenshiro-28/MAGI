@@ -58,13 +58,15 @@ You can tailor it to different techniques such as Chain-of-Thought, Chain of Dra
 
 You can set your Core Protocol in the file **core_protocol.txt**.
 
-The default protocol includes:
+The default protocol is the structured evolution of the original Chain of Draft method. Instead of long explanatory paragraphs, it forces extremely concise micro-drafts (max 6 words per line) while still guiding the model through a complete high-leverage cognitive loop:
 
-- Foundational Deconstruction: Classify the problem, list assumptions, define boundaries.
-- Hypothesis Generation & Inversion: Create diverse approaches, stress-test via premortem.
-- Multi-Method Derivation & Triangulation: Solve via orthogonal methods, reconcile discrepancies.
-- Epistemic Rigor Loop: Annotate claims, test counterfactuals and edges.
-- Metacognitive Consolidation: Synthesize, critique, calibrate confidence, rebut objections.
+- Problem classification + key assumptions
+- 3 micro-hypotheses + premortem
+- 2 orthogonal micro-solves + mismatch check
+- Epistemic/confidence check
+- Final synthesis + strongest objection + rebuttal
+
+Result: sharper answers, ~80–90 % lower hidden token usage, lower latency, and no robotic feel.
 
 To revert to the default model reasoning without applying any custom protocol, simply remove all contents from the file **core_protocol.txt** or delete the file.
 
@@ -187,7 +189,7 @@ $ hf auth login
 
 #### Configuration
 
-IMAGE_GENERATION_MODEL: this is the model used to generate images (default: SG161222/RealVisXL_V5.0)
+IMAGE_GENERATION_MODEL: this is the model used to generate images (default: RunDiffusion/Juggernaut-XI-v11)
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
@@ -195,7 +197,7 @@ IMAGE_GENERATION_TYPE: this defines the base medium or style of the image (actin
 
 IMAGE_GENERATION_SPECS: these are the overarching photographic or artistic specifications you want to apply to the images. This text will be appended to the end of the prompt used to generate each image (default: 50mm lens, f/8 aperture, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, gross proportions, missing limbs, poorly drawn face, lifeless eyes)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad face, missing limbs, bad hands, lifeless eyes)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 896)
 

@@ -1,10 +1,10 @@
 import image_generation
 
-model = "SG161222/RealVisXL_V5.0"
-lora = ""
-image_type = "4K RAW photo"
-image_specs = "50mm lens, f/8 aperture, high-end commercial photography, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading"
-negative_prompt = "lowres, deformed, bad anatomy, bad proportions, gross proportions, jpeg artifacts, muddy textures, blurry, out of focus, soft focus, poorly drawn face, lifeless eyes, colored sclera"
+model = "stabilityai/stable-diffusion-xl-base-1.0"
+lora = "ostris/face-helper-sdxl-lora"
+image_type = "4K RAW photo, high-end commercial photography"
+image_specs = "50mm lens, f/8 aperture, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading"
+negative_prompt = "lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad face, missing limbs, bad hands, lifeless eyes"
 
 prompt = "giant mecha"
 

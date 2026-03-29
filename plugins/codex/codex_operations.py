@@ -9,18 +9,17 @@ CODEX_FILE = "codex.json"
 # --- Thresholds ---
 _DUPLICATE_THRESHOLD = 0.90
 _SIMILAR_THRESHOLD = 0.75
-_READ_THRESHOLD = 0.32
+_READ_THRESHOLD = 0.5
 
 # Returns the best matches when querying
 _MAX_READ_RESULTS = 3
-_MAX_ENTRY_CHARS = 8000
+_MAX_ENTRY_CHARS = 32000
 _MAX_TITLE_CHARS = 200
 
-# all-mpnet-base-v2 has a 514-token limit (~1800 chars).
 # Content is chunked at this size with overlap so long code snippets
 # get a representative embedding instead of being silently truncated.
-_CHUNK_SIZE = 1800
-_CHUNK_OVERLAP = 200
+_CHUNK_SIZE = 32000
+_CHUNK_OVERLAP = 500
 
 # Query to list all entries.
 CODEX_LIST_ALL = "[CODEX:LIST_ALL]"
@@ -33,11 +32,11 @@ _model = None
 
 
 def _get_model():
-    """Lazy-load the sentence transformer model (all-mpnet-base-v2)."""
+    """Lazy-load the sentence transformer model."""
     global _model
     if _model is None:
         from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer("all-mpnet-base-v2")
+        _model = SentenceTransformer("BAAI/bge-m3")
     return _model
 
 
