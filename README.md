@@ -191,13 +191,13 @@ $ hf auth login
 
 IMAGE_GENERATION_MODEL: this is the model used to generate images (default: RunDiffusion/Juggernaut-XI-v11)
 
-IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
+IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: ostris/face-helper-sdxl-lora)
 
 IMAGE_GENERATION_TYPE: this defines the base medium or style of the image (acting as a foundational anchor). This text will be prepended to the beginning of the prompt used to generate each image (default: 4K RAW photo, high-end commercial photography)
 
 IMAGE_GENERATION_SPECS: these are the overarching photographic or artistic specifications you want to apply to the images. This text will be appended to the end of the prompt used to generate each image (default: 50mm lens, f/8 aperture, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad face, missing limbs, bad hands, lifeless eyes)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, missing limbs, bad hands)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 896)
 

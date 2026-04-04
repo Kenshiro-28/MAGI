@@ -117,8 +117,6 @@ When using medium shot for people or humanoids, include "waist up" to maintain f
 
 When using medium long shot for people or humanoids, include "knees up" to maintain framing.
 
-When using full shot for people or humanoids, include "full body in frame".
-
 If none of these are the best fit, you can use other standard compositional terms. The final prompt should be a clear, physical description of the scene, including any physical descriptions of people (body type, physique, facial features, proportions).
 
 IMPORTANT: The chosen composition must show all described details. If the TEXT describes elements that would be cut off by the requested framing (e.g., thigh-high stockings in a "waist up" shot, bare feet in a "knees up" shot, floor-length dress in a "head and shoulders" shot), use a wider composition that can include those details.
@@ -133,11 +131,11 @@ Here are examples of how to correctly format the final prompt:
 ---
 EXAMPLE 1 (Removing a stylistic light description)
 TEXT = a knight in shining armor on a horse, under dramatic, moody lighting
-CORRECT PROMPT = full body in frame: knight in shining armor riding horse.
+CORRECT PROMPT = full shot: knight in shining armor riding horse.
 
 EXAMPLE 2 (Keeping light source details)
 TEXT = a slender elven archer with long auburn hair and emerald eyes by a flickering oil lantern under cinematic lighting
-CORRECT PROMPT = full body in frame: slender elven archer with long auburn hair and emerald eyes, by flickering oil lantern.
+CORRECT PROMPT = full shot: slender elven archer with long auburn hair and emerald eyes, by flickering oil lantern.
 
 EXAMPLE 3 (Honoring framing request and keeping physical descriptions)
 TEXT = a medium shot of a curvy woman with a voluptuous figure, blue eyes and long blonde hair in a room lit only by a single candle
@@ -153,15 +151,15 @@ CORRECT PROMPT = panoramic: futuristic Tokyo cityscape with neon skyscrapers str
 
 EXAMPLE 6 (Adjusting composition to show described details)
 TEXT = a close-up of a curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings
-CORRECT PROMPT = full body in frame: curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings.
+CORRECT PROMPT = full shot: curvy blonde model with blue eyes wearing elegant black lingerie and sheer thigh-high stockings.
 
 EXAMPLE 7 (Adjusting composition to show described details)
 TEXT = a medium shot of a Roman centurion in polished lorica segmentata and leather caligae standing on marble steps
-CORRECT PROMPT = full body in frame: Roman centurion in polished lorica segmentata and leather caligae, standing on marble steps.
+CORRECT PROMPT = full shot: Roman centurion in polished lorica segmentata and leather caligae, standing on marble steps.
 
 EXAMPLE 8 (Adjusting composition to show described details)
 TEXT = a headshot of a woman in an elegant floor-length gown
-CORRECT PROMPT = full body in frame: woman wearing elegant floor-length gown.
+CORRECT PROMPT = full shot: woman wearing elegant floor-length gown.
 ---
 Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements, the requested style, and any physical light sources.
 

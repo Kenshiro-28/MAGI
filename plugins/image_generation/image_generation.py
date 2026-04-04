@@ -10,7 +10,7 @@ INFERENCE_STEPS = 40
 RECOMMENDED_VRAM = 24 * (1024 ** 3) 
 GUIDANCE_SCALE = 5.0
 ALGORITHM_TYPE = "dpmsolver++"  # DPM++ 2M Karras
-LORA_SCALE = 0.65
+LORA_SCALE = 0.8
 
 
 def _get_repo_files(repo_id: str):
