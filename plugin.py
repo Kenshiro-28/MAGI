@@ -203,7 +203,8 @@ CORE CONSTRAINTS:
 • Console-only: All output via print() - no files (except explicit saves), no GUIs.
 • Non-interactive: Zero user input (no input(), no prompts).
 • Real implementation: Use actual APIs/operations. Do not use placeholders (e.g., 'YOUR_KEY_HERE').
-• Detailed Output: Print labeled, complete results with units and context."""
+• Detailed Output: Print labeled, complete results with units and context.
+• Dependencies: Every third-party import (e.g. requests, numpy, PIL) must be listed in a single # pip install comment at the very top of the code block, e.g. # pip install requests numpy pillow. When in doubt, include it."""
 CODE_RUNNER_COT_TEXT = """Follow all system guidelines.
 
 Before writing the code, reason step-by-step in a structured way to ensure clean, efficient, and error-free results:
@@ -249,7 +250,7 @@ Before writing the code, reason step-by-step in a structured way to ensure clean
    - Test 2: Input=[Edge case] → Expected=[Y] → Reason=[Z]
 
 9. **Implementation Strategy**: Choose the approach and explain:
-   - Libraries needed: [List with pip comment if external]
+   - Libraries needed: [List all required libraries; third-party packages must appear in the # pip install comment at the top of the code block]
    - Authentication: [CONFIRM: Do you have the API keys? If NO, print an error. NEVER use placeholders like 'YOUR_KEY_HERE'.]
    - Performance considerations: [Time/space complexity]
 
@@ -262,7 +263,8 @@ Before writing the code, reason step-by-step in a structured way to ensure clean
       ```
 
 11. **Self-Review Checklist**: Before finalizing, verify:
-    - [ ] All imports listed correctly?
+    - [ ] Are all third-party imports listed in a single # pip install comment at the very top of the code block?
+    - [ ] Are all import statements correct and complete?
     - [ ] No user input() calls?
     - [ ] All print() statements are detailed with labels?
     - [ ] No infinite loops or long-running processes?
@@ -382,8 +384,7 @@ def generate_image(primeDirectives: str, action: str, context: list[str]) -> str
     image_description = core.send_prompt(primeDirectives, GENERATE_IMAGE_TEXT + extended_action, aux_context, hide_reasoning = True)
 
     # Generate image generation prompt
-    aux_context = context[:]
-    image_generation_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_PROMPT_TEXT + image_description, aux_context, hide_reasoning = True)
+    image_generation_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_PROMPT_TEXT + image_description, [], hide_reasoning = True)
 
     comms.printSystemText(IMAGE_GENERATION_TAG + image_generation_prompt + "\n")
 

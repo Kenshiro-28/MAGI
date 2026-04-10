@@ -208,7 +208,7 @@ class TestRead(CodexTestBase):
     def test_semantic_query_top_result_is_most_relevant(self):
         result = self.read("HTTP fetch with Python")
         lines = result.split("\n")
-        first_entry_line = next((line for line in lines if "---" in line), "")
+        first_entry_line = next((line for line in lines if "<entry" in line), "")
         self.assertIn("Python requests tutorial", first_entry_line)
 
     def test_unrelated_query_returns_no_results(self):
@@ -217,7 +217,7 @@ class TestRead(CodexTestBase):
 
     def test_relevance_scores_shown(self):
         result = self.read("Solana blockchain")
-        self.assertIn("relevance:", result)
+        self.assertIn("relevance=", result)
 
     def test_max_results_respected(self):
         for i in range(6):
@@ -225,7 +225,7 @@ class TestRead(CodexTestBase):
                        f"Python data processing pipeline step {i} using pandas and numpy",
                        f"python,data,etl,step{i}")
         result = self.read("Python data ETL pipeline")
-        count = result.count("relevance:")
+        count = result.count("relevance=")
         self.assertLessEqual(count, _codex_module._MAX_READ_RESULTS)
 
 

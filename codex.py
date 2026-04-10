@@ -1,6 +1,7 @@
 import core
 import comms
 import json
+import re
 from plugins.codex import codex_operations
 from plugins.codex.codex_operations import CODEX_LIST_ALL
 from plugins.codex.codex_operations import CODEX_NO_RESULT
@@ -108,9 +109,10 @@ def write_codex(action: str, context: list[str]) -> str:
     known_facts = codex_operations.read_codex(title)
 
     if known_facts and known_facts != CODEX_NO_RESULT:
-        # Clean the fixed metadata header (--- ... ---) — keep only the facts
-        if '---' in known_facts:
-            known_facts = known_facts.split('---', 2)[-1].strip()
+        # Clean the metadata header
+        if '<entry' in known_facts:
+            contents = re.findall(r'<entry[^>]*>(.*?)</entry>', known_facts, re.DOTALL)
+            known_facts = '\n'.join(c.strip() for c in contents)
 
         prompt = CODEX_EXTRACT_WRITE_PROMPT + action + CODEX_MERGE_TEXT + known_facts
         response = core.send_prompt(CODEX_SYSTEM_PROMPT, prompt, aux_context, hide_reasoning = True)

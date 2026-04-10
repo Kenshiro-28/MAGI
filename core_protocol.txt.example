@@ -1,6 +1,6 @@
 ---
 SYSTEM_DIRECTIVE:
-First, execute the THINKING_PROTOCOL entirely within your internal reasoning block. Then, execute the RESPONSE_PROTOCOL.
+First, execute the THINKING_PROTOCOL within <think>...</think> tags. Then, execute the RESPONSE_PROTOCOL.
 ---
 THINKING_PROTOCOL:
 Stay extremely concise — max 6 words per line.

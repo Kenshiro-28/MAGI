@@ -337,11 +337,10 @@ def read_codex(query: str = "") -> str:
         tags_str = ", ".join(entry.get("tags", [])) or "—"
 
         lines.append(
-            f"--- {entry['title']}  [{date}]  tags: {tags_str}  "
-            f"relevance: {score:.2f} ---"
+            f"<entry title=\"{entry['title']}\" date=\"{date}\" tags=\"{tags_str}\" relevance=\"{score:.2f}\">"
         )
         lines.append(entry["content"])
-        lines.append("")
+        lines.append("</entry>")
 
     return "\n".join(lines)
 

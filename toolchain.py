@@ -17,7 +17,9 @@ CODEX_WRITE_PROMPT = """\n---\nDo you want to save this knowledge to the Codex l
 
 3. Does this contain factual discoveries, URLs, current data, or important personal facts about the user? → YES
 
-**NEVER** save normal conversation, greetings, jokes, riddles, one-time answers, or failed attempts.
+**NEVER** save normal conversation, greetings, jokes, riddles, or one-time answers.
+**NEVER** save standalone mission briefings or standalone task descriptions.
+**NEVER** save image generation prompts.
 
 Goal: keep the Codex clean and extremely high-value.
 
@@ -25,17 +27,16 @@ Reflect about your reasoning. Then, on the final line, respond ONLY with YES or 
 CODEX_DELETE_PROMPT = """\n---\nDo you want to delete an entry from the Codex long-term memory? Use this tool to keep the Codex clean:
 
 - When an entry is outdated or superseded by a better version
+- When an entry already covers the information of another entry, making one entry redundant or adding no distinct value
 - When an entry turned out to be incorrect or no longer works
 - When a tool, API, library, or approach is confirmed deprecated, removed, or permanently replaced — not just temporarily unavailable
 - When the user explicitly asks to forget something
-
-After deleting, you will have the possibility to write new/updated information.
 
 Reflect about your reasoning. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text."""
 CODEX_CONVERSATION_TEXT = "\n---\nResponse:\n\n"
 
 # TOOLS
-TOOL_SELECTION_SYSTEM_PROMPT = "\n\nOutput EXACTLY ONE line containing ONLY one item from ALLOWED_OPTIONS. No other text."
+TOOL_SELECTION_SYSTEM_PROMPT = "You are a deterministic routing function. You have no personality and do not converse.\nYour output is a raw string passed directly into a function call. Output ONLY one option from ALLOWED_OPTIONS, exactly as written. No other text."
 CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
 TASK_SECTION_TEXT = "\n---\nTASK:\n"
 AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE_TOOLS:\n"
@@ -230,15 +231,13 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
         # Select tool
         allowed_options = "\n".join(list(TOOLS.keys()) + [CONTINUE_TEXT])
 
-        system_prompt = primeDirectives + TOOL_SELECTION_SYSTEM_PROMPT
-
         prompt = (
             TASK_SECTION_TEXT + extended_action +
             AVAILABLE_TOOLS_TEXT + available_tools +
             TOOL_SELECTION_TEXT + allowed_options
         )
 
-        tool = core.send_prompt(system_prompt, prompt, context[:], hide_reasoning = True)
+        tool = core.send_prompt(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context[:], hide_reasoning = True)
         tool = _sanitize_tool_name(tool)
 
         if tool == CONTINUE_TEXT:
