@@ -97,7 +97,7 @@ def _sanitize_tool_name(response: str) -> str:
 
 
 def run_core_protocol(primeDirectives: str, action: str, context: list[str], hide_reasoning: bool = False) -> str:
-    response = core.send_prompt(primeDirectives, CORE_PROTOCOL + action, context, hide_reasoning)
+    response = core.send_prompt(primeDirectives, action + CORE_PROTOCOL, context, hide_reasoning)
 
     # Remove Core Protocol from context (len(context) is always >= 3 after sending a prompt)
     context[-2] = context[-2].replace(CORE_PROTOCOL, '').strip()
@@ -291,7 +291,7 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
 core_protocol_text = core.read_text_file(CORE_PROTOCOL_FILE_PATH)
 
 if core_protocol_text:
-    CORE_PROTOCOL = core_protocol_text + TASK_SECTION_TEXT
+    CORE_PROTOCOL = "\n---\n" + core_protocol_text
 else:
     CORE_PROTOCOL = ""
 

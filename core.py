@@ -7,7 +7,7 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\n[ MAGI 12.36 ]"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.37 ]"
 CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
@@ -55,7 +55,7 @@ MAX_INPUT_TOKENS = 0
 MIN_CONTEXT_SIZE = 32768
 MIN_RESPONSE_SIZE = 16384
 MAX_RESPONSE_SIZE = 32768
-CONTEXT_HEADROOM = 16
+CONTEXT_HEADROOM = 512
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
 CONTEXT_SIZE_INVALID_TEXT = "Invalid context size.\n"

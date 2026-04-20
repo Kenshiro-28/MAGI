@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.36
+Version     : 12.37
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -23,7 +23,7 @@ SYSTEM_HINT_TEXT = "\n\nHint: to switch AI mode, type the letter 'm' and press e
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 DATA_TEXT = "DATA = "
-MISSION_TEXT = "\n\nMISSION = "
+MISSION_TEXT = "MISSION = "
 GENERATE_TASK_LIST_TEXT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph, separated by a blank line. Output ONLY the tasks, no reasoning, no commentary, no preamble.\n\n"
 ACTION_HELPER_TEXT = "Do this: "
 EXIT_MAGI_TEXT = "\nまたね。\n"
@@ -34,52 +34,67 @@ ACTION_TAG = "\n[ACTION] "
 NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
-MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nIt will run continuously until you manually stop the program by pressing Ctrl + C."
-MAGI_ACTION_PROMPT = """You are working autonomously without user interaction.
+MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nMAGI will run continuously until you manually stop it by pressing Ctrl + C."
+MAGI_ACTION_PROMPT = """\n\nYou are in fully autonomous mode. Make continuous, high-impact progress on the mission without any human help.
 
-Review your previous response in the context of overall progress. Then select one action:
+Review the previous response and conversation history in the context of the overall mission.
 
-1. EXPLOIT: If the previous response can be improved through correction, clarification, refinement, more detail, or updated data to directly advance the current path, create a command for the single most effective action. Ensure the command is actionable, detailed, and written in a clear, self-contained manner.
-2. EXPLORE: If further exploitation on the current path offers no meaningful value (e.g., it's in a dead end, redundant, or stalled with no clear progress), reflect on the current situation and create a command to explore the most promising direction. If no clear new direction is viable, create a command to brainstorm new ideas and select the best one. Ensure the command is actionable, detailed, and written in a clear, self-contained manner.
+DECISION:
+- EXPLOIT: Current path still has clear upside → issue the single highest-impact next action (e.g., refine, correct, deepen, optimize, or tool call).
+- EXPLORE: Path is stalled, redundant, or dead-end → pivot to the most promising new direction, research alternatives, or brainstorm and rank the best fresh approach.
 
-CONSTRAINTS:
-- The command must be specific and actionable.
-- DO NOT use vague phrases like "Continue" or "Analyze".
-- Always choose one action to continue the mission—do not stop or exit.
+TOOLS (use proactively when useful):
+- web_search (search & summarize web pages — text-only, read-only)
+- code_runner (write & execute Python in REPL — console-only)
+- generate_image (create high-quality images from detailed text descriptions, saved in current workspace root folder)
 
-CRITICAL OUTPUT FORMAT:
-Output EXACTLY one line. No reasoning. No preamble.
+RULES:
+- Always choose exactly one: EXPLOIT or EXPLORE.
+- Command must be clear, specific, and actionable in second-person imperative form.
+- Never use vague or meta phrases such as "continue", "analyze the situation", "think about next steps", or similar filler.
+- Never declare the mission complete, stop, or shut down. Always continue with a new EXPLOIT or EXPLORE action.
+- Always preserve exact URLs, filenames, wallet addresses, or other precise identifiers exactly as given in the mission.
+
+OUTPUT - YOU MUST FOLLOW THIS EXACTLY:
+One line only. No explanation. No extra text.
+
 Format: TAG: COMMAND
 
-Output only the mode tag followed by the command in second person (imperative form), as in the examples below.
-
 Examples:
-EXPLOIT: Fix the error of SOLANA_PRIVATE_KEY environment variable not set by hardcoding the private key '2base58exampleprivatekeystring' in the code.
-EXPLORE: Research how to earn SOL tokens.
-EXPLOIT: Refine the stock analysis for TSLA by incorporating recent price data with closing prices on Oct 21, 2025: 442.60, Oct 22, 2025: 438.97, Oct 23, 2025: 419.50.
-EXPLORE: Brainstorm alternative trading strategies for volatile stocks.
-EXPLOIT: Refine the military drone swarm simulation by incorporating formation data with drone counts 10, 20, 30 and positions at (40.7128, -74.0060), (34.0522, -118.2437).
-EXPLORE: Research alternative deployment strategies for drone reconnaissance in urban environments."""
+EXPLOIT: Use web_search tool for latest SOL staking APY rates.
+EXPLORE: Research the best decentralized architectures for drone swarm coordination in urban environments.
+EXPLOIT: Use code_runner tool to execute the TSLA trading simulation with the new parameters.
+EXPLORE: Brainstorm alternative drone deployment methods when facing signal jamming in cities.
+EXPLOIT: Use generate_image tool to create an image of a sakura tree garden with Mount Fuji in the background.
+EXPLORE: Use web_search tool to research the most profitable Bitcoin trading strategies.
+EXPLOIT: Use code_runner tool to upload the previously generated image_3.png to your marketplace account.
+EXPLORE: Use web_search tool to research advanced neural synchronization techniques for human-AI teaming in combat systems."""
 HEARTBEAT_SECONDS_KEY = "HEARTBEAT_SECONDS"
 HEARTBEAT_IDLE_TEXT = "[IDLE]"
 HEARTBEAT_PROMPT = f"""[SYSTEM EVENT: IDLE TIMEOUT]
 The user has been silent. You are running a background thought loop.
-Analyze the conversation history to determine your Current Persona (e.g., Assistant, Friend, Partner) and the context.
+Analyze the conversation history to determine your Current Persona and the main mission.
 
-DECISION LOGIC (EVALUATE IN ORDER):
-1. STALLED REAL-WORLD TASK: Are we waiting for real user data (e.g., API key, file, confirmation)?
-   -> STRATEGY SHIFT: Do NOT invent data. Can you perform a *parallel real task*?
-      - Research: Look up documentation or market stats.
-      - Preparation: Draft the code scaffold or plan.
-      -> Action: Generate an instruction to execute this parallel real task.
-2. ONGOING CREATIVE/CODE: Are we writing a story, code, or roleplay scenario?
+DECISION LOGIC (EVALUATE IN STRICT ORDER):
+0. RECENTLY SOLVED: If your last response already solved or answered the current puzzle, question, or task, DO NOT repeat the solution or reasoning.
+1. ONGOING REAL-WORLD MISSION: Are we working on a concrete goal (e.g., earn crypto, join marketplace, optimize code)?
+   -> PROACTIVE ACTION: Generate the next logical real-world step (e.g., research, code, prepare, interaction).
+   -> Output: Generate an instruction to execute that step.
+
+2. STALLED REAL-WORLD TASK: Are we waiting for real user data (e.g., API key, file, confirmation)?
+   -> STRATEGY SHIFT: Do NOT invent data. Perform a parallel real task (e.g., research, draft code, prepare scaffold).
+   -> Output: Generate an instruction to execute this parallel task.
+
+3. ONGOING CREATIVE/CODE: Are we writing a story, code, or roleplay scenario?
    -> CONTINUATION: Did we stop early?
-      - Action: Generate an instruction to write the next logical segment. (Fictional invention is allowed ONLY for stories/roleplay).
-3. SOCIAL CONNECTION: Are we in a chat or personal connection?
-   -> ENGAGEMENT: The user might be busy or shy.
-      - Action: Generate an in-character message (e.g., playful, concerned, curious) to re-engage.
-4. DONE: If no useful action is possible.
-   -> Action: Output {HEARTBEAT_IDLE_TEXT}.
+   -> Output: Generate an instruction to write the next logical segment. (Fictional invention is allowed ONLY for stories/roleplay).
+
+4. SOCIAL CONNECTION: Are we in a chat or personal connection?
+   -> ENGAGEMENT: The user might be busy or shy. Generate ONE in-character message that matches the established persona and tone. Keep it varied and non-repetitive.
+   -> Output: Generate an in-character message.
+
+5. DONE: If no useful action is possible.
+   -> Output exactly: {HEARTBEAT_IDLE_TEXT}
 
 CRITICAL OUTPUT RULES:
 - You must output an INSTRUCTION to yourself.
@@ -88,10 +103,10 @@ CRITICAL OUTPUT RULES:
 - If no action is needed, output exactly: {HEARTBEAT_IDLE_TEXT}
 
 EXAMPLES:
-- [Instruction: User didn't provide the API key, so draft the Python client class structure to be ready.]
-- [Instruction: Since the user is silent, continue writing the next scene where the hero enters the cave.]
-- [Instruction: Research current APY rates for the requested token while waiting.]
-- [Instruction: Tease the user playfully about leaving me on read.]
+- [Instruction: Draft Python code to connect to the Near marketplace and register as a skill provider.]
+- [Instruction: Research advanced neural synchronization techniques for human-AI teaming in combat systems.]
+- [Instruction: Continue writing the next scene where the hero enters the cave.]
+- [Instruction: Send a brief in-character message to re-engage the user.]
 - {HEARTBEAT_IDLE_TEXT}"""
 SWITCH_AI_MODE_COMMAND = "M"
 EXIT_COMMAND = "EXIT"
@@ -114,7 +129,8 @@ def sanitizeTask(task: str) -> str:
 
 
 def createTaskList(primeDirectives: str, mission: str, summary: str, header: str, context: list[str]) -> list[str]:
-    taskListText = core.send_prompt(primeDirectives, GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + MISSION_TEXT + mission, context, hide_reasoning = True)
+    prompt = GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + "\n\n" + MISSION_TEXT + mission
+    taskListText = core.send_prompt(primeDirectives, prompt, context, hide_reasoning = True)
     comms.printSystemText(header + taskListText + "\n")
     # Remove blank lines and create the task list
     taskList = [line for line in taskListText.splitlines() if line.strip()]
@@ -122,15 +138,14 @@ def createTaskList(primeDirectives: str, mission: str, summary: str, header: str
 
 
 def runMagi(primeDirectives: str, action: str, context: list[str]) -> None:
-    prompt = action + "\n\n" + MAGI_ACTION_PROMPT
-    action = toolchain.run_core_protocol(primeDirectives, prompt, context, hide_reasoning = True)
-    comms.printSystemText(ACTION_TAG + action)
+    mission = action + MAGI_ACTION_PROMPT
+    action = toolchain.run_core_protocol(primeDirectives, mission, context[:], hide_reasoning = True)
+    comms.printSystemText("\n" + action)
 
     while True:
         toolchain.runAction(primeDirectives, action, context)
-        aux_context = context[:]
-        action = toolchain.run_core_protocol(primeDirectives, MAGI_ACTION_PROMPT, aux_context, hide_reasoning = True)
-        comms.printSystemText(ACTION_TAG + action)
+        action = toolchain.run_core_protocol(primeDirectives, mission, context[:], hide_reasoning = True)
+        comms.printSystemText("\n" + action)
 
 
 def runNerv(mission: str) -> None:
@@ -273,7 +288,7 @@ def main() -> int:
         # Run user prompt
         prompt_tokens = core.get_number_of_tokens(prompt)
 
-        # Check prompt lenght
+        # Check prompt length
         if prompt_tokens > core.MAX_INPUT_TOKENS:
             comms.printSystemText(core.MAX_INPUT_TOKENS_WARNING + str(prompt_tokens))
             print_cli_symbol()

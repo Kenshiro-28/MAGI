@@ -3,11 +3,17 @@ import comms
 import toolchain
 
 NERV_SQUAD_TEXT = "\n\n----- NERV Squad -----\n"
-ISSUE_ORDERS_PROMPT_1 = """\n\nNow, compose a mission summary.
+ISSUE_ORDERS_PROMPT_1 = """\n\nNow, compose a mission summary in your own natural style and personality.
 
 Then, structure the mission into three independent tasks by assigning each to one of your agents (describe the task in third person).
 
-Ensure each task is concise and scoped to be achievable in a single response, such as via one focused web search or code execution if external information or computation is required. Ensure the last task produces a complete and final response for the whole mission.
+Important rules you MUST follow:
+- You may be dramatic, motivational, cold, clinical, sarcastic, or any other tone that matches your established persona.
+- However, you MUST NOT write, simulate, or invent any agent responses, summaries, or dialogue.
+- Do not write what the agents will say or what their final output will be.
+- Output ONLY the mission summary + the three task assignments. No extra text.
+- Each task must be concise and scoped to be achievable in a single response (e.g. one focused web search or code execution if needed).
+- The third task must synthesize the results from the first two tasks and produce the complete and final response for the whole mission. Prefer pure reasoning and clear writing; use a tool only if it is genuinely necessary for the final synthesis.
 
 Use the DATA section only if it provides useful information for the MISSION.
 

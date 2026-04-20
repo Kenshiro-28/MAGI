@@ -2,7 +2,7 @@
 ### GENERAL SETTINGS
 ################################################################################
 
-TEMPERATURE = 1.0
+TEMPERATURE = 0.8
 CONTEXT_SIZE = 65536
 HEARTBEAT_SECONDS = 1800
 

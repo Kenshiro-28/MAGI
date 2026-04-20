@@ -24,7 +24,7 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-TEMPERATURE: model temperature (default: 1.0)
+TEMPERATURE: model temperature (default: 0.8)
 
 CONTEXT_SIZE: number of tokens in the context window (default: 65536)
 
@@ -124,14 +124,14 @@ The system will extract useful information from the file **mission_data.txt**.
 
 This is a fully autonomous mode.
 
-After receiving your initial prompt, MAGI will work autonomously to accomplish its mission.
+MAGI will treat your prompt as its main mission and work autonomously to accomplish it.
 
-Optionally, you can include the main objective and any critical mission data in the file **prime_directives.txt** to help ensure that MAGI remains aligned with its main objective during long-running operations. For example:
+You must have enabled the three plugin tools in `config.cfg`:
 
 ```
-You are MAGI, a friendly AI assistant.
-
-Your primary mission is to research tech stocks focused on robotics and AI automation, and identify the most promising options for long-term growth.
+ENABLE_WEB_PLUGIN = YES
+ENABLE_CODE_RUNNER_PLUGIN = YES
+ENABLE_IMAGE_GENERATION_PLUGIN = YES
 ```
 
 MAGI will run continuously until you manually stop it by pressing Ctrl + C.
@@ -168,7 +168,7 @@ MAGI will use the model to generate context-related images and save them in the 
 
 If the folder contains images from previous sessions, they will be overwritten.
 
-*System requirements:*
+#### System Requirements
 
 CPU-only: 32GB of system RAM.
 
@@ -260,25 +260,21 @@ The model must generate extended reasoning enclosed between `<think>...</think>`
 
 ### Recommended model
 
-Hint: As a rule of thumb, your available memory (system RAM for CPU-only, or VRAM for GPU offload) should be at least 50% larger than the GGUF file size.
+**[Qwen3.6-35B-A3B](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/blob/main/Qwen3.6-35B-A3B-UD-Q8_K_XL.gguf)**
 
-#### Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking
+A strong general-purpose language model with robust reasoning, particularly effective for coding and agentic tasks.
 
-![Deckard](https://ipfs.io/ipfs/bafybeifhmkvn2idrf2v343eq3aflxcwzut3dhfwjj4y7pgqb7ckwy25avm)
+#### System Requirements (using 65k context size)
 
-**[Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking](https://huggingface.co/DavidAU/Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking-GGUF/blob/main/Qwen3.5-9B-Claude-4.6-Opus-Deckard-V4.2-Uncensored-Heretic-Thinking-Q8_0.gguf)**
+As a rule of thumb, your available memory (system RAM for CPU-only or VRAM for full GPU offload) should be at least 50% larger than the GGUF file size.
 
-Qwen 3.5 represents a significant leap forward, well-suited for agentic workflows on modest hardware. It delivers solid reasoning, coding, and instruction-following performance while fitting comfortably within consumer-grade memory budgets.
+* **CPU-only:**
+  * Minimum: 32GB RAM
+  * Recommended: 48GB RAM
 
-This is a high-quality fine-tune by DavidAU of the Qwen 3.5 9B dense model, using Claude-4.6 Opus dataset and Deckard (5 datasets). The Claude dataset trims Qwen's native reasoning — reducing hesitation and looping — while Deckard adds depth and character.
-
-**System Requirements:**
-
-*(Suitable for the default 65k context size)*
-
-* **CPU-only:** System RAM: minimum: 16GB, recommended: 32GB.
-
-* **NVIDIA GPU:** Minimum 16GB VRAM for full offload.
+* **NVIDIA GPU:**
+  * Minimum: 24GB VRAM + 32GB system RAM
+  * Recommended: 48GB VRAM + 32GB system RAM
 
 ## Debian installation
 
