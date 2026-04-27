@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.37
+Version     : 12.38
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -22,9 +22,9 @@ agent: Any = None
 SYSTEM_HINT_TEXT = "\n\nHint: to switch AI mode, type the letter 'm' and press enter. To exit MAGI, type 'exit'.\n"
 PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
-DATA_TEXT = "DATA = "
-MISSION_TEXT = "MISSION = "
-GENERATE_TASK_LIST_TEXT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph, separated by a blank line. Output ONLY the tasks, no reasoning, no commentary, no preamble.\n\n"
+DATA_TEXT = "\n\nDATA = "
+MISSION_TEXT = "\n\nMISSION = "
+GENERATE_TASK_LIST_TEXT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph, separated by a blank line. Output ONLY the tasks, no reasoning, no commentary, no preamble."
 ACTION_HELPER_TEXT = "Do this: "
 EXIT_MAGI_TEXT = "\nまたね。\n"
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
@@ -129,7 +129,7 @@ def sanitizeTask(task: str) -> str:
 
 
 def createTaskList(primeDirectives: str, mission: str, summary: str, header: str, context: list[str]) -> list[str]:
-    prompt = GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + "\n\n" + MISSION_TEXT + mission
+    prompt = GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + MISSION_TEXT + mission
     taskListText = core.send_prompt(primeDirectives, prompt, context, hide_reasoning = True)
     comms.printSystemText(header + taskListText + "\n")
     # Remove blank lines and create the task list
@@ -138,13 +138,19 @@ def createTaskList(primeDirectives: str, mission: str, summary: str, header: str
 
 
 def runMagi(primeDirectives: str, action: str, context: list[str]) -> None:
+    mission_data = core.load_mission_data(action)
+
+    if mission_data:
+        comms.printSystemText(MISSION_DATA_TEXT + mission_data)
+
     mission = action + MAGI_ACTION_PROMPT
-    action = toolchain.run_core_protocol(primeDirectives, mission, context[:], hide_reasoning = True)
+    briefing = action + DATA_TEXT + "\n\n" + mission_data + MAGI_ACTION_PROMPT
+    action = core.send_prompt(primeDirectives, briefing, context, hide_reasoning = True)
     comms.printSystemText("\n" + action)
 
     while True:
         toolchain.runAction(primeDirectives, action, context)
-        action = toolchain.run_core_protocol(primeDirectives, mission, context[:], hide_reasoning = True)
+        action = core.send_prompt(primeDirectives, mission, context[:], hide_reasoning = True)
         comms.printSystemText("\n" + action)
 
 

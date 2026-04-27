@@ -7,7 +7,7 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\n[ MAGI 12.37 ]"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.38 ]"
 CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
@@ -53,8 +53,7 @@ REPETITION_PENALTY = 1.0
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
 MIN_CONTEXT_SIZE = 32768
-MIN_RESPONSE_SIZE = 16384
-MAX_RESPONSE_SIZE = 32768
+MAX_RESPONSE_SIZE = 16384
 CONTEXT_HEADROOM = 512
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
@@ -84,7 +83,7 @@ THINK_PATTERN = re.compile(
     rf'({re.escape(THINK_START)}.*?{re.escape(THINK_END)}\n?)',
     flags=re.DOTALL
 )
-THINK_TRIGGER = THINK_START + "\nLet's think step by step:\n\n- "
+THINK_TRIGGER = THINK_START + "\n"
 
 LOG_ENABLED = False
 ENABLE_LOG_KEY = "ENABLE_LOG"
@@ -139,13 +138,6 @@ def get_completion_from_messages(context: list[str]) -> str:
         # Catch oversized prompt
         if text_tokens > MAX_INPUT_TOKENS:
             print_system_text(MAX_INPUT_TOKENS_WARNING + str(text_tokens))
-
-            # Trim excess tokens (newest part)
-            excess_ratio = (text_tokens - MAX_INPUT_TOKENS) / text_tokens
-            allowed_chars = int(len(text) * (1 - excess_ratio))
-
-            text = text[:allowed_chars].rstrip()
-            text_tokens = get_number_of_tokens(text)
 
         # Compute response token limit
         max_tokens = min(CONTEXT_SIZE - text_tokens - CONTEXT_HEADROOM, MAX_RESPONSE_SIZE)
@@ -381,14 +373,11 @@ def load_model(startup: bool = True) -> None:
 
         print()
 
-        cpu_cores = os.cpu_count() or 4  # safe fallback
-
         # Load model
         model = Llama(
             model_path = modelFile,
             n_ctx = CONTEXT_SIZE,
             n_gpu_layers = -1,
-            n_threads = max(cpu_cores - 2, 1),
             verbose = False
         )
 
@@ -419,8 +408,6 @@ def unload_model() -> None:
 
 
 def load_config() -> None:
-    global config
-
     try:
         with open(CONFIG_FILE_PATH, 'r') as file:
             for line in file:
@@ -486,7 +473,7 @@ def configure_model() -> None:
         exit()
 
     # Set max input tokens
-    MAX_INPUT_TOKENS = CONTEXT_SIZE - MIN_RESPONSE_SIZE
+    MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
 
     # Set logging configuration
     LOG_ENABLED = config.get(ENABLE_LOG_KEY, "NO").upper() == "YES"

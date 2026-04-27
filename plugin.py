@@ -204,7 +204,12 @@ CORE CONSTRAINTS:
 • Non-interactive: Zero user input (no input(), no prompts).
 • Real implementation: Use actual APIs/operations. Do not use placeholders (e.g., 'YOUR_KEY_HERE').
 • Detailed Output: Print labeled, complete results with units and context.
-• Dependencies: Every third-party import (e.g. requests, numpy, PIL) must be listed in a single # pip install comment at the very top of the code block, e.g. # pip install requests numpy pillow. When in doubt, include it."""
+• Dependencies (CRITICAL RULE):
+  - If the code uses ANY third-party package (e.g. requests, numpy, PIL), put EXACTLY ONE line at the very top:
+    # pip install package1 package2 package3
+  - If the code uses ONLY Python standard library (e.g. os, json, math), DO NOT output any "# pip install" line at all.
+  - NEVER write "# pip install none", "# No packages required", "# pip install []", or any comment explaining the absence of packages.
+  - When in doubt about whether something is third-party → include it. But if you're sure it's standard library → omit the line completely."""
 CODE_RUNNER_COT_TEXT = """Follow all system guidelines.
 
 Before writing the code, reason step-by-step in a structured way to ensure clean, efficient, and error-free results:
@@ -250,7 +255,9 @@ Before writing the code, reason step-by-step in a structured way to ensure clean
    - Test 2: Input=[Edge case] → Expected=[Y] → Reason=[Z]
 
 9. **Implementation Strategy**: Choose the approach and explain:
-   - Libraries needed: [List all required libraries; third-party packages must appear in the # pip install comment at the top of the code block]
+   - Libraries needed:
+     • If any third-party packages are required → write them in the EXACT format `# pip install pkg1 pkg2` as the FIRST line of the code.
+     • If NO third-party packages are required → do not write any pip install line whatsoever.
    - Authentication: [CONFIRM: Do you have the API keys? If NO, print an error. NEVER use placeholders like 'YOUR_KEY_HERE'.]
    - Performance considerations: [Time/space complexity]
 
@@ -263,7 +270,8 @@ Before writing the code, reason step-by-step in a structured way to ensure clean
       ```
 
 11. **Self-Review Checklist**: Before finalizing, verify:
-    - [ ] Are all third-party imports listed in a single # pip install comment at the very top of the code block?
+    - [ ] If NO third-party packages are used → there is ZERO "# pip install" line (not even an empty one or a comment)
+    - [ ] If third-party packages ARE used → exactly one "# pip install pkg1 pkg2 ..." line exists at the absolute top
     - [ ] Are all import statements correct and complete?
     - [ ] No user input() calls?
     - [ ] All print() statements are detailed with labels?
@@ -273,17 +281,30 @@ Before writing the code, reason step-by-step in a structured way to ensure clean
     - [ ] NO PLACEHOLDERS (like 'YOUR_KEY') used?
     - [ ] Code is single-pass execution (no while True)?
 
-12. **Final Code Structure Preview**: Outline the file structure:
-    ```
-    # pip install [packages]
-    # imports
-    # constants/config
-    # helper functions
-    # main logic
-    # print detailed results
-    # print("\\nINTERNAL STATE:")
-    # print(f"key: {value}")
-    ```
+12. **Final Code Structure Preview**: Outline the file structure **exactly** as follows:
+    - If third-party packages are required:
+        ```
+        # pip install pkg1 pkg2 pkg3
+        # imports
+        # constants/config
+        # helper functions
+        # main logic
+        # print detailed results
+        # print("\\nINTERNAL STATE:")
+        # print(f"key: {value}")
+        ```
+    - If NO third-party packages are required:
+        ```
+        # imports
+        # constants/config
+        # helper functions
+        # main logic
+        # print detailed results
+        # print("\\nINTERNAL STATE:")
+        # print(f"key: {value}")
+        ```
+
+    **Critical rule**: Never include any "# pip install" line when no third-party packages are needed.
 
 Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write — no text, comments, or additional blocks after it."""
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "

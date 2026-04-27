@@ -13,11 +13,8 @@ If ACTION describes listing, browsing, showing, or displaying all Codex entries 
 If ACTION is a natural conversation starter like a greeting (e.g. "hi", "hello", "hey"), use the phrase "{USER_PROFILE_TEXT}".
 Output ONLY the search phrase or "{CODEX_LIST_ALL}". No commentary.
 ACTION = """
-CODEX_EXTRACT_WRITE_PROMPT = f"""Output **EXACTLY one valid JSON object** and nothing else.
-No markdown, no code fences, no preamble, no explanation, no extra text whatsoever.
-
-Extract the fields **strictly from the ACTION provided at the end**.
-Base your response exclusively on that text. Do not add, invent, or use any information outside of it.
+CODEX_EXTRACT_WRITE_PROMPT_1 = """Output **EXACTLY one valid JSON object** and NOTHING ELSE.
+No markdown, no code fences, no preamble, no explanation, no extra text, no visible reasoning.
 
 You must use this exact structure:
 {{
@@ -25,6 +22,16 @@ You must use this exact structure:
   "content": "the most reusable, self-contained knowledge",
   "tags": "comma-separated lowercase keywords"
 }}
+
+The ACTION to extract from is delimited below.
+
+=== BEGIN ACTION ===
+"""
+CODEX_EXTRACT_WRITE_PROMPT_2 = f"""
+=== END ACTION ===
+
+Now extract the fields from the ACTION above and output EXACTLY one valid JSON object.
+No markdown, no code fences, no preamble, no explanation, no extra text, no visible reasoning.
 
 STRICT RULES (apply in this exact order):
 1. "title": short specific title for the knowledge entry; for personal facts about the user use the stable title "{USER_PROFILE_TEXT}"
@@ -44,14 +51,19 @@ Example of correct output:
   "tags": "drone, swarm, reconnaissance, urban, ai, electronic-warfare"
 }}
 
-ACTION = """
-CODEX_MERGE_TEXT = f"""\n\nIMPORTANT: This is a MERGE operation for the exact title "{{title}}".
+Your entire response must be ONLY the JSON object. No other text before or after it."""
+CODEX_MERGE_TEXT = f"""
+
+=== BEGIN PREVIOUSLY_KNOWN_FACTS ===
+{{known_facts}}
+=== END PREVIOUSLY_KNOWN_FACTS ===
+
+IMPORTANT: This is a MERGE operation for the exact title "{{title}}".
+Use BOTH the ACTION and PREVIOUSLY_KNOWN_FACTS blocks above as input.
 Keep ONLY facts that are directly relevant to this title.
 Drop any facts that do not belong to this title (e.g. general user profile facts belong only in "{USER_PROFILE_TEXT}").
 Add the new facts and keep previously known facts that still apply to this title.
-Only drop facts that will be obsolete after adding the new facts.
-
-PREVIOUSLY_KNOWN_FACTS = """
+Only drop facts that will be obsolete after adding the new facts."""
 CODEX_EXTRACT_TITLE_PROMPT = """Extract the entry title to delete from ACTION and output ONLY the exact title string. Do not include dates, tags, or any other metadata. No commentary.
 ACTION = """
 CODEX_READ_TAG = "\n[CODEX] Read\n\nQuery: "
@@ -91,11 +103,9 @@ def _parse_json_response(response: str) -> dict:
     return json.loads(cleaned)
 
 
-def read_codex(action: str, context: list[str]) -> str:
-    aux_context = context[:]
-
+def read_codex(action: str) -> str:
     # Extract search query from the action
-    query = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_QUERY_PROMPT + action, aux_context, hide_reasoning = True).strip()
+    query = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_QUERY_PROMPT + action, [], hide_reasoning = True).strip()
 
     if not query:
         return action
@@ -113,11 +123,9 @@ def read_codex(action: str, context: list[str]) -> str:
     return action + CODEX_READ_TEXT + read_data
 
 
-def write_codex(action: str, context: list[str]) -> str:
-    aux_context = context[:]
-
+def write_codex(action: str) -> str:
     # Extract title, content and tags from the action
-    response = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_WRITE_PROMPT + action, aux_context, hide_reasoning = True)
+    response = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_WRITE_PROMPT_1 + action + CODEX_EXTRACT_WRITE_PROMPT_2, [], hide_reasoning = True)
 
     try:
         fields = _parse_json_response(response)
@@ -142,8 +150,8 @@ def write_codex(action: str, context: list[str]) -> str:
             contents = re.findall(r'<entry[^>]*>(.*?)</entry>', known_facts, re.DOTALL)
             known_facts = '\n'.join(c.strip() for c in contents)
 
-        prompt = CODEX_EXTRACT_WRITE_PROMPT + action + CODEX_MERGE_TEXT.format(title=title) + known_facts
-        response = core.send_prompt(CODEX_SYSTEM_PROMPT, prompt, aux_context, hide_reasoning = True)
+        prompt = CODEX_EXTRACT_WRITE_PROMPT_1 + action + CODEX_EXTRACT_WRITE_PROMPT_2 + CODEX_MERGE_TEXT.format(title=title, known_facts=known_facts)
+        response = core.send_prompt(CODEX_SYSTEM_PROMPT, prompt, [], hide_reasoning = True)
 
         try:
             fields = _parse_json_response(response)
@@ -160,11 +168,9 @@ def write_codex(action: str, context: list[str]) -> str:
     return action + CODEX_WRITE_TEXT + write_data
 
 
-def delete_codex(action: str, context: list[str]) -> str:
-    aux_context = context[:]
-
+def delete_codex(action: str) -> str:
     # Extract entry title from the action
-    title = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_TITLE_PROMPT + action, aux_context, hide_reasoning = True).strip()
+    title = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_TITLE_PROMPT + action, [], hide_reasoning = True).strip()
 
     # === HARD PROTECTION FOR USER PROFILE ===
     if title.lower() == USER_PROFILE_TEXT.lower():

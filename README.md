@@ -255,12 +255,14 @@ Sun Tzu was the author of The Art of War.
 The model must generate extended reasoning enclosed between `<think>...</think>` tags:
 
 ```
-<think>Okay, so I need to explain who was Sun Tzu.</think>
+<think>
+Okay, so I need to explain who was Sun Tzu.
+</think>
 ```
 
 ### Recommended model
 
-**[Qwen3.6-35B-A3B](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/blob/main/Qwen3.6-35B-A3B-UD-Q8_K_XL.gguf)**
+**[Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF](https://huggingface.co/DavidAU/Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF/blob/main/Qwen3.6-27B-NEO-CODE-HERE-2T-OT-HIGH-Q8_0.gguf)**
 
 A strong general-purpose language model with robust reasoning, particularly effective for coding and agentic tasks.
 
@@ -273,7 +275,7 @@ As a rule of thumb, your available memory (system RAM for CPU-only or VRAM for f
   * Recommended: 48GB RAM
 
 * **NVIDIA GPU:**
-  * Minimum: 24GB VRAM + 32GB system RAM
+  * Minimum: 8GB VRAM + 32GB system RAM
   * Recommended: 48GB VRAM + 32GB system RAM
 
 ## Debian installation

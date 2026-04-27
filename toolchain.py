@@ -219,7 +219,7 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
 
     # Read Codex
     if codex_enabled:
-        extended_action = codex.read_codex(extended_action, context)
+        extended_action = codex.read_codex(extended_action)
 
     # Use tools
     while tool_use < TOOL_USE_LIMIT:
@@ -274,13 +274,13 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
         delete_codex = core.binary_question(primeDirectives, conversation + CODEX_DELETE_PROMPT, context)
 
         if delete_codex:
-            conversation = codex.delete_codex(conversation, context)
+            conversation = codex.delete_codex(conversation)
 
         # Write new memory
         write_codex = core.binary_question(primeDirectives, conversation + CODEX_WRITE_PROMPT, context)
 
         if write_codex:
-            codex.write_codex(conversation, context)
+            codex.write_codex(conversation)
 
     return response
 
