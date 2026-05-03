@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.38
+Version     : 12.39
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -138,13 +138,16 @@ def createTaskList(primeDirectives: str, mission: str, summary: str, header: str
 
 
 def runMagi(primeDirectives: str, action: str, context: list[str]) -> None:
+    mission = action + MAGI_ACTION_PROMPT
+
     mission_data = core.load_mission_data(action)
 
     if mission_data:
-        comms.printSystemText(MISSION_DATA_TEXT + mission_data)
+        comms.printSystemText(MISSION_DATA_TEXT + mission_data + "\n")
+        briefing = action + DATA_TEXT + mission_data + MAGI_ACTION_PROMPT
+    else:
+        briefing = mission
 
-    mission = action + MAGI_ACTION_PROMPT
-    briefing = action + DATA_TEXT + "\n\n" + mission_data + MAGI_ACTION_PROMPT
     action = core.send_prompt(primeDirectives, briefing, context, hide_reasoning = True)
     comms.printSystemText("\n" + action)
 

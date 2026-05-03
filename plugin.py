@@ -351,6 +351,9 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     target_prompt = WEB_SEARCH_GENERATE_TARGET + action
     target = core.send_prompt(WEB_SEARCH_TARGET_SYSTEM_PROMPT, target_prompt, aux_context, hide_reasoning = True)
 
+    # Get the last line
+    target = target.split('\n')[-1].strip()
+
     # Check if action provided specific URLs
     urls = re.findall(WEB_URL_PATTERN, action)
 
@@ -359,7 +362,12 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     else:
         # Generate web search query
         query = core.send_prompt(WEB_SEARCH_SYSTEM_PROMPT, WEB_SEARCH_GENERATE_QUERY + target, aux_context, hide_reasoning = True)
+
+        # Remove double quotes
         query = query.replace('"', '')
+
+        # Get the last line
+        query = query.split('\n')[-1].strip()
 
         comms.printSystemText(WEB_SEARCH_TAG + query + "\n\n" + target)
 

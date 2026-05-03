@@ -136,6 +136,8 @@ ENABLE_IMAGE_GENERATION_PLUGIN = YES
 
 MAGI will run continuously until you manually stop it by pressing Ctrl + C.
 
+The system will extract useful information from the file **mission_data.txt**.
+
 ## Plugins
 
 ### Code Runner plugin
