@@ -6,33 +6,52 @@ import core
 import codex
 
 # CODEX
-CODEX_WRITE_PROMPT = """\n---\nDo you want to save this knowledge to the Codex long-term memory?
+CODEX_WRITE_PROMPT = """\n---\nCodex long-term memory write decision.
 
-**STRICT DECISION RULES** (apply in this exact order):
+DECISION HIERARCHY — apply top-down, first match wins:
 
-1. Did the user explicitly ask to remember, save, keep, or not forget something? → ALWAYS YES
+1. The user explicitly asked to remember, save, keep, store, or not forget something. → YES
+   This rule fully overrides the NEVER SAVE clause below. If the user explicitly asks to save image generation content, save it.
 
-2. Did you just successfully create and execute Python code (via the code_runner tool) that ran without errors and gave correct output? → ALWAYS YES
-   (This includes any reusable utilities, helper functions, scripts, API wrappers, or working code)
+2. You successfully wrote and executed Python code via the code_runner tool, and it ran without errors. → YES
+   Working code is reusable knowledge even when the user's question feels one-time (e.g. "what's the weather", "what's my IP", "convert 100 USD to EUR", "find my public location") — the script will be reused next time the same need appears.
 
-3. Does this contain factual discoveries, URLs, current data, or important personal facts about the user? → YES
+3. The turn revealed durable factual knowledge: a working URL or API endpoint, a version number, a command that succeeded, a configuration that proved correct, library behavior, or any discovery worth keeping. → YES
 
-**NEVER** save normal conversation, greetings, jokes, riddles, or one-time answers.
-**NEVER** save standalone mission briefings or standalone task descriptions.
-**NEVER** save image generation prompts.
+4. The turn revealed a personal fact about the user (preferences, ongoing projects, identity, context that should persist across sessions). → YES
 
-Goal: keep the Codex clean and extremely high-value.
+5. None of rules 1–4 apply. → NO
+   (Typical no-save cases: casual conversation, greeting, joke, riddle, one-time prose answer without executed code, standalone mission briefing, standalone task description, transient data that won't stay true.)
 
-Reflect about your reasoning. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text."""
-CODEX_DELETE_PROMPT = """\n---\nDo you want to delete an entry from the Codex long-term memory? Use this tool to keep the Codex clean:
+NEVER SAVE (applies to rules 2–5; rule 1 fully overrides this):
+- Image generation prompts, image descriptions, and image filenames produced by the generate_image tool. These are runtime artifacts, not durable knowledge.
+- Roleplay tactics, persona behavior instructions, in-character messaging guidelines, conversation engagement techniques, or any meta-content describing how to communicate or behave. These are session-level behavior, not durable knowledge
+- If a turn contains BOTH image generation AND other save-worthy content, save the other content and exclude the image-related artifacts.
 
-- When an entry is outdated or superseded by a better version
-- When an entry already covers the information of another entry, making one entry redundant or adding no distinct value
-- When an entry turned out to be incorrect or no longer works
-- When a tool, API, library, or approach is confirmed deprecated, removed, or permanently replaced — not just temporarily unavailable
-- When the user explicitly asks to forget something
+GOAL: keep the Codex clean and high-value. When in doubt and code ran successfully, choose YES.
 
-Reflect about your reasoning. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text."""
+OUTPUT CONTRACT — read carefully:
+- All reasoning goes inside the <think>...</think> block.
+- After the closing </think> tag, output exactly one word: YES or NO.
+- Nothing else after </think>. No punctuation, no quotes, no explanation."""
+CODEX_DELETE_PROMPT = """\n---\nCodex long-term memory delete decision.
+
+DECISION HIERARCHY — apply top-down, first match wins:
+
+1. The user explicitly asked to forget, delete, remove, or erase something. → YES
+
+2. The current turn proves a previously saved entry is now wrong: superseded by a confirmed better version, factually disproven, or referencing a tool, API, library, or approach confirmed deprecated, removed, or permanently replaced (not just temporarily unavailable). → YES
+
+3. The current turn shows that two existing entries are now redundant — one fully covers the other and the older one adds no distinct value. → YES
+
+4. None of the above. The turn does not give clear, current-turn evidence that a specific entry must go. → NO
+
+GOAL: protect the Codex from accidental loss. Default to NO unless the case is clear-cut and grounded in this turn.
+
+OUTPUT CONTRACT — read carefully:
+- All reasoning goes inside the <think>...</think> block.
+- After the closing </think> tag, output exactly one word: YES or NO.
+- Nothing else after </think>. No punctuation, no quotes, no explanation."""
 CODEX_CONVERSATION_TEXT = "\n---\nResponse:\n\n"
 
 # TOOLS
@@ -42,28 +61,54 @@ TASK_SECTION_TEXT = "\n---\nTASK:\n"
 AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE_TOOLS:\n"
 CONTINUE_TEXT = "continue"
 TOOL_SELECTION_TEXT = f"""\n---\nTOOL_ROUTER:
-
-Goal: choose ONE tool to call now, or choose '{CONTINUE_TEXT}' to call no tool and proceed normally.
+You are a strict tool selection system. Your only job is to choose ONE tool or decide to continue. Do NOT solve the task or explain anything.
 
 AVAILABLE_TOOLS is a JSON array of objects: {{ "name": ..., "description": ... }}.
 
-You must output the tool "name" EXACTLY as shown (or '{CONTINUE_TEXT}').
+--- DECISION RULES (EVALUATE IN ORDER) ---
+1. If the previous tool call already satisfied the user's request, choose '{CONTINUE_TEXT}'.
+2. If the task requires something that only one specific tool can do, choose that tool.
+3. If the needed information is already available in context and no update is requested, choose '{CONTINUE_TEXT}'.
+4. Do NOT repeat a tool unless the previous result was bad, incomplete, or the user explicitly asked for multiple attempts.
+5. When uncertain, choose '{CONTINUE_TEXT}'.
 
-Decision rules (EVALUATE IN ORDER):
-1. [STOP] If the last tool output FULLY solves the specific request (e.g., action completed or info found), choose '{CONTINUE_TEXT}'.
-2. [SELECT] If the task explicitly requests an action that ONLY a tool can perform, choose the corresponding tool.
-   Examples:
-   - "Generate an image / create a picture" -> generate_image
-   - "Run code / execute python" -> code_runner
-   - "Search the web / check for updates" -> web_search
-3. [CHECK CONTEXT] If the information is already present in the context AND no update is requested, choose '{CONTINUE_TEXT}'.
-4. [AVOID LOOPS] Do NOT repeat a tool if it already provided sufficient information; repeat only if the last result was an error.
-5. [DEFAULT] If uncertain, choose '{CONTINUE_TEXT}'.
+--- THINKING PROCESS ---
+Inside your <think>...</think> block, follow this process **exactly**:
 
-Output rules (STRICT):
-- Output MUST be exactly one of the strings in ALLOWED_OPTIONS.
-- Output ONLY that string on a single line.
-- No explanations, no JSON, no extra words.
+1. **Draft your choice**
+   - Read the decision rules above.
+   - Make your initial selection (or choose '{CONTINUE_TEXT}').
+
+2. **Review your draft**
+   - Are you following the decision rules in the correct order?
+   - Is the tool actually needed right now?
+   - If considering repeating a tool: Was the previous result bad, incomplete, or did the user explicitly ask for multiple attempts?
+   - Are you choosing a tool out of habit instead of real necessity?
+
+3. **Final verification**
+   - Re-evaluate your choice one more time against the rules.
+   - When in doubt, choose '{CONTINUE_TEXT}' over calling a tool.
+   - Only output your decision after completing this verification.
+
+--- OUTPUT CONTRACT ---
+- All reasoning must stay inside the <think>...</think> block.
+- After the closing </think> tag, output **ONLY** one item from ALLOWED_OPTIONS.
+- Output nothing else. No explanations, no reasoning, no extra text, no quotes, no sentences.
+- Do NOT start solving the task or writing a normal response.
+
+Correct examples:
+web_search
+generate_image
+code_runner
+continue
+
+Incorrect examples (never do this):
+Sure, I can help you with that!
+I'm glad you asked me that, let me check...
+I think we should use web_search
+"web_search"
+Let me call the code_runner tool
+web_search because the first one failed
 
 ALLOWED_OPTIONS:\n"""  # noqa: S608
 EMPTY_JSON_TEXT = "[]"
@@ -215,11 +260,16 @@ def run_tool(name: str, primeDirectives: str, action: str, context: list[str], i
 def runAction(primeDirectives: str, action: str, context: list[str], is_agent: bool = False) -> str:
     extended_action = action
 
+    codex_read_data = ""
+    codex_delete_data = ""
+    codex_write_data = ""
+
     tool_use = 0
 
     # Read Codex
     if codex_enabled:
-        extended_action = codex.read_codex(extended_action)
+        codex_read_data = codex.read_codex(extended_action)
+        extended_action += codex_read_data
 
     # Use tools
     while tool_use < TOOL_USE_LIMIT:
@@ -232,9 +282,9 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
         allowed_options = "\n".join(list(TOOLS.keys()) + [CONTINUE_TEXT])
 
         prompt = (
-            TASK_SECTION_TEXT + extended_action +
+            TOOL_SELECTION_TEXT + allowed_options +
             AVAILABLE_TOOLS_TEXT + available_tools +
-            TOOL_SELECTION_TEXT + allowed_options
+            TASK_SECTION_TEXT + extended_action
         )
 
         tool = core.send_prompt(TOOL_SELECTION_SYSTEM_PROMPT, prompt, context[:], hide_reasoning = True)
@@ -274,15 +324,19 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
         delete_codex = core.binary_question(primeDirectives, conversation + CODEX_DELETE_PROMPT, context)
 
         if delete_codex:
-            conversation = codex.delete_codex(conversation)
+            codex_delete_data = codex.delete_codex(conversation)
+            conversation += codex_delete_data
 
         # Write new memory
         write_codex = core.binary_question(primeDirectives, conversation + CODEX_WRITE_PROMPT, context)
 
         if write_codex:
-            codex.write_codex(conversation)
+            # Remove Codex read data to prevent attention dilution from long Codex entries
+            conversation = conversation.replace(codex_read_data, "", 1)
 
-    return response
+            codex_write_data = codex.write_codex(conversation)
+
+    return response + codex_delete_data + codex_write_data
 
 
 # INITIALIZE

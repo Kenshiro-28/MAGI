@@ -1,8 +1,11 @@
+from __future__ import annotations
 import gc
 import torch
 from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
 from diffusers.utils import logging
 from huggingface_hub import list_repo_files, hf_hub_download
+from typing import Any, Optional
+
 
 IMAGE_GENERATION_ERROR = "\n[ERROR] An exception occurred while trying to generate an image: "
 
@@ -95,7 +98,7 @@ def _load_cpu_pipeline(model: str):
     return pipe
 
 
-def _load_gpu_pipeline(model: str, lora: str = None):
+def _load_gpu_pipeline(model: str, lora: Optional[str] = None):
     if torch.cuda.is_available():
         total_vram = torch.cuda.get_device_properties(0).total_memory
         pipe = _load_pipeline(model, torch.float16)
@@ -130,13 +133,13 @@ def generate_image(
     prompt: str,
     negative_prompt: str,
     model: str,
-    lora: str,
+    lora: Optional[str],
     image_type: str,
     image_specs: str,
     width: int,
     height: int
 ):
-    pipe: StableDiffusionXLPipeline = None
+    pipe: Optional[Any] = None
     image = None
 
     try:

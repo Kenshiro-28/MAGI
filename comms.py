@@ -10,10 +10,10 @@ MESSAGE_RECEIVED_TEXT_2 = "」"
 COMMS_ERROR = "\n[ERROR] Comms error: "
 
 # TELEGRAM PLUGIN
-TELEGRAM_PLUGIN_SEND_WAIT_TIME = 2
+TELEGRAM_PLUGIN_SEND_WAIT_TIME = 3
 TELEGRAM_PLUGIN_RECEIVE_WAIT_TIME = 5
 TELEGRAM_PLUGIN_CHAR_LIMIT = 4096
-TELEGRAM_PLUGIN_SAFE_CHAR_LIMIT = 4000
+TELEGRAM_PLUGIN_SAFE_CHAR_LIMIT = 3000
 TELEGRAM_MESSAGE_QUEUE_LIMIT = 100
 TELEGRAM_TAG = "\n[TELEGRAM] "
 
@@ -49,7 +49,7 @@ def userInput() -> str:
     else:
         message = core.user_input()
 
-    return message
+    return message.strip()
 
 
 # TELEGRAM PLUGIN OPERATIONS
@@ -67,7 +67,7 @@ def _send_telegram_bot(text: str) -> None:
                 # Look backward from the limit to find the last space
                 cut_index = text.rfind(' ', 0, TELEGRAM_PLUGIN_CHAR_LIMIT)
 
-                # If no space is found, OR the space is too far back (less than 4000),
+                # If no space is found, OR the space is too far back (less than 3000),
                 # force a maximum hard cut so we don't send unnecessarily short chunks.
                 if cut_index == -1 or cut_index < TELEGRAM_PLUGIN_SAFE_CHAR_LIMIT:
                     chunk = text[:TELEGRAM_PLUGIN_CHAR_LIMIT]

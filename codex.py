@@ -8,20 +8,26 @@ from plugins.codex.codex_operations import CODEX_NO_RESULT
 
 CODEX_SYSTEM_PROMPT = "You are a precise data extraction assistant that manages the Codex, a long-term memory tool. Extract structured information exactly as instructed, with no additions or commentary."
 USER_PROFILE_TEXT = "User profile"
-CODEX_EXTRACT_QUERY_PROMPT = f"""Extract the search intent from ACTION and output ONLY a short descriptive search phrase (max 20 words) suitable for a semantic knowledge base query. For queries about the user's personal information, identity, or background, use the phrase "{USER_PROFILE_TEXT}".
-If ACTION describes listing, browsing, showing, or displaying all Codex entries or the Codex itself (e.g. "show me the Codex", "what's in the Codex", "list all Codex entries"), output exactly: "{CODEX_LIST_ALL}".
+CODEX_EXTRACT_QUERY_PROMPT = f"""Extract the search intent from ACTION.
+
+For queries about the user's personal information, identity, or background — including requests to list facts about the user (e.g. "tell me about myself", "list everything you remember about me") — use the phrase "{USER_PROFILE_TEXT}".
+If ACTION asks to list or show ALL stored entries with no user-scope restriction (e.g. "list all your memories", "what's in the Codex", "list all Codex entries"), output exactly: "{CODEX_LIST_ALL}".
 If ACTION is a natural conversation starter like a greeting (e.g. "hi", "hello", "hey"), use the phrase "{USER_PROFILE_TEXT}".
-Output ONLY the search phrase or "{CODEX_LIST_ALL}". No commentary.
+
+OUTPUT CONTRACT — read carefully:
+- All reasoning goes inside the <think>...</think> block.
+- After the closing </think> tag, output ONLY a short descriptive search phrase (max 20 words) OR exactly "{CODEX_LIST_ALL}".
+- Nothing else after </think>. No commentary, no quotes, no explanation.
+
 ACTION = """
-CODEX_EXTRACT_WRITE_PROMPT_1 = """Output **EXACTLY one valid JSON object** and NOTHING ELSE.
-No markdown, no code fences, no preamble, no explanation, no extra text, no visible reasoning.
+CODEX_EXTRACT_WRITE_PROMPT_1 = """Extract structured fields from the ACTION below into a JSON object.
 
 You must use this exact structure:
-{{
+{
   "title": "short specific title for the knowledge entry",
   "content": "the most reusable, self-contained knowledge",
   "tags": "comma-separated lowercase keywords"
-}}
+}
 
 The ACTION to extract from is delimited below.
 
@@ -30,12 +36,12 @@ The ACTION to extract from is delimited below.
 CODEX_EXTRACT_WRITE_PROMPT_2 = f"""
 === END ACTION ===
 
-Now extract the fields from the ACTION above and output EXACTLY one valid JSON object.
-No markdown, no code fences, no preamble, no explanation, no extra text, no visible reasoning.
+Now extract the fields from the ACTION above into one valid JSON object.
 
 STRICT RULES (apply in this exact order):
 1. "title": short specific title for the knowledge entry; for personal facts about the user use the stable title "{USER_PROFILE_TEXT}"
 2. "content":
+   - Never glue words together or remove spaces between words.
    - If the ACTION contains a full Python script that executed successfully, store the ENTIRE script as-is without any summarization or extraction.
    - For any other knowledge, store the most reusable, self-contained portion of the knowledge.
    - If the full content exceeds 32000 characters, keep the most important and reusable parts (imports, key functions/classes, main logic, critical information) while preserving structure and readability.
@@ -51,20 +57,71 @@ Example of correct output:
   "tags": "drone, swarm, reconnaissance, urban, ai, electronic-warfare"
 }}
 
-Your entire response must be ONLY the JSON object. No other text before or after it."""
-CODEX_MERGE_TEXT = f"""
+When creating the JSON, follow this process inside your <think>...</think> block:
+1. First, create a draft of the "content" field based on the ACTION.
+2. Review the draft carefully for accuracy:
+   - Do not change numbers, dates, names, spellings, or specific terms unless explicitly required.
+   - Check for glued words or missing spaces and preserve original wording exactly.
+   - Preserve the original meaning and wording as faithfully as possible.
+   - Only apply changes if they are clearly needed.
+3. After the content review, do a quick structure check:
+   - Ensure the JSON has the correct keys: "title", "content", and "tags".
+   - Make sure the output will be valid JSON.
+4. Only after both reviews, output the final JSON object.
+
+OUTPUT CONTRACT — read carefully:
+- All reasoning goes inside the <think>...</think> block.
+- After the closing </think> tag, output EXACTLY one valid JSON object and NOTHING ELSE.
+- Nothing else after </think>. No markdown, no code fences, no preamble, no explanation, no trailing text."""
+CODEX_RETRY_WRITE_PROMPT = """\n\nIMPORTANT: The previous attempt failed to produce valid JSON.
+Re-read the STRICT RULES and OUTPUT CONTRACT carefully.
+Pay special attention to factual accuracy and do not alter details from the original ACTION.
+Output EXACTLY one valid JSON object and NOTHING ELSE."""
+CODEX_MERGE_TEXT = """
 
 === BEGIN PREVIOUSLY_KNOWN_FACTS ===
-{{known_facts}}
+{known_facts}
 === END PREVIOUSLY_KNOWN_FACTS ===
 
-IMPORTANT: This is a MERGE operation for the exact title "{{title}}".
-Use BOTH the ACTION and PREVIOUSLY_KNOWN_FACTS blocks above as input.
-Keep ONLY facts that are directly relevant to this title.
-Drop any facts that do not belong to this title (e.g. general user profile facts belong only in "{USER_PROFILE_TEXT}").
-Add the new facts and keep previously known facts that still apply to this title.
-Only drop facts that will be obsolete after adding the new facts."""
-CODEX_EXTRACT_TITLE_PROMPT = """Extract the entry title to delete from ACTION and output ONLY the exact title string. Do not include dates, tags, or any other metadata. No commentary.
+MERGE OPERATION for title "{title}".
+
+Inside your <think>...</think> block, follow this process **before** reading the merge rules below:
+
+1. Create a draft of the merged content.
+2. Review the draft against PREVIOUSLY_KNOWN_FACTS with high conservatism:
+   - Never glue words together or remove spaces between words.
+   - Remove only **exact or very clear near-duplicates**.
+   - Consolidate facts only when they clearly describe the **exact same information**.
+   - Do **not** rephrase, rewrite, or remove facts simply because they appear awkwardly worded, unusual, or messy.
+   - Do not alter numbers, dates, names, spellings, or specific terms unless a fact is clearly SUPERSEDED.
+   - When in doubt, always preserve the original content.
+   - However, if you find clearly redundant or repetitive information across multiple facts, you may consolidate them into a cleaner, single statement (only when you are confident it does not lose important details).
+3. After the review, do a quick structure check to ensure the final JSON is valid.
+4. Only after completing the conservative review, apply the merge rules below and output the final JSON.
+
+DEFAULT BEHAVIOR (strict):
+Every fact from PREVIOUSLY_KNOWN_FACTS must be preserved unless it is **clearly SUPERSEDED** or an **exact/near duplicate**.
+
+The "content" field must contain the consolidated UNION of all PREVIOUSLY_KNOWN_FACTS and the new facts from the ACTION.
+
+SUPERSEDED → Keep the new fact, drop the old one.
+DUPLICATE / NEAR-DUPLICATE → Keep only the clearer or more recent version.
+UNCERTAIN / AWKWARD / MESSY CONTENT → Preserve as-is. Do not clean just because it looks messy.
+
+Be extremely conservative. Do not remove or significantly modify existing facts unless there is clear and unambiguous justification. Slow accumulation of minor redundancy is acceptable if it avoids any risk of losing useful information.
+
+OUTPUT CONTRACT — read carefully:
+- All reasoning goes inside the <think>...</think> block.
+- After the closing </think> tag, output EXACTLY one valid JSON object and NOTHING ELSE.
+- Nothing else after </think>. No markdown, no code fences, no preamble, no explanation, no trailing text."""
+CODEX_EXTRACT_TITLE_PROMPT = """Extract the entry title to delete from ACTION.
+Do not include dates, tags, or any other metadata.
+
+OUTPUT CONTRACT — read carefully:
+- All reasoning goes inside the <think>...</think> block.
+- After the closing </think> tag, output ONLY the exact title string.
+- Nothing else after </think>. No quotes, no commentary.
+
 ACTION = """
 CODEX_READ_TAG = "\n[CODEX] Read\n\nQuery: "
 CODEX_WRITE_TAG = "\n[CODEX] Write\n\nTitle: "
@@ -93,22 +150,41 @@ def _parse_json_response(response: str) -> dict:
 
         cleaned = cleaned.strip()
 
-    # Extract the JSON object in case there is preamble or trailing text
-    start = cleaned.find("{")
-    end = cleaned.rfind("}") + 1
+    try:
+        # Extract the JSON object in case there is preamble or trailing text
+        start = cleaned.find("{")
+        end = cleaned.rfind("}") + 1
 
-    if start != -1 and end > start:
-        cleaned = cleaned[start:end]
+        if start != -1 and end > start:
+            cleaned = cleaned[start:end]
 
-    return json.loads(cleaned)
+        json_data: dict = json.loads(cleaned)
+
+        title = str(json_data.get("title", "")).strip()
+        content = str(json_data.get("content", "")).strip()
+        tags = str(json_data.get("tags", "")).strip()
+
+    except (json.JSONDecodeError, AttributeError, ValueError):
+        title = ""
+        content = ""
+        tags = ""
+
+    return {"title": title, "content": content, "tags": tags}
 
 
 def read_codex(action: str) -> str:
     # Extract search query from the action
-    query = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_QUERY_PROMPT + action, [], hide_reasoning = True).strip()
+    response = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_QUERY_PROMPT + action, [], hide_reasoning = True)
+
+    # Get the last line
+    lines = response.split('\n')
+    last_line = lines[-1]
+
+    # Strip any surrounding quotes
+    query = last_line.strip('"\'')
 
     if not query:
-        return action
+        return ""
 
     result = codex_operations.read_codex(query)
 
@@ -120,26 +196,33 @@ def read_codex(action: str) -> str:
         read_data += result
         comms.printSystemText(CODEX_READ_TAG + read_data)
 
-    return action + CODEX_READ_TEXT + read_data
+    return CODEX_READ_TEXT + read_data
 
 
 def write_codex(action: str) -> str:
-    # Extract title, content and tags from the action
-    response = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_WRITE_PROMPT_1 + action + CODEX_EXTRACT_WRITE_PROMPT_2, [], hide_reasoning = True)
+    aux_context: list[str] = []
 
-    try:
-        fields = _parse_json_response(response)
-        title = str(fields.get("title", "")).strip()
-        content = str(fields.get("content", "")).strip()
-        tags = str(fields.get("tags", "")).strip()
-    except (json.JSONDecodeError, AttributeError, ValueError):
-        title = ""
-        content = ""
-        tags = ""
+    # Extract title, content and tags from the action
+    response = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_WRITE_PROMPT_1 + action + CODEX_EXTRACT_WRITE_PROMPT_2, aux_context, hide_reasoning = True)
+
+    fields = _parse_json_response(response)
+    title = fields["title"]
+    content = fields["content"]
+    tags = fields["tags"]
 
     if not title or not content:
-        comms.printSystemText(CODEX_WRITE_EXTRACT_ERROR)
-        return action + CODEX_WRITE_ERROR
+        # Fix json structure
+        retry_prompt = CODEX_EXTRACT_WRITE_PROMPT_1 + action + CODEX_EXTRACT_WRITE_PROMPT_2 + CODEX_RETRY_WRITE_PROMPT
+        response = core.send_prompt(CODEX_SYSTEM_PROMPT, retry_prompt, aux_context, hide_reasoning = True)
+
+        fields = _parse_json_response(response)
+        title = fields["title"]
+        content = fields["content"]
+        tags = fields["tags"]
+
+        if not title or not content:
+            comms.printSystemText(CODEX_WRITE_EXTRACT_ERROR)
+            return CODEX_WRITE_ERROR
 
     # Check if there are previously known facts for this title
     known_facts = codex_operations.read_codex(title)
@@ -150,14 +233,30 @@ def write_codex(action: str) -> str:
             contents = re.findall(r'<entry[^>]*>(.*?)</entry>', known_facts, re.DOTALL)
             known_facts = '\n'.join(c.strip() for c in contents)
 
+        # Merge operation
         prompt = CODEX_EXTRACT_WRITE_PROMPT_1 + action + CODEX_EXTRACT_WRITE_PROMPT_2 + CODEX_MERGE_TEXT.format(title=title, known_facts=known_facts)
         response = core.send_prompt(CODEX_SYSTEM_PROMPT, prompt, [], hide_reasoning = True)
 
         try:
             fields = _parse_json_response(response)
-            content = str(fields.get("content", "")).strip()
+            new_content = str(fields.get("content", "")).strip()
+            new_tags = str(fields.get("tags", "")).strip()
+
+            if new_content:
+                content = new_content
+            else:
+                content = (known_facts + "\n" + content).strip()
+
+            if new_tags:
+                tags = new_tags
+
         except Exception:
-            pass  # fallback if merge fails
+            content = (known_facts + "\n" + content).strip()
+
+    # Normalize tags (works for both normal writes and merges)
+    if tags:
+        tag_list = sorted(set(t.strip().lower() for t in tags.split(",") if t.strip()))
+        tags = ", ".join(tag_list)
 
     result = codex_operations.write_codex(title, content, tags)
 
@@ -165,16 +264,26 @@ def write_codex(action: str) -> str:
 
     comms.printSystemText(CODEX_WRITE_TAG + write_data)
 
-    return action + CODEX_WRITE_TEXT + write_data
+    return CODEX_WRITE_TEXT + write_data
 
 
 def delete_codex(action: str) -> str:
     # Extract entry title from the action
-    title = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_TITLE_PROMPT + action, [], hide_reasoning = True).strip()
+    response = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_TITLE_PROMPT + action, [], hide_reasoning = True)
+
+    # Get the last line
+    lines = response.split('\n')
+    last_line = lines[-1]
+
+    # Strip any surrounding quotes
+    title = last_line.strip('"\'')
+
+    if not title:
+        return ""
 
     # === HARD PROTECTION FOR USER PROFILE ===
     if title.lower() == USER_PROFILE_TEXT.lower():
-        return action
+        return ""
 
     result = codex_operations.delete_codex(title)
 
@@ -182,4 +291,6 @@ def delete_codex(action: str) -> str:
 
     comms.printSystemText(CODEX_DELETE_TAG + delete_data)
 
-    return action + CODEX_DELETE_TEXT + delete_data
+    return CODEX_DELETE_TEXT + delete_data
+
+

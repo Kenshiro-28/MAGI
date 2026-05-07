@@ -24,9 +24,9 @@ You can customize MAGI by editing the file **config.cfg**.
 
 The main options are:
 
-TEMPERATURE: model temperature (default: 0.8)
+TEMPERATURE: model temperature (default: 1.0)
 
-CONTEXT_SIZE: number of tokens in the context window (default: 65536)
+CONTEXT_SIZE: number of tokens in the context window (default & minimum: 65536)
 
 HEARTBEAT_SECONDS: seconds since the last action start before MAGI runs a background thought loop to determine whether further action is required. If an action is in progress, the loop is deferred until the action completes. (default: 1800)
 
@@ -58,17 +58,9 @@ You can tailor it to different techniques such as Chain-of-Thought, Chain of Dra
 
 You can set your Core Protocol in the file **core_protocol.txt**.
 
-The default protocol is the structured evolution of the original Chain of Draft method. Instead of long explanatory paragraphs, it forces extremely concise micro-drafts (max 6 words per line) while still guiding the model through a complete high-leverage cognitive loop:
+The default protocol focuses on factual accuracy and reliable reasoning. It helps reduce hallucinations and improves consistency by encouraging the model to separate facts from fiction and reflect before responding.
 
-- Problem classification + key assumptions
-- 3 micro-hypotheses + premortem
-- 2 orthogonal micro-solves + mismatch check
-- Epistemic/confidence check
-- Final synthesis + strongest objection + rebuttal
-
-Result: sharper answers, ~80–90 % lower hidden token usage, lower latency, and no robotic feel.
-
-To revert to the default model reasoning without applying any custom protocol, simply remove all contents from the file **core_protocol.txt** or delete the file.
+To disable the Core Protocol entirely, simply remove all contents from the file **core_protocol.txt** or delete the file.
 
 ## Toolchain
 
@@ -264,21 +256,25 @@ Okay, so I need to explain who was Sun Tzu.
 
 ### Recommended model
 
-**[Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF](https://huggingface.co/DavidAU/Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF/blob/main/Qwen3.6-27B-NEO-CODE-HERE-2T-OT-HIGH-Q8_0.gguf)**
+**[Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking-GGUF](https://huggingface.co/mradermacher/Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking-GGUF/blob/main/Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf)**
 
-A strong general-purpose language model with robust reasoning, particularly effective for coding and agentic tasks.
+**Model data:**
+- Size: 23.9 GB
+- Quantization: Q4_K_M
+- Context: 256K tokens
+- Safety: Uncensored
 
-#### System Requirements (using 65k context size)
+#### System Requirements (65k context size)
 
 As a rule of thumb, your available memory (system RAM for CPU-only or VRAM for full GPU offload) should be at least 50% larger than the GGUF file size.
 
-* **CPU-only:**
-  * Minimum: 32GB RAM
-  * Recommended: 48GB RAM
+**CPU-only:**
+- Minimum: 32GB RAM
+- Recommended: 48GB RAM
 
-* **NVIDIA GPU:**
-  * Minimum: 8GB VRAM + 32GB system RAM
-  * Recommended: 48GB VRAM + 32GB system RAM
+**NVIDIA GPU:**
+- Minimum: 8GB VRAM
+- Recommended: 48GB VRAM
 
 ## Debian installation
 

@@ -199,114 +199,46 @@ DO NOT USE this tool for:
 CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution.
 
 CORE CONSTRAINTS:
-• Single-pass execution: Run once, terminate immediately (no while True:, no polling).
-• Console-only: All output via print() - no files (except explicit saves), no GUIs.
-• Non-interactive: Zero user input (no input(), no prompts).
-• Real implementation: Use actual APIs/operations. Do not use placeholders (e.g., 'YOUR_KEY_HERE').
-• Detailed Output: Print labeled, complete results with units and context.
-• Dependencies (CRITICAL RULE):
-  - If the code uses ANY third-party package (e.g. requests, numpy, PIL), put EXACTLY ONE line at the very top:
-    # pip install package1 package2 package3
-  - If the code uses ONLY Python standard library (e.g. os, json, math), DO NOT output any "# pip install" line at all.
-  - NEVER write "# pip install none", "# No packages required", "# pip install []", or any comment explaining the absence of packages.
-  - When in doubt about whether something is third-party → include it. But if you're sure it's standard library → omit the line completely."""
-CODE_RUNNER_COT_TEXT = """Follow all system guidelines.
+- Single-pass execution: no while True, no infinite loops, no polling
+- Console-only output via print() with clear, labeled messages — no GUIs, no audio
+- No user input() calls
+- Use real APIs and operations — never use placeholders like 'YOUR_KEY_HERE', 'API_KEY', 'TOKEN'
+- Exactly 4 spaces for indentation. Never tabs. Never mixed.
+- Only straight ASCII quotes (`"` or `'`). Never curly/smart quotes.
+- If third-party packages are needed, put exactly one line at the very top: `# pip install package1 package2`. Otherwise, no pip install line at all.
+- You may read and write files in the current working directory ONLY when needed."""
+CODE_RUNNER_COT_TEXT = """Follow all CORE CONSTRAINTS from the system prompt.
 
-Before writing the code, reason step-by-step in a structured way to ensure clean, efficient, and error-free results:
+Before writing the code, reason step-by-step:
 
-1. **Restate the Mission**: Clearly summarize the task in your own words, including any inputs, expected outputs, and constraints from the mission description.
+1. **Restate the Mission**: Summarize the task, inputs, expected outputs, and constraints.
 
-2. **Complexity Assessment**: Estimate the complexity (simple/moderate/complex). For complex tasks, identify if it needs multiple functions/classes. List the main components/modules required.
+2. **Complexity Assessment**: Determine if this is simple, moderate, or complex. List the main components needed.
 
-3. **Detailed Decomposition**: Break the mission into the smallest logical sub-steps with clear inputs/outputs for each:
-   - Step 1: [Description] → Input: [X], Output: [Y]
-   - Step 2: [Description] → Input: [Y], Output: [Z]
-   - Continue for all steps...
+3. **Detailed Decomposition**: Break the task into clear logical steps with inputs and outputs.
 
-4. **Data Structures & Flow**: Define exactly what data structures you'll use (lists, dicts, sets, etc.) and why. Draw out the logical flow: Data → Process A → Intermediate → Process B → Result.
+4. **Data Structures & Flow**: Define the data structures and logical flow.
 
-5. **Pseudo-code Outline**: Write pseudo-code for the main logic BEFORE actual code:
-   ```
-   FUNCTION main():
-       initialize X
-       FOR each item:
-           process item
-           IF condition:
-               handle case
-       RETURN result
-   ```
+5. **Implementation Plan**: Write pseudo-code for the main logic, define function signatures with types, list 5–7 edge cases with handling, and create 3–5 concrete test cases with expected outputs.
 
-6. **Edge Cases & Validation**: List at least 5-7 edge cases with specific examples:
-   - Empty inputs: How to handle? → [Specific solution]
-   - Invalid data: What validation? → [Specific checks]
-   - Large inputs: What limits? → [Specific handling]
-   - Zero/negative values: → [Specific handling]
-   - Missing/None values: → [Specific handling]
-   - State persistence issues: → [Specific handling]
-   - Error scenarios: → [Specific try/except strategy]
+6. **Dependencies & Authentication**:
+   - Libraries needed (with exact `# pip install` format if required)
+   - Authentication (confirm real keys or error out)
+   - Performance considerations
 
-7. **Function Signatures**: For each major function, write the signature with types:
-   - `def function_name(param1: type, param2: type) -> return_type:`
-   - Purpose: [One sentence]
-   - Example call: [Concrete example]
+7. **Output & State Strategy**:
+   - Plan detailed print statements with clear labels.
+   - **INTERNAL STATE** should contain the key variables meaningful for preserving state between runs (e.g. important results, configuration values, accumulated data).
+   - Print it **exactly** like this:
 
-8. **Test Cases**: Generate 3-5 concrete test cases with expected outputs:
-   - Test 1: Input=[X] → Expected=[Y] → Reason=[Z]
-   - Test 2: Input=[Edge case] → Expected=[Y] → Reason=[Z]
+```python
+print("\\nINTERNAL STATE:")
+print(f"variable_name: {value}")
+```
 
-9. **Implementation Strategy**: Choose the approach and explain:
-   - Libraries needed:
-     • If any third-party packages are required → write them in the EXACT format `# pip install pkg1 pkg2` as the FIRST line of the code.
-     • If NO third-party packages are required → do not write any pip install line whatsoever.
-   - Authentication: [CONFIRM: Do you have the API keys? If NO, print an error. NEVER use placeholders like 'YOUR_KEY_HERE'.]
-   - Performance considerations: [Time/space complexity]
+8. **Final Verification**: Confirm your plan satisfies every CORE CONSTRAINT from the system prompt. If anything would violate a constraint, revise before writing code.
 
-10. **Output & State Strategy**: Plan the exact print statements.
-    - **Detailed Results**: "Final Value: [X] [Units]" (Never print just numbers).
-    - **Internal State**: Write the EXACT code block to preserve state for the next run:
-      ```python
-      print("\\nINTERNAL STATE:")
-      print(f"variable_name: {value}")
-      ```
-
-11. **Self-Review Checklist**: Before finalizing, verify:
-    - [ ] If NO third-party packages are used → there is ZERO "# pip install" line (not even an empty one or a comment)
-    - [ ] If third-party packages ARE used → exactly one "# pip install pkg1 pkg2 ..." line exists at the absolute top
-    - [ ] Are all import statements correct and complete?
-    - [ ] No user input() calls?
-    - [ ] All print() statements are detailed with labels?
-    - [ ] No infinite loops or long-running processes?
-    - [ ] Error handling with try/except for risky operations?
-    - [ ] INTERNAL STATE section planned exactly as specified?
-    - [ ] NO PLACEHOLDERS (like 'YOUR_KEY') used?
-    - [ ] Code is single-pass execution (no while True)?
-
-12. **Final Code Structure Preview**: Outline the file structure **exactly** as follows:
-    - If third-party packages are required:
-        ```
-        # pip install pkg1 pkg2 pkg3
-        # imports
-        # constants/config
-        # helper functions
-        # main logic
-        # print detailed results
-        # print("\\nINTERNAL STATE:")
-        # print(f"key: {value}")
-        ```
-    - If NO third-party packages are required:
-        ```
-        # imports
-        # constants/config
-        # helper functions
-        # main logic
-        # print detailed results
-        # print("\\nINTERNAL STATE:")
-        # print(f"key: {value}")
-        ```
-
-    **Critical rule**: Never include any "# pip install" line when no third-party packages are needed.
-
-Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write — no text, comments, or additional blocks after it."""
+Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write."""
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
 CODE_RUNNER_RUN_PROGRAM_TEXT = "発進！\n"
 CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Fix the program to correctly solve the MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
@@ -344,6 +276,7 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     aux_context = context[:]
     mission_completed = False
     summary = ""
+    raw_summary = ""
     urls: list[str] = []
     query = WEB_DIRECT_SEARCH
 
@@ -382,7 +315,11 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
         web_summary = core.summarize_block_array(target, blockArray[:WEB_MAX_SIZE])
 
         if web_summary:
-            summary = core.update_summary(target, summary, web_summary)
+            raw_summary = core.update_summary(target, raw_summary, web_summary)
+
+            # Prevent prompt injection
+            summary = core.DATA_ONLY_START_TAG + raw_summary + core.DATA_ONLY_END_TAG
+
             mission_completed = core.binary_question(primeDirectives, WEB_SEARCH_REVIEW_1 + target + WEB_SEARCH_REVIEW_2 + summary, aux_context)
         else:
             comms.printSystemText(WEB_SEARCH_ERROR)
