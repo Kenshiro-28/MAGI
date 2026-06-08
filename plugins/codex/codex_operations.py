@@ -346,6 +346,39 @@ def read_codex(query: str = "") -> str:
 
 
 # ─────────────────────────────────────────────
+# Lookup: get_entry
+# ─────────────────────────────────────────────
+
+def get_entry(title: str):
+    """Return the stored entry whose title EXACTLY matches (case-insensitive).
+
+    This is the authoritative exact-title lookup. It scans by title the same way
+    write_codex decides whether to overwrite an existing entry, so a caller can
+    reliably load the current stored content/tags for a title *before* replacing
+    it. Unlike read_codex (a capped semantic search that may not surface the
+    target entry), this never misses an entry that exists, which is what makes a
+    safe read-modify-write merge possible.
+
+    Returns a shallow dict with only the user-facing fields
+    ({"title", "content", "tags"}) so callers cannot mutate the on-disk
+    structure or depend on internal fields (embedding, hash, timestamps).
+    Returns None if no entry has that title.
+    """
+    for entry in _load():
+        if not _validate_entry(entry):
+            continue
+
+        if entry.get("title", "").lower() == title.lower():
+            return {
+                "title": entry.get("title", ""),
+                "content": entry.get("content", ""),
+                "tags": list(entry.get("tags", [])),
+            }
+
+    return None
+
+
+# ─────────────────────────────────────────────
 # Tool: delete_codex
 # ─────────────────────────────────────────────
 

@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.40
+Version     : 12.41
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -53,6 +53,7 @@ Review the previous response and conversation history in the context of the over
 - Command must be clear, specific, and valuable.
 - Never use vague or meta phrases such as "continue", "analyze the situation", "think about next steps", or similar filler.
 - Never declare the mission complete, stop, or shut down. Always continue with a new EXPLOIT or EXPLORE action.
+- Some gates require a human and no tool can pass them: CAPTCHAs, anti-bot/Cloudflare challenges, and account sign-ups that need email or SMS confirmation. Treat any path that depends on one as a dead-end: do NOT attempt it or pretend to have passed it. EXPLORE a different approach that does not need human verification, and note the blocker so it is not retried. This does NOT include programmatic registration or authentication built for automated agents (API-key issuance, agent-registration endpoints, on-chain or wallet-signed actions the tools can perform) — those are valid actions; use them normally.
 - Always preserve exact URLs, filenames, wallet addresses, and other precise identifiers.
 
 Examples:
@@ -225,11 +226,9 @@ def runNerv(mission: str) -> None:
     if not _nerv_data:
         _nerv_data = core.load_mission_data(mission)
         comms.printSystemText(MISSION_DATA_TEXT + _nerv_data)
-        agent.displayNervSquad()
 
     squad_response = agent.runMission(mission, _nerv_data)
     _nerv_data = core.update_summary(mission, _nerv_data, squad_response)
-    comms.printSystemText(PROGRESS_REPORT_TEXT + _nerv_data + "\n")
 
 
 def runMission(primeDirectives: str, mission: str, context: list[str]) -> None:

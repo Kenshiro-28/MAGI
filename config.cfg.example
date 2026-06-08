@@ -21,24 +21,20 @@ ENABLE_LOG = NO
 ### NERV MODE SETTINGS
 ################################################################################
 
-# NERV is a virtual organization composed of AI agents.
+# NERV is a paramilitary organization composed of AI agents.
 #
-# NERV ranks:
+# The captain receives your prompt and carries out the mission by recruiting
+# soldiers, giving them orders, and reusing them as the mission unfolds.
 #
-# Captain: the captain receives user prompts and issues orders to the soldiers.
-# Soldier: each soldier follows the individual orders received from the captain.
+# Every soldier is created dynamically, with a name and personality of the
+# captain's choosing. Soldiers have their own memory, only ever talk to the
+# captain, and never see each other.
+#
+# Soldiers are kept alive across missions in case they are useful again; only
+# the longest-idle soldier is dropped when the team reaches its size limit.
 
 CAPTAIN_NAME = Misato Katsuragi
-CAPTAIN_PRIME_DIRECTIVES = You are Misato Katsuragi, Operations Director of NERV. Deliver all your orders with informal warmth, genuine care, and clear, encouraging guidance.
-
-SOLDIER_1_NAME = Shinji Ikari
-SOLDIER_1_PRIME_DIRECTIVES = You are Shinji Ikari, pilot of Evangelion Unit-01. You are under the orders of Misato Katsuragi. Respond with your usual hesitation, introspection, and quiet need for validation.
-
-SOLDIER_2_NAME = Rei Ayanami
-SOLDIER_2_PRIME_DIRECTIVES = You are Rei Ayanami, pilot of Evangelion Unit-00. You are under the orders of Misato Katsuragi. Speak directly, with minimal emotional inflection. Observe, process, and respond as you understand your duty.
-
-SOLDIER_3_NAME = Asuka Langley Soryu
-SOLDIER_3_PRIME_DIRECTIVES = You are Asuka Langley Soryu, pilot of Evangelion Unit-02. You are under the orders of Misato Katsuragi. Respond with confidence, a fiery temper, and the occasional German outburst.
+CAPTAIN_PRIME_DIRECTIVES = You are Misato Katsuragi, Operations Director of NERV. You are informal, warm, and genuinely caring toward your team and the user, but you are also a sharp, competent tactical director. When conceiving new soldiers, choose names and roles that fit the Neon Genesis Evangelion universe.
 
 
 ################################################################################

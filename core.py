@@ -7,7 +7,7 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\n[ MAGI 12.40 ]"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.41 ]"
 CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
@@ -35,6 +35,7 @@ MODEL_RESPONSE_ERROR = "\n[ERROR] An exception occurred while trying to get a re
 MODEL_RESPONSE_FORMAT_ERROR = "\n[ERROR] Response format error."
 MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
+OVERSIZED_PROMPT_ERROR = "\n[ERROR] The prompt is too big to generate a response."
 
 TEMPERATURE = 0.0
 TEMPERATURE_KEY = "TEMPERATURE"
@@ -61,6 +62,7 @@ REPETITION_PENALTY = 1.0
 
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
+MIN_RESPONSE_SIZE = 8192
 MAX_RESPONSE_SIZE = 32768
 MIN_CONTEXT_SIZE = MAX_RESPONSE_SIZE * 2
 CONTEXT_HEADROOM = 1024
@@ -144,12 +146,24 @@ def get_completion_from_messages(context: list[str]) -> str:
             del context[1:3]
             text, text_tokens = get_context_data(context)
 
-        # Catch oversized prompt
+        # Check oversized prompt
         if text_tokens > MAX_INPUT_TOKENS:
             print_system_text(MAX_INPUT_TOKENS_WARNING + str(text_tokens))
 
+        # Available tokens for the response
+        available_tokens = CONTEXT_SIZE - text_tokens - CONTEXT_HEADROOM
+
+        # Check minimum response size
+        if available_tokens < MIN_RESPONSE_SIZE:
+            print_system_text(OVERSIZED_PROMPT_ERROR)
+
+            # Remove extended reasoning trigger from context
+            context[-1] = context[-1].removesuffix(THINK_TRIGGER)
+
+            return OVERSIZED_PROMPT_ERROR
+
         # Compute response token limit
-        max_tokens = min(CONTEXT_SIZE - text_tokens - CONTEXT_HEADROOM, MAX_RESPONSE_SIZE)
+        max_tokens = min(available_tokens, MAX_RESPONSE_SIZE)
 
         # Get model response
         response_data = model(

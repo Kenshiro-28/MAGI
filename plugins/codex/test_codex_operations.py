@@ -276,6 +276,91 @@ class TestDelete(CodexTestBase):
 
 
 # -----------------------------------------------------------------------------
+class TestGetEntry(CodexTestBase):
+    """get_entry: authoritative exact-title lookup used as the merge base.
+
+    Unlike read_codex (a capped semantic search), get_entry must find an entry
+    purely by exact title and never depend on the embedding model, so a caller
+    can always load current stored content before an update/merge.
+    """
+
+    def test_exact_title_returns_entry(self):
+        self.write("Python notes", "print(1984)", "python")
+        entry = _codex_module.get_entry("Python notes")
+        self.assertIsNotNone(entry)
+        self.assertEqual(entry["content"], "print(1984)")
+
+    def test_case_insensitive_match(self):
+        self.write("User Profile", "Born 1984", "user")
+        self.assertIsNotNone(_codex_module.get_entry("user profile"))
+
+    def test_missing_title_returns_none(self):
+        self.write("Exists", "content", "test")
+        self.assertIsNone(_codex_module.get_entry("Does not exist"))
+
+    def test_empty_codex_returns_none(self):
+        with open(_codex_module.CODEX_FILE, "w") as f:
+            json.dump([], f)
+        self.assertIsNone(_codex_module.get_entry("Anything"))
+
+    def test_returns_only_user_facing_fields(self):
+        self.write("Fields", "content", "test")
+        entry = _codex_module.get_entry("Fields")
+        self.assertEqual(set(entry.keys()), {"title", "content", "tags"})
+
+    def test_returns_isolated_copy(self):
+        """Mutating the returned dict must not affect the stored entry."""
+        self.write("Copy check", "content", "a,b")
+        entry = _codex_module.get_entry("Copy check")
+        entry["content"] = "mutated"
+        entry["tags"].append("mutated")
+        again = _codex_module.get_entry("Copy check")
+        self.assertEqual(again["content"], "content")
+        self.assertEqual(again["tags"], ["a", "b"])
+
+    def test_tagless_entry_returns_empty_list(self):
+        """Regression: read_codex renders tagless entries as '—'; get_entry must not."""
+        self.write("No tags entry", "content", "")
+        self.assertEqual(_codex_module.get_entry("No tags entry")["tags"], [])
+
+    def test_legacy_entry_without_embedding(self):
+        legacy = [{
+            "title": "Legacy entry",
+            "content": "old content without embedding",
+            "tags": ["legacy"],
+            "created": "2024-01-01 00:00",
+            "updated": "2024-01-01 00:00",
+            "hash": "abc123",
+        }]
+        with open(_codex_module.CODEX_FILE, "w") as f:
+            json.dump(legacy, f)
+        self.assertEqual(
+            _codex_module.get_entry("Legacy entry")["content"],
+            "old content without embedding",
+        )
+
+    def test_invalid_entry_skipped(self):
+        self.write("Valid entry", "good content", "test")
+        raw = self.raw_entries()
+        raw.append({"broken": True})  # missing required fields
+        with open(_codex_module.CODEX_FILE, "w") as f:
+            json.dump(raw, f)
+        self.assertEqual(_codex_module.get_entry("Valid entry")["content"], "good content")
+
+    def test_found_even_when_semantic_read_misses(self):
+        """The core guarantee behind the safe merge: get_entry does not depend on
+        similarity, so it finds an entry that read_codex would never surface."""
+        self.write("Obscure title", "some stored content", "misc")
+        with patch("codex_operations._cosine", return_value=0.0):
+            # read_codex (semantic) finds nothing once all similarities are zero...
+            self.assertEqual(self.read("Obscure title"), _codex_module.CODEX_NO_RESULT)
+            # ...but get_entry still returns the entry by exact title.
+            entry = _codex_module.get_entry("Obscure title")
+            self.assertIsNotNone(entry)
+            self.assertEqual(entry["content"], "some stored content")
+
+
+# -----------------------------------------------------------------------------
 class TestEdgeCases(CodexTestBase):
 
     def test_empty_tags_string(self):

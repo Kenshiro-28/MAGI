@@ -63,6 +63,7 @@ WEB_SUMMARY_REVIEW_2 = "\n\nWeb search result: "
 WEB_SEARCH_FAILED_TEXT = "\n---\n" + WEB_SEARCH_TOOL_NAME + ": you performed a web search but it didn't return any results."
 WEB_DIRECT_SEARCH = "Direct Link Navigation"
 WEB_URL_PATTERN = r'(https?://[^\s<>"]+|www\.[^\s<>"]+)'
+TOOL_DELIMITER = "\n---\n"
 
 # TELEGRAM PLUGIN
 TELEGRAM_PLUGIN_ENABLED_TEXT  = "Telegram   : enabled"
@@ -219,7 +220,18 @@ Before writing the code, reason step-by-step:
 
 4. **Data Structures & Flow**: Define the data structures and logical flow.
 
-5. **Implementation Plan**: Write pseudo-code for the main logic, define function signatures with types, list 5–7 edge cases with handling, and create 3–5 concrete test cases with expected outputs.
+5. **Implementation Plan & Tests**:
+   - Write clean, production-quality functions or classes for the core logic.
+   - Implement a reasonable number of concise, deterministic test functions using simple `assert` statements. Focus on the core logic and key edge cases. Prioritize quality over quantity.
+   - Use this lightweight custom test pattern:
+     - Define `def test_xxx():` functions.
+     - Create a small `run_tests()` harness that prints in this exact order:
+       - `=== UNIT TESTS ===`
+       - One line per test showing `PASSED` or `FAILED — reason`
+       - `TEST SUMMARY: X run, Y failed`
+       - Either `ALL TESTS PASSED` or `TESTS FAILED` on its own line
+   - Hardcode small inputs and expected outputs directly from the MISSION. Make every test fully self-contained and deterministic.
+   - Tests must validate the implementation — never write tests that would fail on a correct solution.
 
 6. **Dependencies & Authentication**:
    - Libraries needed (with exact `# pip install` format if required)
@@ -227,16 +239,21 @@ Before writing the code, reason step-by-step:
    - Performance considerations
 
 7. **Output & State Strategy**:
-   - Plan detailed print statements with clear labels.
-   - **INTERNAL STATE** should contain the key variables meaningful for preserving state between runs (e.g. important results, configuration values, accumulated data).
-   - Print it **exactly** like this:
+   - Structure console output with these exact sections in this order:
+     1. `=== UNIT TESTS ===` section (with per-test results + summary + final status line)
+     2. `=== MISSION EXECUTION ===` section with the actual mission results
+     3. `=== INTERNAL STATE ===` section printed exactly like this at the very end:
 
 ```python
-print("\\nINTERNAL STATE:")
+print("\\n=== INTERNAL STATE ===")
 print(f"variable_name: {value}")
 ```
 
-8. **Final Verification**: Confirm your plan satisfies every CORE CONSTRAINT from the system prompt. If anything would violate a constraint, revise before writing code.
+8. **Final Verification**: Confirm your plan satisfies every CORE CONSTRAINT from the system prompt. Specifically verify that:
+   - Tests run first and produce the required `=== UNIT TESTS ===` section with a clear pass/fail status.
+   - The `=== MISSION EXECUTION ===` section is present.
+   - The `=== INTERNAL STATE ===` section appears last in the exact format shown.
+   If anything would violate a constraint, revise before writing code.
 
 Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write."""
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
@@ -246,11 +263,12 @@ CODE_RUNNER_MISSION_TEXT = "\n\nMISSION: "
 CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = """Analyze the execution results to determine if the MISSION is complete.
 
 CRITERIA:
-1. Execution Success: Did the program run without errors?
-2. State Preservation: Is the 'INTERNAL STATE:' section present and correct?
-3. Mission Fulfillment: Do the results fully answer the request?
+1. Test Validation: The output must contain a clear "=== UNIT TESTS ===" section, followed by either "ALL TESTS PASSED" or a "TESTS FAILED" summary. Important: Even if tests pass, you must still verify that the mission was actually solved correctly. Do not output YES just because tests passed.
+2. Execution Success: The output must contain a clear "=== MISSION EXECUTION ===" section and the program must have run without runtime errors.
+3. State Preservation: The output must contain a clear "=== INTERNAL STATE ===" section at the end with meaningful values.
+4. Mission Fulfillment: The results must fully and correctly solve the original MISSION.
 
-Think step-by-step. Reflect on each criterion.
+Think step-by-step about each criterion. The test results (especially whether "ALL TESTS PASSED") should carry significant weight in your decision.
 
 CRITICAL: The very last line of your response must be exactly "YES" or "NO".
 
@@ -287,8 +305,9 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
     # Get the last line
     target = target.split('\n')[-1].strip()
 
-    # Check if action provided specific URLs
-    urls = re.findall(WEB_URL_PATTERN, action)
+    # Check if the user prompt provided specific URLs
+    user_prompt = action.split(TOOL_DELIMITER, 1)[0]
+    urls = re.findall(WEB_URL_PATTERN, user_prompt)
 
     if urls:
         comms.printSystemText(WEB_SEARCH_TAG + query + "\n\n" + target)

@@ -100,15 +100,15 @@ The system will extract useful information from the file **mission_data.txt**.
 
 ### NERV mode
 
-NERV is a virtual organization composed of AI agents.
+NERV is a paramilitary organization composed of AI agents.
 
-The agents are organized following a military structure, consisting of one Captain and three Soldiers.
+The captain receives your prompt and carries out the mission by recruiting soldiers, giving them orders, and reusing them as the mission unfolds.
 
-The Captain receives the user's prompt, analyzes it, and issues orders to each Soldier.
+Every soldier is created dynamically, with a name and personality of the captain's choosing. Soldiers have their own memory, only ever talk to the captain, and never see each other.
 
-The Captain will evaluate each Soldier's response and provide additional guidance when necessary.
+Soldiers are kept alive across missions in case they are useful again; only the longest-idle soldier is dropped when the team reaches its size limit.
 
-Each agent has its own memory and remembers the ongoing conversation.
+To print the agent list, type the command **agents** and press enter.
 
 The system will extract useful information from the file **mission_data.txt**.
 
@@ -256,11 +256,11 @@ Okay, so I need to explain who was Sun Tzu.
 
 ### Recommended model
 
-**[Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking-GGUF](https://huggingface.co/mradermacher/Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking-GGUF/blob/main/Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf)**
+**[Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF](https://huggingface.co/DavidAU/Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF/blob/main/Qwen3.6-27B-NEO-CODE-HERE-2T-OT-Q5_K_M.gguf)**
 
 **Model data:**
-- Size: 23.9 GB
-- Quantization: Q4_K_M
+- Size: 19.5 GB
+- Quantization: Q5_K_M
 - Context: 256K tokens
 - Safety: Uncensored
 

@@ -11,24 +11,32 @@ CODEX_WRITE_PROMPT = """\n---\nCodex long-term memory write decision.
 DECISION HIERARCHY — apply top-down, first match wins:
 
 1. The user explicitly asked to remember, save, keep, store, or not forget something. → YES
-   This rule fully overrides the NEVER SAVE clause below. If the user explicitly asks to save image generation content, save it.
+   This rule fully overrides the NEVER SAVE clause below. If the user explicitly asks to save otherwise-excluded content (e.g. an image generation prompt, or a riddle), save it.
 
 2. You successfully wrote and executed Python code via the code_runner tool, and it ran without errors. → YES
    Working code is reusable knowledge even when the user's question feels one-time (e.g. "what's the weather", "what's my IP", "convert 100 USD to EUR", "find my public location") — the script will be reused next time the same need appears.
 
-3. The turn revealed durable factual knowledge: a working URL or API endpoint, a version number, a command that succeeded, a configuration that proved correct, library behavior, or any discovery worth keeping. → YES
+3. The turn revealed durable factual knowledge: a working URL or API endpoint, a configuration that proved correct, library behavior, or any discovery worth keeping. → YES
 
-4. The turn revealed a personal fact about the user (preferences, ongoing projects, identity, context that should persist across sessions). → YES
+4. The turn revealed a durable personal fact about the user (e.g. preferences, ongoing projects, identity, relevant context that should persist across sessions). → YES
+   But a message YOU composed or sent to the user, or the mood of the current moment, is NOT a personal fact — those fall under NEVER SAVE, even when they read like meaningful context. A lasting fact about the user still counts even if it surfaced in an emotional moment.
 
 5. None of rules 1–4 apply. → NO
-   (Typical no-save cases: casual conversation, greeting, joke, riddle, one-time prose answer without executed code, standalone mission briefing, standalone task description, transient data that won't stay true.)
 
-NEVER SAVE (applies to rules 2–5; rule 1 fully overrides this):
-- Image generation prompts, image descriptions, and image filenames produced by the generate_image tool. These are runtime artifacts, not durable knowledge.
-- Roleplay tactics, persona behavior instructions, in-character messaging guidelines, conversation engagement techniques, or any meta-content describing how to communicate or behave. These are session-level behavior, not durable knowledge
-- If a turn contains BOTH image generation AND other save-worthy content, save the other content and exclude the image-related artifacts.
+NEVER SAVE (applies to rules 2–5; rule 1 fully overrides this). If the ONLY save-worthy material in the turn is one of these, the answer is NO — rules 2–5 can never be used to save it:
+- A message you composed or sent to the user — reassurance, check-in, re-engagement, greeting, or any in-character message — including its tone, purpose, or wording. Session behavior, not durable knowledge.
+- The transient emotional or relational state of this exchange (e.g. "the user went quiet", "the mood right now"). The momentary state is not a durable fact.
+- Casual conversation, joke, riddle, one-time prose answer without executed code, standalone mission briefing, standalone task description, transient data that won't stay true.
+- Image generation prompts, image descriptions, and image filenames produced by the generate_image tool. Runtime artifacts, not durable knowledge.
+- Roleplay tactics, persona behavior instructions, conversation engagement techniques, or any meta-content describing how to communicate or behave. Session-level behavior, not durable knowledge.
+- If a turn contains BOTH excluded material AND other save-worthy content, answer YES on the durable content and leave the excluded parts out.
 
-GOAL: keep the Codex clean and high-value. When in doubt and code ran successfully, choose YES.
+THINKING PROCESS — inside your <think>...</think> block, follow these steps exactly:
+1. Draft — identify what in this turn could be worth saving, then pick the first matching rule (1–5).
+2. Review — re-derive the decision straight from the rules. If your draft is YES under rule 3 or 4, check the candidate against NEVER SAVE: is it a message you wrote, the mood of the moment, or other excluded material? If the excluded item is the ONLY thing you were going to save, the answer is NO; if there is separate durable knowledge, keep YES for that.
+3. Decide — output the verified answer. Do not flip a correct YES on genuine code or durable knowledge to NO just to seem cautious.
+
+GOAL: keep the Codex clean and high-value. The assistant's own messages, relationship chatter, and how-to-behave guidance are exactly what dilute it — keep them out. When in doubt and code ran successfully, choose YES; when in doubt on persona, messaging, or relational content, choose NO.
 
 OUTPUT CONTRACT — read carefully:
 - All reasoning goes inside the <think>...</think> block.
@@ -123,7 +131,7 @@ TOOL_SIGNATURE_ERROR = "[ERROR] Function must accept 3 or 4 parameters: "
 TOOL_PARAMETER_TYPE_ERROR = "[ERROR] Parameter {name} has incorrect type: expected {expected}, got {actual} in {function}"
 TOOL_RETURN_TYPE_ERROR = "[ERROR] Function must return {expected}, got {actual} in {function}"
 
-TOOL_USE_LIMIT = 5
+TOOL_USE_LIMIT = 3
 
 TOOLS: dict[str, dict] = {}
 

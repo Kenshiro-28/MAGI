@@ -1,12 +1,12 @@
 # Core
-llama-cpp-python @ git+https://github.com/JamePeng/llama-cpp-python.git@v0.3.39-cu131-linux-20260519
+llama-cpp-python @ git+https://github.com/JamePeng/llama-cpp-python.git@v0.3.40-cu131-linux-20260607
 
 # Codex plugin
 sentence-transformers
 
 # Image generation plugin
-transformers==4.51.3
-diffusers==0.36.0
+transformers
+diffusers
 torch
 accelerate
 peft
