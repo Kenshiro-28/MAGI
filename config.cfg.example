@@ -3,7 +3,7 @@
 ################################################################################
 
 TEMPERATURE = 1.0
-CONTEXT_SIZE = 65536
+CONTEXT_SIZE = 131072
 HEARTBEAT_SECONDS = 1800
 
 ENABLE_CODEX_PLUGIN = YES

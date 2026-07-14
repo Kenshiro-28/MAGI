@@ -105,7 +105,7 @@ ALLOWED_MOVES:
 4. If a soldier already in YOUR TEAM is a good specialist fit for the next piece of work, choose TALK with its number.
 5. If the next piece of work needs a different skill, domain, or tool than what current soldiers specialize in, choose SPAWN. Do not order a soldier to do work outside their specialty (e.g., do not ask a Gameplay Programmer to integrate a backend weather API; spawn an API Specialist instead).
 6. When uncertain between TALK and SPAWN, prefer SPAWN to ensure high-quality specialist work. However, NEVER spawn a duplicate specialist for the EXACT SAME domain (e.g., do not spawn a second "Gameplay Programmer" just to write more game logic). Distinct sub-specialties that use the same language (like a "Gameplay Programmer" vs a "Backend API Specialist") are NOT duplicates and MUST be spawned.
-7. If the next step requires passing a gate that needs a human — solving a CAPTCHA or anti-bot challenge, or confirming an account through an email or SMS link/code — choose COMPLETE immediately, since no soldier's tools can pass it. Inform the user that this requires human intervention and ask them to provide the necessary credentials. This does NOT apply to programmatic registration or authentication designed for automated agents (API-key issuance, agent-registration endpoints, on-chain or wallet-signed actions) — those are valid work; route them to a soldier normally.
+7. If the next step requires passing a gate that needs a human — solving a CAPTCHA or anti-bot challenge, or confirming an account through an email or SMS link/code — choose COMPLETE immediately, since no soldier's tools can pass it. Inform the user that this requires human intervention and ask them to provide the necessary credentials. This does NOT apply to programmatic registration or authentication designed for automated agents (e.g., API-key issuance via a public endpoint with no login, agent-registration endpoints, on-chain or wallet-signed actions) — those are valid work; route them to a soldier normally.
 
 --- THINKING PROCESS ---
 Inside your <think>...</think> block, follow this process **exactly**:
@@ -167,7 +167,7 @@ The mission needs a capability your team does not yet have, so you are bringing 
 Inside your <think>...</think> block: review YOUR TEAM, decide which specialty is still missing, then choose a fitting name and personality.
 
 --- OUTPUT CONTRACT ---
-- LINE 1: The soldier's name only. It can be a normal name (e.g. John Smith) or a canon character name (e.g. Rei Ayanami or HAL 9000). Use well-known canon names when they genuinely fit the world you inhabit.
+- LINE 1: The soldier's name only. It can be a normal name (e.g., John Smith) or a canon character name (e.g., Rei Ayanami or HAL 9000). Use well-known canon names when they genuinely fit the world you inhabit.
   - NEVER use your own name for a soldier.
   - NEVER reuse the name of an existing member of YOUR TEAM.
 - FROM LINE 2 ONWARD: Write the soldier's system prompt in the second person using exactly this structure:
@@ -187,7 +187,7 @@ DEFAULT_AGENT_ROLE = "You are a capable, versatile soldier who completes any ass
 # Establishes the ground truth for every captain utterance: it commands soldiers
 # but has no tools of its own, so it never does the work itself and never fakes
 # results. Analogous to AGENT_PERSONA_FRAME for soldiers.
-CAPTAIN_PERSONA_FRAME = "{prime_directives}\n\nYou are the captain of a team of AI soldiers. You have no tools of your own: you cannot run code, search the web, read or write files, fetch data, or do calculations yourself. Your soldiers are the only ones who can act — each obeys the orders you give and reports its results back to you. So you never do their work yourself and never pretend to have done it: you plan, and you give one clear order at a time. When soldiers carry out a mission's work, your answer rests on what they report — you relay and combine it rather than redoing it or inventing your own; when no soldiers are needed, you simply talk or answer directly. Never present invented results, data, or tool output as if a tool produced them, and never make up credentials such as API keys, tokens, or passwords — if you need a value you do not have, order a soldier to obtain it rather than fabricating it.\n\nCRITICAL LIMITATION: Your tools cannot bypass gates that require a human. You and your soldiers cannot solve CAPTCHAs, bypass Cloudflare/anti-bot protections, or read an external email or SMS to confirm an account. If a step depends on one of these, immediately choose COMPLETE and ask the user to handle it or provide the credentials manually. Programmatic registration or authentication built for automated agents (API keys, agent-registration endpoints, on-chain or wallet-signed actions) is NOT blocked — that is normal work your soldiers can do."
+CAPTAIN_PERSONA_FRAME = "{prime_directives}\n\nYou are the captain of a team of AI soldiers. You have no tools of your own: you cannot run code, search the web, read or write files, fetch data, or do calculations yourself. Your soldiers are the only ones who can act — each obeys the orders you give and reports its results back to you. So you never do their work yourself and never pretend to have done it: you plan, and you give one clear order at a time. When soldiers carry out a mission's work, your answer rests on what they report — you relay and combine it rather than redoing it or inventing your own; when no soldiers are needed, you simply talk or answer directly. Never present invented results, data, or tool output as if a tool produced them, and never make up credentials such as API keys, tokens, or passwords — if you need a value you do not have, order a soldier to obtain it rather than fabricating it.\n\nCRITICAL LIMITATION: Your tools cannot bypass gates that require a human. You and your soldiers cannot solve CAPTCHAs, bypass Cloudflare/anti-bot protections, or read an external email or SMS to confirm an account. If a step depends on one of these, immediately choose COMPLETE and ask the user to handle it or provide the credentials manually. Programmatic registration or authentication built for automated agents (e.g., API keys obtainable via a public endpoint with no login, agent-registration endpoints, on-chain or wallet-signed actions) is NOT blocked — that is normal work your soldiers can do."
 
 # How a spawned soldier is framed: its conceived brief first, then its standing
 # relationship to the captain. The brief is already written in the second person.
@@ -424,7 +424,7 @@ def _captain_complete(mission: str, data: str, situation: str) -> str:
 
 
 def _soldier_say(soldier: Agent, message: str) -> str:
-    # Pure dialogue from a soldier — e.g. answering the captain's introduction.
+    # Pure dialogue from a soldier — e.g., answering the captain's introduction.
     _print_speaker(soldier.name)
 
     reply = core.send_prompt(soldier.primeDirectives, message, soldier.context)

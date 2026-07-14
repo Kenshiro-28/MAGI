@@ -26,23 +26,23 @@ The main options are:
 
 TEMPERATURE: model temperature (default: 1.0)
 
-CONTEXT_SIZE: number of tokens in the context window (default & minimum: 65536)
+CONTEXT_SIZE: number of tokens in the context window (default & minimum: 131072)
 
 HEARTBEAT_SECONDS: seconds since the last action start before MAGI runs a background thought loop to determine whether further action is required. If an action is in progress, the loop is deferred until the action completes. (default: 1800)
 
-ENABLE_CODE_RUNNER_PLUGIN: enable or disable the Code Runner plugin (default: YES)
+ENABLE_CODE_RUNNER_PLUGIN: enable the Code Runner plugin (default: YES)
 
-ENABLE_CODEX_PLUGIN: enable or disable the long-term memory Codex (default: YES)
+ENABLE_CODEX_PLUGIN: enable the long-term memory Codex (default: YES)
 
-ENABLE_IMAGE_GENERATION_PLUGIN: enable or disable the image generation plugin (default: YES)
+ENABLE_IMAGE_GENERATION_PLUGIN: enable the image generation plugin (default: YES)
 
-ENABLE_TELEGRAM_PLUGIN: enable or disable the Telegram plugin (default: NO)
+ENABLE_TELEGRAM_PLUGIN: enable the Telegram plugin (default: NO)
 
-ENABLE_WEB_PLUGIN: enable or disable the web plugin (default: YES)
+ENABLE_WEB_PLUGIN: enable the web plugin (default: YES)
 
 DISPLAY_EXTENDED_REASONING: display the extended reasoning between `<think>...</think>` tags (default: NO)
 
-ENABLE_LOG: enable or disable logging to the file **mission_log.txt** (default: NO)
+ENABLE_LOG: enable logging to the file **mission_log.txt** (default: NO)
 
 ## Prime Directives
 
@@ -256,17 +256,15 @@ Okay, so I need to explain who was Sun Tzu.
 
 ### Recommended model
 
-**[Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF](https://huggingface.co/DavidAU/Qwen3.6-27B-Heretic-Uncensored-FINETUNE-NEO-CODE-Di-IMatrix-MAX-GGUF/blob/main/Qwen3.6-27B-NEO-CODE-HERE-2T-OT-Q5_K_M.gguf)**
+**[Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF](https://huggingface.co/DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF/blob/main/Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-Q5_K_M.gguf)**
 
 **Model data:**
-- Size: 19.5 GB
+- Size: 20.7 GB
 - Quantization: Q5_K_M
 - Context: 256K tokens
 - Safety: Uncensored
 
-#### System Requirements (65k context size)
-
-As a rule of thumb, your available memory (system RAM for CPU-only or VRAM for full GPU offload) should be at least 50% larger than the GGUF file size.
+#### System Requirements (default context size)
 
 **CPU-only:**
 - Minimum: 32GB RAM

@@ -10,15 +10,15 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - name: Install Ruff
         run: pip install ruff
       - name: Run Ruff
-        run: ruff check --extend-select=S,TYP --ignore=S105,S110 --target-version py311 --per-file-ignores "plugins/web/web.py:S104,plugins/web/web.py:S108,plugins/web/web.py:S112,plugins/web/web.py:S607" .
+        run: ruff check --select=E4,E7,E9,F,S,TYP --ignore=S105,S110 --target-version py311 --per-file-ignores "plugins/web/web.py:S104,plugins/web/web.py:S108,plugins/web/web.py:S112,plugins/web/web.py:S607" .
       - name: Install mypy
         run: pip install mypy
       - name: Run mypy

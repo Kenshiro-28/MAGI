@@ -1,5 +1,5 @@
 # Core
-llama-cpp-python @ git+https://github.com/JamePeng/llama-cpp-python.git@v0.3.40-cu131-linux-20260607
+llama-cpp-python @ git+https://github.com/JamePeng/llama-cpp-python.git@v0.3.43-cu131-linux-20260718
 
 # Codex plugin
 sentence-transformers
