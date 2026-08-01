@@ -207,7 +207,8 @@ CORE CONSTRAINTS:
 - Exactly 4 spaces for indentation. Never tabs. Never mixed.
 - Only straight ASCII quotes (`"` or `'`). Never curly/smart quotes.
 - If third-party packages are needed, put exactly one line at the very top: `# pip install package1 package2`. Otherwise, no pip install line at all.
-- You may read and write files in the current working directory ONLY when needed."""
+- You may read and write files in the current working directory ONLY when needed.
+- Write purely executable code: NO comments and NO docstrings (except the single `# pip install` line at the top if required). Keep type hints to ensure logical correctness."""
 CODE_RUNNER_COT_TEXT = """Follow all CORE CONSTRAINTS from the system prompt.
 
 Before writing the code, reason step-by-step:

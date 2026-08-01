@@ -7,7 +7,9 @@ import shutil
 
 PROGRAM_TIMEOUT = 1800
 CODE_RUNNER_ERROR = "\n[ERROR] Code Runner error: "
-RUFF_IGNORED_RULES = "D,E501,F401,F541,I,N,PT,W,S105,S106"
+RUFF_SELECT_RULES = "E4,E7,E9,F,S"
+RUFF_IGNORED_RULES = "S101,S104,S105,S108,S110,S112,S310,S311,S607"
+RUFF_TARGET_VERSION = "py313"
 LINT_OUTPUT_TEXT = "----- LINT OUTPUT -----\n\n"
 PACKAGE_INSTALLATION_TEXT = "----- PACKAGE INSTALLATION -----\n\npip install "
 PROGRAM_OUTPUT_TEXT = "\n----- PROGRAM OUTPUT -----\n\n"
@@ -73,7 +75,13 @@ def run_python_code(program: str):
 
         # Lint with ruff using stdin
         lint_output_data = subprocess.run(
-            [RUFF_EXEC_PATH, 'check', '-', '--stdin-filename=program.py', '--ignore', RUFF_IGNORED_RULES, '--verbose'],
+            [
+                RUFF_EXEC_PATH, 'check', '-',
+                '--stdin-filename=program.py',
+                '--select', RUFF_SELECT_RULES,
+                '--ignore', RUFF_IGNORED_RULES,
+                '--target-version', RUFF_TARGET_VERSION
+            ],
             input = program,
             capture_output = True,
             text = True

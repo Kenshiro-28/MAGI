@@ -7,7 +7,7 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\n[ MAGI 12.42 ]"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.43 ]"
 CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"

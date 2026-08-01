@@ -14,11 +14,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.11'
+          python-version: '3.13'
       - name: Install Ruff
         run: pip install ruff
       - name: Run Ruff
-        run: ruff check --select=E4,E7,E9,F,S,TYP --ignore=S105,S110 --target-version py311 --per-file-ignores "plugins/web/web.py:S104,plugins/web/web.py:S108,plugins/web/web.py:S112,plugins/web/web.py:S607" .
+        run: ruff check --select=E4,E7,E9,F,S --ignore=S104,S105,S108,S110,S112,S607 --target-version py313 .
       - name: Install mypy
         run: pip install mypy
       - name: Run mypy
