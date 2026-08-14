@@ -10,12 +10,21 @@ class MockLlama:
         self.n_ctx = n_ctx
         self.verbose = True
         self.kwargs = kwargs
+        self.last_prompt = None
+        self.last_call_kwargs = None
 
     def tokenize(self, text):
         # Simple mock tokenizer that counts characters as tokens
         return [ord(c) for c in text.decode('utf-8')]
 
     def __call__(self, prompt, max_tokens=100, temperature=1.0, **kwargs):
+        self.last_prompt = prompt
+        self.last_call_kwargs = {
+            'max_tokens': max_tokens,
+            'temperature': temperature,
+            **kwargs
+        }
+
         return {
             'choices': [
                 {'text': MOCK_MODEL_OUTPUT}
@@ -88,8 +97,8 @@ class TestCore(unittest.TestCase):
             core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
         )
 
-        # Check third element has the basic response + EOS
-        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
+        # Check third element has the full response + EOS
+        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
 
     def test_existing_context(self):
         """Test send_prompt with existing context - should overwrite prime directives"""
@@ -121,8 +130,8 @@ class TestCore(unittest.TestCase):
             core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
         )
 
-        # New response should be appended (without extended reasoning)
-        self.assertEqual(context[4], BASIC_RESPONSE + core.EOS)
+        # New response should be appended with extended reasoning preserved
+        self.assertEqual(context[4], NORMAL_RESPONSE + core.EOS)
 
     def test_hide_reasoning_true(self):
         """Test send_prompt with hide_reasoning explicitly set to True"""
@@ -135,7 +144,82 @@ class TestCore(unittest.TestCase):
         # Assert - the response should have thinking tags removed
         self.assertEqual(response, BASIC_RESPONSE)
 
-        # Check context contains the basic response + EOS
+        # Check context contains the full response + EOS
+        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
+
+    def test_hide_reasoning_positional(self):
+        """Test fourth positional argument remains hide_reasoning"""
+        context = []
+
+        response = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context, True)
+
+        self.assertEqual(response, BASIC_RESPONSE)
+        self.assertTrue(core.model.last_prompt.endswith(core.ASSISTANT_TEXT + core.THINK_TRIGGER))
+        self.assertEqual(core.model.last_call_kwargs['temperature'], core.TEMPERATURE_THINKING)
+        self.assertEqual(core.model.last_call_kwargs['top_p'], core.TOP_P_THINKING)
+
+    def test_get_completion_thinking(self):
+        """Test thinking mode uses open think block and thinking sampling"""
+        context = [
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS,
+            core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
+        ]
+
+        response = core.get_completion_from_messages(context, thinking=True)
+
+        self.assertEqual(response, NORMAL_RESPONSE)
+        self.assertTrue(core.model.last_prompt.endswith(core.ASSISTANT_TEXT + core.THINK_TRIGGER))
+        self.assertEqual(core.model.last_call_kwargs['temperature'], core.TEMPERATURE_THINKING)
+        self.assertEqual(core.model.last_call_kwargs['top_p'], core.TOP_P_THINKING)
+
+    def test_get_completion_non_thinking(self):
+        """Test non-thinking mode uses closed think block and instruct sampling"""
+        context = [
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS,
+            core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
+        ]
+
+        response = core.get_completion_from_messages(context, thinking=False)
+
+        expected_suffix = (
+            core.ASSISTANT_TEXT
+            + core.THINK_TRIGGER
+            + "\n"
+            + core.THINK_END
+            + "\n\n"
+        )
+
+        self.assertEqual(response, MOCK_MODEL_OUTPUT)
+        self.assertTrue(core.model.last_prompt.endswith(expected_suffix))
+        self.assertEqual(core.model.last_call_kwargs['temperature'], core.TEMPERATURE_INSTRUCT)
+        self.assertEqual(core.model.last_call_kwargs['top_p'], core.TOP_P_INSTRUCT)
+
+    def test_send_prompt_non_thinking(self):
+        """Test send_prompt stores and returns a direct non-thinking response"""
+        context = []
+
+        with patch(__name__ + '.MOCK_MODEL_OUTPUT', BASIC_RESPONSE):
+            response = core.send_prompt(
+                PRIME_DIRECTIVES,
+                PROMPT,
+                context,
+                thinking=False,
+                hide_reasoning=True
+            )
+
+        expected_command = (
+            core.USER_TEXT
+            + PROMPT
+            + core.EOS
+            + core.ASSISTANT_TEXT
+            + core.THINK_TRIGGER
+            + "\n"
+            + core.THINK_END
+            + "\n\n"
+        )
+
+        self.assertEqual(response, BASIC_RESPONSE)
+        self.assertEqual(context[1], expected_command)
         self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
 
     def test_empty_response(self):
@@ -168,8 +252,8 @@ class TestCore(unittest.TestCase):
         # Check first element contains just system + EOS
         self.assertEqual(context[0], core.SYSTEM_TEXT + core.EOS)
 
-        # Check context response doesn't contain extended reasoning.
-        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
+        # Check context response preserves extended reasoning.
+        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
 
 
     def test_empty_prompt(self):
@@ -186,8 +270,8 @@ class TestCore(unittest.TestCase):
         # Check second element has empty user prompt + EOS + assistant tag
         self.assertEqual(context[1], core.USER_TEXT + core.EOS + core.ASSISTANT_TEXT)
 
-        # Check context response doesn't contain extended reasoning.
-        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
+        # Check context response preserves extended reasoning.
+        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
 
     def test_multiple_thinking_blocks(self):
         """Test send_prompt with multiple thinking blocks"""
@@ -201,8 +285,8 @@ class TestCore(unittest.TestCase):
         # Assert - all thinking tags should be removed
         self.assertEqual(response, BASIC_MULTIPLE_THINKING_RESPONSE)
 
-        # Check context contains the basic response + EOS
-        self.assertEqual(context[2], BASIC_MULTIPLE_THINKING_RESPONSE + core.EOS)
+        # Check context preserves the full response including all thinking blocks + EOS
+        self.assertEqual(context[2], MULTIPLE_THINKING_RESPONSE + core.EOS)
 
     def test_context_trimming(self):
         """Test that context is properly trimmed when token count exceeds MAX_INPUT_TOKENS"""
@@ -244,8 +328,8 @@ class TestCore(unittest.TestCase):
         self.assertEqual(context[2], original_context[4])  # Second response
         self.assertEqual(context[3], core.USER_TEXT + third_message + core.EOS + core.ASSISTANT_TEXT)
 
-        # Check the final context element stores the basic response
-        self.assertEqual(context[4], BASIC_RESPONSE + core.EOS)
+        # Check the final context element stores the full response
+        self.assertEqual(context[4], NORMAL_RESPONSE + core.EOS)
 
 
 class TestSummary(unittest.TestCase):
@@ -280,6 +364,23 @@ class TestSummary(unittest.TestCase):
         # Case 4: Text with multiple blocks
         result = core.split_text_in_blocks("Word1 Word2 Word3 Word4 Word5 Word6 Word7")
         self.assertEqual(result, ["Word1 Word2 Word3", "Word4 Word5 Word6", "Word7"])
+
+    def test_summarize_uses_non_thinking(self):
+        """Test summarize explicitly disables reasoning"""
+        topic = "Test topic"
+        text = "Test data"
+
+        with patch.object(core, 'send_prompt', return_value="Summary") as mock_send:
+            result = core.summarize(topic, text)
+
+        mock_send.assert_called_once_with(
+            core.SUMMARIZE_SYSTEM_PROMPT,
+            core.DATA_ONLY_START_TAG + text + core.DATA_ONLY_END_TAG + core.SUMMARIZE_TEXT + topic,
+            [],
+            thinking=False,
+            hide_reasoning=True
+        )
+        self.assertEqual(result, "Summary")
 
     def test_update_summary(self):
         """Test update_summary function with various combinations of inputs"""
@@ -388,6 +489,16 @@ class TestBinaryQuestion(unittest.TestCase):
             result = core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context)
             mock_send.assert_called_once()
             self.assertTrue(result)
+
+    def test_yes_substring_response(self):
+        """Test responses merely containing YES are not accepted"""
+        context = []
+
+        with patch.object(core, 'send_prompt', return_value="Yesterday"):
+            self.assertFalse(core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context))
+
+        with patch.object(core, 'send_prompt', return_value="No, not yes"):
+            self.assertFalse(core.binary_question(PRIME_DIRECTIVES, BINARY_QUESTION, context))
 
     def test_empty_response(self):
         """Test binary_question with empty response"""

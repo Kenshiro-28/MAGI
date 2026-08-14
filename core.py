@@ -7,7 +7,7 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\n[ MAGI 12.43 ]"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.44 ]"
 CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
@@ -37,8 +37,9 @@ MODEL_NOT_FOUND_ERROR = "\n[ERROR] Model not found.\n"
 MODEL_LOAD_ERROR = "\n[ERROR] Error loading model: "
 OVERSIZED_PROMPT_ERROR = "\n[ERROR] The prompt is too big to generate a response."
 
-TEMPERATURE = 0.0
-TEMPERATURE_KEY = "TEMPERATURE"
+TEMPERATURE_THINKING = 0.0
+TEMPERATURE_THINKING_KEY = "TEMPERATURE"
+TEMPERATURE_INSTRUCT = 0.7
 TEMPERATURE_NOT_FOUND_TEXT = "Temperature not found.\n"
 TEMPERATURE_INVALID_TEXT = "Invalid temperature.\n"
 
@@ -47,7 +48,8 @@ HEARTBEAT_SECONDS_KEY = "HEARTBEAT_SECONDS"
 HEARTBEAT_SECONDS = 0
 
 # Sampling
-TOP_P = 0.95
+TOP_P_THINKING = 0.95
+TOP_P_INSTRUCT = 0.8
 TOP_K = 20
 MIN_P = 0.0
 
@@ -132,10 +134,14 @@ def get_context_data(context: list[str]) -> tuple[str, int]:
     return text, text_tokens
 
 
-def get_completion_from_messages(context: list[str]) -> str:
+def get_completion_from_messages(context: list[str], thinking: bool = True) -> str:
     try:
         # Append extended reasoning trigger
         context[-1] += THINK_TRIGGER
+
+        if not thinking:
+            # Close extended reasoning block
+            context[-1] += "\n" + THINK_END + "\n\n"
 
         # Get context data
         text, text_tokens = get_context_data(context)
@@ -157,20 +163,29 @@ def get_completion_from_messages(context: list[str]) -> str:
         if available_tokens < MIN_RESPONSE_SIZE:
             print_system_text(OVERSIZED_PROMPT_ERROR)
 
-            # Remove extended reasoning trigger from context
-            context[-1] = context[-1].removesuffix(THINK_TRIGGER)
+            if thinking:
+                # Remove extended reasoning trigger from context
+                context[-1] = context[-1].removesuffix(THINK_TRIGGER)
 
             return OVERSIZED_PROMPT_ERROR
 
         # Compute response token limit
         max_tokens = min(available_tokens, MAX_RESPONSE_SIZE)
 
+        # Customize inference parameters
+        if thinking:
+            temperature = TEMPERATURE_THINKING
+            top_p = TOP_P_THINKING
+        else:
+            temperature = TEMPERATURE_INSTRUCT
+            top_p = TOP_P_INSTRUCT
+
         # Get model response
         response_data = model(
                             text,
                             max_tokens = max_tokens,
-                            temperature = TEMPERATURE,
-                            top_p = TOP_P,
+                            temperature = temperature,
+                            top_p = top_p,
                             top_k = TOP_K,
                             min_p = MIN_P,
                             dry_multiplier = DRY_MULTIPLIER,
@@ -186,11 +201,15 @@ def get_completion_from_messages(context: list[str]) -> str:
         if isinstance(response_data, Iterator):
             raise ValueError(MODEL_RESPONSE_FORMAT_ERROR)
 
-        # Remove extended reasoning trigger from context
-        context[-1] = context[-1].removesuffix(THINK_TRIGGER)
+        # Compute response
+        response = response_data['choices'][0]['text'].strip()
 
-        # Prepend extended reasoning trigger to response
-        response = THINK_TRIGGER + response_data['choices'][0]['text'].strip()
+        if thinking:
+            # Remove extended reasoning trigger from context
+            context[-1] = context[-1].removesuffix(THINK_TRIGGER)
+
+            # Prepend extended reasoning trigger to response
+            response = THINK_TRIGGER + response
 
         return response
 
@@ -210,7 +229,7 @@ def remove_reasoning(response: str) -> str:
     return response.strip()
 
 
-def send_prompt(primeDirectives: str, prompt: str, context: list[str], hide_reasoning: bool = False) -> str:
+def send_prompt(primeDirectives: str, prompt: str, context: list[str], hide_reasoning: bool = False, thinking: bool = True) -> str:
     # Sanitize input
     primeDirectives = primeDirectives.strip()
     prompt = prompt.strip()
@@ -231,13 +250,13 @@ def send_prompt(primeDirectives: str, prompt: str, context: list[str], hide_reas
     context.append(command)
 
     # Process the updated context
-    full_response = get_completion_from_messages(context)
+    full_response = get_completion_from_messages(context, thinking)
 
     # Remove extended reasoning from response
     response = remove_reasoning(full_response)
 
-    # Add response to context
-    context.append(response + EOS)
+    # Add full response to context
+    context.append(full_response + EOS)
 
     # Return the full response if required
     if DISPLAY_EXTENDED_REASONING and not hide_reasoning:
@@ -307,7 +326,7 @@ def summarize(topic: str, text: str) -> str:
 
     text = DATA_ONLY_START_TAG + text + DATA_ONLY_END_TAG
 
-    summary = send_prompt(SUMMARIZE_SYSTEM_PROMPT, text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True)
+    summary = send_prompt(SUMMARIZE_SYSTEM_PROMPT, text + SUMMARIZE_TEXT + topic, context, thinking = False, hide_reasoning = True)
 
     return summary
 
@@ -347,7 +366,7 @@ def binary_question(primeDirectives: str, question: str, context: list[str]) -> 
     last_line = last_line.upper().replace(".", "").replace("'", "").replace("\"", "").strip()
 
     # Check answer
-    if "YES" in last_line:
+    if last_line == "YES":
         return True
     else:
         return False
@@ -433,7 +452,7 @@ def load_model(startup: bool = True) -> None:
             config_info = (
                 f"Model    : {modelName}\n"
                 f"Context  : {CONTEXT_SIZE:,} tokens\n"
-                f"Temp     : {TEMPERATURE}\n"
+                f"Temp     : {TEMPERATURE_THINKING}\n"
                 f"Heartbeat: {heartbeat_display}\n"
                 f"Reasoning: {reasoning_status}\n"
                 f"Log      : {log_status}"
@@ -480,7 +499,7 @@ def load_config() -> None:
 
 
 def configure_model() -> None:
-    global TEMPERATURE
+    global TEMPERATURE_THINKING
     global CONTEXT_SIZE
     global MAX_INPUT_TOKENS
     global HEARTBEAT_SECONDS
@@ -488,14 +507,14 @@ def configure_model() -> None:
     global DISPLAY_EXTENDED_REASONING
 
     # Set model temperature
-    temperature = config.get(TEMPERATURE_KEY, '')
+    temperature_thinking = config.get(TEMPERATURE_THINKING_KEY, '')
 
-    if not temperature:
+    if not temperature_thinking:
         print_system_text(CONFIG_ERROR + TEMPERATURE_NOT_FOUND_TEXT)
         exit()
 
     try:
-        TEMPERATURE = float(temperature)
+        TEMPERATURE_THINKING = float(temperature_thinking)
 
     except ValueError:
         print_system_text(CONFIG_ERROR + TEMPERATURE_INVALID_TEXT)

@@ -213,7 +213,7 @@ CODE_RUNNER_COT_TEXT = """Follow all CORE CONSTRAINTS from the system prompt.
 
 Before writing the code, reason step-by-step:
 
-1. **Restate the Mission**: Summarize the task, inputs, expected outputs, and constraints.
+1. **Restate the Mission**: Summarize the task, inputs, expected outputs, and constraints without losing any concrete requirement, value, identifier, condition, dependency, or externally obtained fact needed for correctness.
 
 2. **Complexity Assessment**: Determine if this is simple, moderate, or complex. List the main components needed.
 
@@ -259,7 +259,7 @@ print(f"variable_name: {value}")
 Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write."""
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
 CODE_RUNNER_RUN_PROGRAM_TEXT = "発進！\n"
-CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Fix the program to correctly solve the MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
+CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Continue fixing it based on the previous program, latest results, and recent context.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
 CODE_RUNNER_MISSION_TEXT = "\n\nMISSION: "
 CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = """Analyze the execution results to determine if the MISSION is complete.
 
@@ -429,7 +429,7 @@ def code_runner_action(primeDirectives: str, action: str, context: list[str], is
         if review == 0:
             prompt = CODE_RUNNER_GENERATION_TEXT + action
         else:
-            prompt = CODE_RUNNER_FIX_PROGRAM_TEXT + program + "\n\n" + lint_output + "\n\n" + program_output + CODE_RUNNER_MISSION_TEXT + action
+            prompt = CODE_RUNNER_FIX_PROGRAM_TEXT + program + "\n\n" + lint_output + "\n\n" + program_output
 
         # Generate the code
         response = core.send_prompt(system_prompt, prompt, aux_context, hide_reasoning = True)
