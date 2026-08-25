@@ -29,22 +29,22 @@ CONSTRAINTS:
 - Console-based: The extracted content is returned as plain text summaries.
 
 DO NOT USE this tool if the request explicitly instructs NOT to browse the web, search the internet, or use similar actions (e.g., "don't browse the web", "no internet search", "offline search")."""
-WEB_SEARCH_SYSTEM_PROMPT = "You write a web search query to obtain relevant results."
+WEB_SEARCH_SYSTEM_PROMPT = "You write a web search query to obtain relevant results. Think step by step and reflect on your reasoning."
 WEB_SEARCH_GENERATE_QUERY = """Write a web search query (max 20 words) to obtain relevant results on the following topic.
 
 Examples:
 TOPIC = python errors → "common python programming bugs fixes"
 TOPIC = japanese festivals → "traditional japanese festivals history celebrations"
 
-Reason step-by-step. Reflect about your reasoning. Then, on the final line, output ONLY the query string. Don't write titles, headings or comments.
+Think step by step and reflect on your reasoning. Then, on the final line, output ONLY the query string. Don't write titles, headings or comments.
 
 TOPIC = """
-WEB_SEARCH_TARGET_SYSTEM_PROMPT = "You are a research manager. Your job is to tell a junior researcher exactly what information to look for."
+WEB_SEARCH_TARGET_SYSTEM_PROMPT = "You are a research manager. Your job is to tell a junior researcher exactly what information to look for. Think step by step and reflect on your reasoning."
 WEB_SEARCH_GENERATE_TARGET = """Analyze the USER_REQUEST.
 Define a clear, concise "Extraction Goal" for the summarizer.
 This goal must specify exactly what facts, numbers, or details to extract from the web pages.
 
-Reason step-by-step. Reflect about your reasoning. Then, on the final line, output ONLY the extraction goal string. Don't write titles, headings or comments.
+Think step by step and reflect on your reasoning. Then, on the final line, output ONLY the extraction goal string. Don't write titles, headings or comments.
 
 USER_REQUEST = """
 WEB_SEARCH_REVIEW_1 = """Does the following WEB_SUMMARY provide relevant information for the REQUESTED_GOAL? Reason step-by-step:
@@ -52,7 +52,7 @@ WEB_SEARCH_REVIEW_1 = """Does the following WEB_SUMMARY provide relevant informa
 2. Check if summary matches them.
 3. Decide if it's sufficient.
 
-Reflect about your reasoning: Ensure it is based strictly on relevance and sufficiency. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text.
+Reflect on your reasoning: Ensure it is based strictly on relevance and sufficiency. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text.
 
 REQUESTED_GOAL = """
 WEB_SEARCH_REVIEW_2 = "\n\nWEB_SUMMARY = "
@@ -84,29 +84,39 @@ IMAGE_GENERATION_NEGATIVE_PROMPT_KEY = "IMAGE_GENERATION_NEGATIVE_PROMPT"
 IMAGE_GENERATION_WIDTH_KEY = "IMAGE_GENERATION_WIDTH"
 IMAGE_GENERATION_HEIGHT_KEY = "IMAGE_GENERATION_HEIGHT"
 IMAGE_GENERATION_TOOL_NAME = "generate_image"
-IMAGE_GENERATION_SYSTEM_PROMPT = "You are an expert prompt engineer for image generation. Craft clear, visual descriptions that strictly follow the provided instructions for optimal results."
+IMAGE_DESCRIPTION_SYSTEM_PROMPT = """You are an expert visual scene interpreter. Transform the current image request into one clear natural-language description of a single static image.
+
+Treat the provided request as the only image to describe. Use conversation context only to resolve explicit or clearly implied references in the current request; otherwise ignore it. Never carry over visual details merely because they appear in conversation context.
+
+Never continue a task list, plan another task, describe a previous or next image, mention tool use or task execution, include meta commentary, or repeat the scene description.
+
+Think step by step and reflect on your reasoning."""
+IMAGE_GENERATION_SYSTEM_PROMPT = "You are an expert prompt engineer for image generation. Craft clear, visual descriptions that strictly follow the provided instructions for optimal results. Think step by step and reflect on your reasoning."
 IMAGE_GENERATION_TOOL_DESCRIPTION = """Generate a static image based on a textual description. Use this tool only if the task:
 
 - Involves describing visual content that benefits from image generation, such as illustrations, representations of scenes/objects, or visualizing elements like characters, landscapes, or nature scenes in a story (e.g., settings or key moments), OR
 - Explicitly instructs to 'generate an image', 'create a picture', or similar actions.
 
 DO NOT USE this tool for non-visual descriptions or tasks that do not involve visuals, or if the request explicitly instructs NOT to generate images (e.g., "no images", "don't generate an image")."""
-GENERATE_IMAGE_TEXT = """Analyze TEXT and determine its nature:
+GENERATE_IMAGE_TEXT = """GLOBAL CONSTRAINT:
+Do not include blur or optical softness effects of any kind. The sole exception is motion blur: preserve it only when explicitly specified in TEXT; otherwise, do not add it. Omit all other blur, soft-focus, out-of-focus, shallow depth of field, or bokeh effects even if TEXT specifies them.
+
+Analyze TEXT and determine its nature:
 
 If TEXT already contains visual descriptions (subjects, objects, scenes, physical attributes, colors, materials, compositions, etc.):
-- PRESERVE all specified details exactly as given
+- PRESERVE all specified details exactly as given, except where the global constraint above requires omission
 - You may ADD complementary visual details that enhance the scene
-- NEVER contradict, oppose, or modify any user-specified attributes
+- NEVER contradict, oppose, or modify any other TEXT-specified attributes
 
 If TEXT is conceptual, abstract, or non-visual (ideas, emotions, stories without visual details):
 - Think about what static image best represents it
 - Create a clear visual description from scratch
 
-Generate an image description (max 200 words). Focus on key visible elements, styles, and scenes. Output ONLY the image description. TEXT: """
+Generate an image description (max 80 words). Prioritize TEXT-specified details over added details. Focus on key visible elements, styles, and scenes. Output ONLY the image description. TEXT: """
 GENERATE_IMAGE_PROMPT_TEXT = """First, think about what static image best represents TEXT. Then think about the best single composition for that image. Use standard terms like the following examples:
 - extreme close-up (isolates a single, small detail)
 - close-up (a person's head and shoulders)
-- medium shot (a person from the hips to head)
+- medium shot (a person from the waist to head)
 - medium long shot (a person from the knees to head)
 - full shot (a person or object fully visible in its setting)
 - wide shot (the subject is small in a large environment)
@@ -120,13 +130,17 @@ When using medium long shot for people or humanoids, include "knees up" to maint
 
 If none of these are the best fit, you can use other standard compositional terms. The final prompt should be a clear, physical description of the scene, including any physical descriptions of people (body type, physique, facial features, proportions).
 
-IMPORTANT: The chosen composition must show all described details. If the TEXT describes elements that would be cut off by the requested framing (e.g., thigh-high stockings in a "waist up" shot, bare feet in a "knees up" shot, floor-length dress in a "head and shoulders" shot), use a wider composition that can include those details.
+IMPORTANT: The chosen composition must show all important details retained in the final prompt. If the TEXT describes elements that would be cut off by the requested framing (e.g., thigh-high stockings in a "waist up" shot, bare feet in a "knees up" shot, floor-length dress in a "head and shoulders" shot), use a wider composition that can include those details.
 
 If the TEXT includes a specific artistic style (like "in the style of H.R. Giger" or "gritty"), you should include it.
 
 Crucially, if the TEXT describes a specific, physical light source that is part of the scene (like a 'candle', 'fireplace', 'neon sign', or 'flashlight'), you SHOULD include it.
 
 Remove general lighting style terms like 'dramatic lighting', 'cinematic lighting', or 'moody lighting'. Keep specific details about light sources.
+
+Remove general rendering or medium terms like 'photorealistic', 'anime', or '3D render'.
+
+Do not introduce or preserve blur or optical softness effects of any kind. The sole exception is motion blur, which may be preserved only if it is already explicitly present in TEXT; otherwise, do not add it.
 
 Here are examples of how to correctly format the final prompt:
 ---
@@ -162,9 +176,46 @@ EXAMPLE 8 (Adjusting composition to show described details)
 TEXT = a headshot of a woman in an elegant floor-length gown
 CORRECT PROMPT = full shot: woman wearing elegant floor-length gown.
 ---
-Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements, the requested style, and any physical light sources.
 
-Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write exactly one highly condensed sentence. Use telegraphic phrasing: bind attributes, details, and clothing to the subject using words like "with" or "wearing", but use commas to separate the main subject from the background and lighting. Drop unnecessary filler words (like "a", "an", "the") to strictly limit your response to 30 words or fewer. Don't write the number of words.\n\nTEXT = """
+Finally, using these examples as a guide, write an image generation prompt describing ONLY the visible elements, the requested artistic style, and any physical light sources.
+
+Order details by visual importance. Start with the composition and primary subject, followed by the subject's defining physical attributes, clothing, and action. Place environment, requested artistic style permitted by the rules above, and physical light sources afterward unless they are central to the image. Put the least important details last.
+
+Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write exactly one concise sentence. Use telegraphic phrasing: bind attributes, details, and clothing to the subject using words like "with" or "wearing", but use commas to separate the main subject from the background and lighting. Drop unnecessary filler words (like "a", "an", "the"). Do not exceed 27 words. This is a HARD OUTPUT LIMIT and takes priority over completeness. Preserve as many important specific visual details from TEXT as possible within that limit. Order details by visual importance, placing the most important concepts earliest. If necessary, omit the least important details first rather than exceed 27 words. Don't write the number of words.
+
+The process below is a verification and finalization procedure only. It does not replace, weaken, or override any instruction above. Every rule above remains mandatory during the Draft, Review, and Finalize steps.
+
+Before finalizing, follow this process inside your <think>...</think> block:
+
+1. Draft:
+   * First create a complete draft of the image-generation prompt.
+   * Apply all composition, visibility, style, lighting, ordering, telegraphic-phrasing, and 27-word rules above.
+
+2. Review the draft carefully against TEXT:
+   * Source-detail check: verify that every retained subject, physical attribute, clothing item, object, action, environment detail, requested artistic style permitted by the rules above, and physical light source accurately represents TEXT. Do not accidentally change, invert, replace, or invent details.
+   * Source-word check: for distinctive words or terms taken from TEXT, preserve their spelling exactly unless an earlier rule explicitly requires omitting or transforming them. Never "correct", expand, complete, or substitute a proper noun, named entity, unusual term, identifier, or quoted wording merely because another spelling seems more familiar.
+   * Generated-word check: inspect every newly generated word and phrase for obvious accidental misspellings, malformed words, truncated words, accidental word concatenations, duplicated fragments, or incomplete phrases. Correct those errors before finalizing.
+   * Contradiction check: ensure no generated detail contradicts anything explicitly specified in TEXT.
+   * Composition check: ensure the chosen framing can visibly include all important details retained in the prompt.
+   * Constraint check: ensure prohibited blur or optical-softness terms, unwanted general lighting terms, rendering-medium terms, camera settings, metaphors, poetic language, and unnecessary filler have not slipped into the draft.
+   * Completeness check: ensure every retained word and phrase is complete and the prompt does not end abruptly.
+
+3. Finalize:
+   * Finalize the reviewed draft as exactly one concise telegraphic sentence, making only changes required by the rules above.
+   * Order details by visual importance according to the rules above.
+   * Count the words and ensure the final prompt does not exceed 27 words.
+   * If it exceeds 27 words, remove the least important complete detail first and count again. Never truncate a word or phrase to satisfy the limit.
+   * Perform one final read for complete words, complete phrases, clear telegraphic coherence, fidelity to TEXT, and compliance with every rule above.
+   * If any problem remains, correct it before outputting the final prompt.
+
+Only after completing all three steps output the final image-generation prompt.
+
+OUTPUT CONTRACT — read carefully:
+- All reasoning, drafts, reviews, checks, corrections, and word counting must stay inside the <think>...</think> block.
+- After the closing </think> tag, output ONLY the final image-generation prompt.
+- Nothing else after </think>. No explanations, reasoning, drafts, review notes, word counts, quotes, headings, or comments.
+
+TEXT = """
 IMAGE_GENERATION_TAG = "\n[IMAGE] "
 IMAGE_GENERATION_OK_TEXT_1 = "\n---\n" + IMAGE_GENERATION_TOOL_NAME + ": image generated successfully.\n\nImage description: "
 IMAGE_GENERATION_OK_TEXT_2 = "\n\nImage generation prompt: "
@@ -197,7 +248,7 @@ DO NOT USE this tool for:
 - Situational reasoning where the answer depends on interpreting a story or set of rules.
 - Any task that a person could solve with a simple pen-and-paper calculation in under a minute.
 - Requests where the user explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming")."""
-CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution.
+CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution. Think step by step and reflect on your reasoning.
 
 CORE CONSTRAINTS:
 - Single-pass execution: no while True, no infinite loops, no polling
@@ -208,7 +259,7 @@ CORE CONSTRAINTS:
 - Only straight ASCII quotes (`"` or `'`). Never curly/smart quotes.
 - If third-party packages are needed, put exactly one line at the very top: `# pip install package1 package2`. Otherwise, no pip install line at all.
 - You may read and write files in the current working directory ONLY when needed.
-- Write purely executable code: NO comments and NO docstrings (except the single `# pip install` line at the top if required). Keep type hints to ensure logical correctness."""
+- Write purely executable code: NO comments and NO docstrings (except the single `# pip install` line at the top if required). Use type hints where they improve clarity."""
 CODE_RUNNER_COT_TEXT = """Follow all CORE CONSTRAINTS from the system prompt.
 
 Before writing the code, reason step-by-step:
@@ -250,11 +301,13 @@ print("\\n=== INTERNAL STATE ===")
 print(f"variable_name: {value}")
 ```
 
-8. **Final Verification**: Confirm your plan satisfies every CORE CONSTRAINT from the system prompt. Specifically verify that:
+8. **Final Verification**: Before outputting the code, verify that:
    - Tests run first and produce the required `=== UNIT TESTS ===` section with a clear pass/fail status.
    - The `=== MISSION EXECUTION ===` section is present.
    - The `=== INTERNAL STATE ===` section appears last in the exact format shown.
-   If anything would violate a constraint, revise before writing code.
+   - The final code contains no unused imports, unused variables, or undefined names.
+   - Every CORE CONSTRAINT from the system prompt is satisfied.
+   If any issue is found, correct it before outputting the code.
 
 Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write."""
 CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
@@ -365,9 +418,14 @@ def generate_image(primeDirectives: str, action: str, context: list[str]) -> str
     extended_action = action
     image: Image.Image = None
 
+    # Preserve the last conversation turn without assistant reasoning
+    aux_context = context[:1]
+
+    if len(context) >= 3:
+        aux_context += [context[-2], core.remove_reasoning(context[-1])]
+
     # Generate visual description
-    aux_context = context[:]
-    image_description = core.send_prompt(primeDirectives, GENERATE_IMAGE_TEXT + extended_action, aux_context, hide_reasoning = True)
+    image_description = core.send_prompt(IMAGE_DESCRIPTION_SYSTEM_PROMPT, GENERATE_IMAGE_TEXT + extended_action, aux_context, hide_reasoning = True)
 
     # Generate image generation prompt
     image_generation_prompt = core.send_prompt(IMAGE_GENERATION_SYSTEM_PROMPT, GENERATE_IMAGE_PROMPT_TEXT + image_description, [], hide_reasoning = True)
@@ -403,7 +461,7 @@ def generate_image(primeDirectives: str, action: str, context: list[str]) -> str
 
     # Send image to Telegram
     if comms.telegram_bot_enabled and image:
-        comms.send_image_telegram_bot(image)
+        comms.send_image_telegram_bot(path)
 
     return extended_action
 

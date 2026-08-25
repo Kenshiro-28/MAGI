@@ -5,7 +5,7 @@ from plugins.codex import codex_operations
 from plugins.codex.codex_operations import CODEX_LIST_ALL
 from plugins.codex.codex_operations import CODEX_NO_RESULT
 
-CODEX_SYSTEM_PROMPT = "You are a precise data extraction assistant that manages the Codex, a long-term memory tool. Extract structured information exactly as instructed, with no additions or commentary."
+CODEX_SYSTEM_PROMPT = "You are a precise data extraction assistant that manages the Codex, a long-term memory tool. Extract structured information exactly as instructed, with no additions or commentary. Think step by step and reflect on your reasoning."
 USER_PROFILE_TEXT = "User profile"
 CODEX_EXTRACT_QUERY_PROMPT = f"""Extract the search intent from ACTION.
 
@@ -41,7 +41,7 @@ STRICT RULES (apply in this exact order):
 1. "title": short specific title for the knowledge entry; for personal facts about the user use the stable title "{USER_PROFILE_TEXT}"
 2. "content":
    - VERBATIM ENTITIES — the ACTION is the ONLY source of truth for the exact characters of every proper noun and named thing (people, places, organizations, brands, products, and the titles of games, films, books, songs, shows, etc.) and of every number, date, version, code, identifier, acronym, URL, file path, command, and quoted string. Transcribe each of these character-for-character from the ACTION. You MAY rephrase the surrounding sentence, but you MUST NOT alter the entity itself in any way: do not expand, complete, abbreviate, translate, re-spell, reorder, or "correct" it, and do not change its capitalization or spacing — not even if your own knowledge suggests a longer, more familiar, more "complete", or more "correct-looking" form. Your familiarity with how a name is usually written must NEVER override the characters in the ACTION. An entity that does not appear in the ACTION exactly as you wrote it has been altered or invented; that is a corruption, not an improvement.
-   - Never glue words together or remove spaces between words.
+   - Never join separate words by removing the single space between them.
    - If the ACTION contains a full Python script that executed successfully, store the ENTIRE script as-is without any summarization or extraction.
    - For any other knowledge, store the most reusable, self-contained portion of the knowledge.
    - If the full content exceeds 32000 characters, keep the most important and reusable parts (imports, key functions/classes, main logic, critical information) while preserving structure and readability.
@@ -64,8 +64,7 @@ When creating the JSON, follow this process inside your <think>...</think> block
 1. First, create a draft of the "content" field based on the ACTION.
 2. Review the draft carefully for accuracy:
    - Entity check: list every proper noun, named title, number, date, version, code, identifier, acronym, URL, file path, command, and quoted string in your draft. For EACH one, find the same characters in the ACTION and confirm they match exactly. If any of them does not appear in the ACTION verbatim, you changed or invented it — restore the ACTION's exact characters. Names, titles, and identifiers are never "corrected", expanded, or completed, regardless of how they look.
-   - Do not change numbers, dates, names, spellings, or specific terms.
-   - Check for glued words or missing spaces and preserve original wording exactly.
+   - Source-text check: preserve the spelling of every word or term taken from the ACTION exactly. In ordinary prose, normalize only obvious accidental repeated spaces between words to a single space. Preserve spacing exactly inside verbatim entities, quoted strings, code, identifiers, URLs, file paths, commands, and other exact technical syntax. In newly generated prose, also correct only obvious accidental misspellings, malformed words, or word concatenations; do not otherwise rewrite it.
    - Preserve the original meaning and wording as faithfully as possible.
    - Only apply changes if they are clearly needed.
 3. After the content review, do a quick structure check:
@@ -89,6 +88,8 @@ Your ONLY task is to decide which EXISTING lines are made obsolete by the NEW in
   - clearly SUPERSEDES it (states an updated value for the very same fact), or
   - is an EXACT or near-exact DUPLICATE of it, or
   - clearly CONTRADICTS or RETRACTS it (states that something previously recorded is no longer true or is now the opposite). This is universal, not limited to any topic: a reversed preference (liked -> no longer likes / now dislikes), a status that ended (lives somewhere -> moved away; owns something -> sold it; uses a tool -> stopped using it), a capability or fact that no longer holds (an endpoint that worked -> now removed; a value that was true -> now false). When the NEW information clearly cancels an existing line, drop that existing line; the new statement is kept automatically, so the entry ends up stating only the current truth.
+
+If NEW information is a complete replacement artifact, such as a full Python script, and the EXISTING lines are an older version of that same artifact, treat ALL EXISTING lines as obsolete. The complete NEW artifact must replace the old artifact cleanly; never combine fragments of an older executable artifact with the new complete version.
 
 You must NEVER rewrite, rephrase, summarize, translate, correct, or reproduce any text — not the existing lines and not the new information. You output only index numbers. Python rebuilds the entry from the original text, so every character, number, name and spelling is preserved exactly.
 
@@ -128,15 +129,30 @@ WORKED EXAMPLES (illustration only — unrelated to the lines above):
   Keep everything — if the NEW information only adds brand-new facts that
   conflict with nothing, drop nothing:
   {"drop": []}"""
-CODEX_EXTRACT_TITLE_PROMPT = """Extract the entry title to delete from ACTION.
-Do not include dates, tags, or any other metadata.
+CODEX_EXTRACT_TITLE_PROMPT_1 = """Choose the exact title of ONE existing Codex entry that should be deleted.
+
+Use the CURRENT ACTION to understand what happened in this turn, and compare it against the EXISTING CODEX ENTRIES.
+
+Choose the clearest deletion candidate using these rules:
+1. If the user explicitly asked to delete a specific existing entry, choose that entry.
+2. If an existing entry is clearly wrong, superseded, factually disproven, deprecated, removed, or permanently replaced, choose that entry.
+3. If existing entries are redundant, choose the older or less complete entry. Treat entries as redundant when they solve essentially the same reusable task using substantially the same approach, even if wording, variable names, formatting, output fields, helper functions, or minor implementation details differ. Preserve a materially useful alternative that would justify retrieving it separately, such as a different core technique, substantially different dependency model, important constraint, or significant additional capability or edge-case handling. Incidental differences do not justify keeping a duplicate.
+4. If multiple entries qualify, choose the single clearest deletion candidate.
+
+The title MUST exactly match the value inside the title attribute of ONE entry shown in EXISTING CODEX ENTRIES.
+Copy ONLY the title value itself.
+Do NOT include `title=`, quotation marks, XML/HTML markup, dates, tags, or any other metadata.
+Never invent, rewrite, abbreviate, summarize, translate, or correct a title.
+
+=== CURRENT ACTION ==="""
+CODEX_EXTRACT_TITLE_PROMPT_2 = "\n\n=== EXISTING CODEX ENTRIES ===\n"
+CODEX_EXTRACT_TITLE_PROMPT_3 = """
 
 OUTPUT CONTRACT — read carefully:
 - All reasoning goes inside the <think>...</think> block.
-- After the closing </think> tag, output ONLY the exact title string.
-- Nothing else after </think>. No quotes, no commentary.
-
-ACTION = """
+- After the closing </think> tag, output ONLY the exact title value of one existing Codex entry.
+- Do NOT include `title=`, quotation marks, XML/HTML markup, or add any characters before or after the exact title value.
+- Nothing else after </think>."""
 CODEX_READ_TAG = "\n[CODEX] Read\n\nQuery: "
 CODEX_WRITE_TAG = "\n[CODEX] Write\n\nTitle: "
 CODEX_DELETE_TAG = "\n[CODEX] Delete\n\nTitle: "
@@ -150,6 +166,47 @@ CODEX_TAGS_TEXT = "\n\nTags: "
 CODEX_WRITE_EXTRACT_ERROR = "\n[CODEX] Write\n\nERROR: Could not extract title or content."
 CODEX_WRITE_ERROR = "\n---\n" + CODEX_TOOL_TEXT + ": memory write operation failed:\n\nReason: Could not extract title or content from the action."
 CODEX_DELETE_TEXT = "\n---\n" + CODEX_TOOL_TEXT + ": you have performed a memory delete operation:\n\nTitle: "
+CODEX_TRIM_MARKER = "[CODEX: some older lines were permanently deleted to save space]"
+# Cap on stored tags per entry. Tags are embedding signal, not an exact filter, so a
+# small sharp set retrieves better than a long diluted one; this also bounds tag growth
+# across repeated merges on a hot entry.
+CODEX_MAX_TAGS = 10
+
+
+def _extract_codex_entries(action: str) -> tuple[str, str]:
+    """Return (action_without_codex, codex_read_block)."""
+
+    codex_start = action.rfind(CODEX_READ_TEXT)
+
+    if codex_start == -1:
+        return action, ""
+
+    entry_start = action.find("<entry", codex_start)
+
+    if entry_start == -1:
+        return action, ""
+
+    # Codex entries are consecutive <entry>...</entry> blocks.
+    position = entry_start
+    codex_end = entry_start
+
+    while action.startswith("<entry", position):
+        entry_end = action.find("</entry>", position)
+
+        if entry_end == -1:
+            return action, ""
+
+        codex_end = entry_end + len("</entry>")
+        position = codex_end
+
+        # Skip whitespace separating consecutive Codex entries.
+        while position < len(action) and action[position].isspace():
+            position += 1
+
+    codex_block = action[codex_start:codex_end]
+    clean_action = action[:codex_start] + action[codex_end:]
+
+    return clean_action, codex_block
 
 
 def _parse_json_response(response: str) -> dict:
@@ -236,12 +293,7 @@ def _parse_drop_decision(response: str, num_lines: int) -> set:
         return set()
 
 
-CODEX_TRIM_MARKER = "[CODEX: some older lines were permanently deleted to save space]"
 
-# Cap on stored tags per entry. Tags are embedding signal, not an exact filter, so a
-# small sharp set retrieves better than a long diluted one; this also bounds tag growth
-# across repeated merges on a hot entry.
-CODEX_MAX_TAGS = 10
 
 
 def _assemble(survivor_lines: list, new_content: str) -> str:
@@ -459,8 +511,21 @@ def write_codex(action: str) -> str:
 
 
 def delete_codex(action: str) -> str:
+    clean_action, codex_entries = _extract_codex_entries(action)
+
+    if not codex_entries:
+        return ""
+
+    prompt = (
+        CODEX_EXTRACT_TITLE_PROMPT_1
+        + clean_action
+        + CODEX_EXTRACT_TITLE_PROMPT_2
+        + codex_entries
+        + CODEX_EXTRACT_TITLE_PROMPT_3
+    )
+
     # Extract entry title from the action
-    response = core.send_prompt(CODEX_SYSTEM_PROMPT, CODEX_EXTRACT_TITLE_PROMPT + action, [], hide_reasoning = True)
+    response = core.send_prompt(CODEX_SYSTEM_PROMPT, prompt, [], hide_reasoning = True)
 
     # Get the last line
     lines = response.split('\n')
@@ -476,6 +541,7 @@ def delete_codex(action: str) -> str:
     if title.lower() == USER_PROFILE_TEXT.lower():
         return ""
 
+    # Delete Codex entry
     result = codex_operations.delete_codex(title)
 
     delete_data = title + CODEX_RESULT_TEXT + result

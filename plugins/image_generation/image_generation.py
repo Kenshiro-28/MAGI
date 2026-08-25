@@ -1,5 +1,6 @@
 from __future__ import annotations
 import gc
+import re
 import torch
 from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
 from diffusers.utils import logging
@@ -9,23 +10,18 @@ from typing import Any, Optional
 
 IMAGE_GENERATION_ERROR = "\n[ERROR] An exception occurred while trying to generate an image: "
 
-INFERENCE_STEPS = 40
-RECOMMENDED_VRAM = 24 * (1024 ** 3) 
+INFERENCE_STEPS = 50
+RECOMMENDED_VRAM = 16 * (1024 ** 3)
 GUIDANCE_SCALE = 5.0
 ALGORITHM_TYPE = "dpmsolver++"  # DPM++ 2M Karras
 LORA_SCALE = 0.8
 
 
-def _get_repo_files(repo_id: str):
-    try:
-        return list_repo_files(repo_id)
-
-    except Exception:
-        return []
-
-
 def _validate_dimensions(width: int, height: int):
     """SDXL requires multiples of 8. Auto-adjust + warn if changed."""
+    if width < 8 or height < 8:
+        raise ValueError("SDXL image dimensions must be at least 8x8 pixels")
+
     orig_w, orig_h = width, height
     width = (width // 8) * 8
     height = (height // 8) * 8
@@ -36,51 +32,75 @@ def _validate_dimensions(width: int, height: int):
     return width, height
 
 
-def _is_safetensors_file(files: list) -> bool:
-    """Auto-detect single-file checkpoints vs full Diffusers format"""
-    try:
-        has_safetensors = any(f.endswith('.safetensors') and '/' not in f for f in files)
-        return has_safetensors
+def _is_safetensors_file(files: list[str]) -> bool:
+    """Detect a root-level single-file safetensors checkpoint."""
+    return any(
+        f.endswith(".safetensors") and "/" not in f
+        for f in files
+    )
 
-    except Exception:
-        return False
+
+def _select_safetensors_file(files: list[str]) -> str:
+    root_files = [
+        f for f in files
+        if f.endswith(".safetensors") and "/" not in f
+    ]
+
+    if not root_files:
+        raise ValueError("No root .safetensors checkpoint found")
+
+    # A repository with one checkpoint is unambiguous.
+    if len(root_files) == 1:
+        return root_files[0]
+
+    matches = [
+        f for f in root_files
+        if "fp16" in f.lower()
+    ]
+
+    if len(matches) == 1:
+        return matches[0]
+
+    raise ValueError(
+        "Could not uniquely select an fp16 checkpoint. "
+        f"Available checkpoints: {root_files}"
+    )
 
 
 def _load_pipeline(model: str, torch_dtype: torch.dtype):
     print(f"Loading base pipeline: {model}")
-    files = _get_repo_files(model)
+    files = list_repo_files(model)
 
-    if _is_safetensors_file(files):
-        print(" → Detected single-file checkpoint")
-        safetensors_file = next((f for f in files if f.endswith('.safetensors') and '/' not in f), None)
-        if not safetensors_file:
-            raise ValueError(f"No root .safetensors file found in {model}")
-
-        # Robust download (avoids URL parsing bugs)
-        local_path = hf_hub_download(
-            repo_id=model,
-            filename=safetensors_file,
-            token=True
-        )
-        pipe = StableDiffusionXLPipeline.from_single_file(
-            local_path,
-            torch_dtype=torch_dtype,
-            use_safetensors=True,
-            safety_checker=None,
-            feature_extractor=None,
-            requires_safety_checker=False
-        )
-        pipe.safety_checker = None
-        pipe.feature_extractor = None
-    else:
+    if "model_index.json" in files:
         print(" → Detected standard Diffusers format")
         pipe = StableDiffusionXLPipeline.from_pretrained(
             model,
-            torch_dtype=torch_dtype,
+            variant="fp16",
+            dtype=torch_dtype,
             use_safetensors=True,
-            variant=None,
-            load_safety_checker=False,
-            token=True
+            add_watermarker=False
+        )
+
+    elif _is_safetensors_file(files):
+        print(" → Detected single-file checkpoint")
+
+        safetensors_file = _select_safetensors_file(files)
+
+        local_path = hf_hub_download(
+            repo_id=model,
+            filename=safetensors_file
+        )
+
+        pipe = StableDiffusionXLPipeline.from_single_file(
+            local_path,
+            dtype=torch_dtype,
+            use_safetensors=True,
+            add_watermarker=False
+        )
+
+    else:
+        raise ValueError(
+            f"Could not detect a supported SDXL model format in {model}"
         )
 
     return pipe
@@ -90,10 +110,6 @@ def _load_cpu_pipeline(model: str):
     print(f"Loading {model} (SDXL) in High-Quality CPU Mode (Float32)...")
     pipe = _load_pipeline(model, torch.float32)
     pipe.to("cpu")
-    pipe.to(dtype=torch.float32)
-    pipe.vae.enable_tiling()
-    pipe.vae.enable_slicing()
-    pipe.enable_attention_slicing()
 
     return pipe
 
@@ -108,8 +124,6 @@ def _load_gpu_pipeline(model: str, lora: Optional[str] = None):
             pipe.to("cuda")
         else:
             pipe.enable_model_cpu_offload()
-            pipe.vae.enable_tiling()
-            pipe.vae.enable_slicing()
     else:
         pipe = _load_cpu_pipeline(model)
 
@@ -159,6 +173,15 @@ def generate_image(
         if image_specs:
             prompt = prompt.removesuffix('.') + ", " + image_specs
 
+        # Remove repeated commas
+        prompt = re.sub(r"\s*,(?:\s*,)+\s*", ", ", prompt)
+
+        # Remove a trailing comma at the very end
+        prompt = re.sub(r",\s*$", "", prompt)
+
+        # Collapse runs of multiple spaces
+        prompt = re.sub(r" {2,}", " ", prompt)
+
         # Print positive and negative prompts
         print("\n" + "=" * 50)
         print("[POSITIVE PROMPT]")
@@ -190,7 +213,8 @@ def generate_image(
         if pipe is not None:
             del pipe
 
+        gc.collect()
+
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        gc.collect()

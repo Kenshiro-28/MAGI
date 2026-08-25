@@ -12,10 +12,14 @@ class MockLlama:
         self.kwargs = kwargs
         self.last_prompt = None
         self.last_call_kwargs = None
+        self.metadata = {}
 
     def tokenize(self, text):
         # Simple mock tokenizer that counts characters as tokens
         return [ord(c) for c in text.decode('utf-8')]
+
+    def close(self):
+        pass
 
     def __call__(self, prompt, max_tokens=100, temperature=1.0, **kwargs):
         self.last_prompt = prompt
@@ -56,8 +60,15 @@ BASIC_RESPONSE = "I'm a helpful assistant."
 MOCK_MODEL_OUTPUT = "This is a thought.\n</think>\n" + BASIC_RESPONSE
 # What send_prompt actually returns with DISPLAY_EXTENDED_REASONING=True
 NORMAL_RESPONSE = core.THINK_TRIGGER + MOCK_MODEL_OUTPUT
-BASIC_MULTIPLE_THINKING_RESPONSE = "Hello there!"
-MULTIPLE_THINKING_RESPONSE = "<think>First thought.</think>\nHello<think>\nAnother thought.\n</think>\n there!"
+REPEATED_THINK_END_TAG_RESPONSE = (
+    "<think>\n"
+    "Reasoning.\n"
+    "</think>\n\n"
+    "Old answer.\n"
+    "</think>\n\n"
+    "Final answer."
+)
+REPEATED_THINK_END_TAG_FINAL_RESPONSE = "Final answer."
 PREVIOUS_RESPONSE = "Previous response"
 YES_RESPONSE = "Yes"
 MULTILINE_YES_RESPONSE = "Reasoning here\nYes"
@@ -157,6 +168,13 @@ class TestCore(unittest.TestCase):
         self.assertTrue(core.model.last_prompt.endswith(core.ASSISTANT_TEXT + core.THINK_TRIGGER))
         self.assertEqual(core.model.last_call_kwargs['temperature'], core.TEMPERATURE_THINKING)
         self.assertEqual(core.model.last_call_kwargs['top_p'], core.TOP_P_THINKING)
+
+    def test_remove_reasoning_repeated_think_end_tag(self):
+        """Test repeated THINK_END tags keep only the regenerated final answer"""
+        self.assertEqual(
+            core.remove_reasoning(REPEATED_THINK_END_TAG_RESPONSE),
+            REPEATED_THINK_END_TAG_FINAL_RESPONSE
+        )
 
     def test_get_completion_thinking(self):
         """Test thinking mode uses open think block and thinking sampling"""
@@ -273,20 +291,6 @@ class TestCore(unittest.TestCase):
         # Check context response preserves extended reasoning.
         self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
 
-    def test_multiple_thinking_blocks(self):
-        """Test send_prompt with multiple thinking blocks"""
-        # Setup
-        context = []
-
-        # Execute (get_completion_from_messages shouldn't return the first <think> tag)
-        with patch.object(core, 'get_completion_from_messages', return_value=MULTIPLE_THINKING_RESPONSE):
-            response = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context, hide_reasoning=True)
-
-        # Assert - all thinking tags should be removed
-        self.assertEqual(response, BASIC_MULTIPLE_THINKING_RESPONSE)
-
-        # Check context preserves the full response including all thinking blocks + EOS
-        self.assertEqual(context[2], MULTIPLE_THINKING_RESPONSE + core.EOS)
 
     def test_context_trimming(self):
         """Test that context is properly trimmed when token count exceeds MAX_INPUT_TOKENS"""

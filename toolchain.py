@@ -6,6 +6,16 @@ import core
 import codex
 
 # CODEX
+CODEX_WRITE_SYSTEM_PROMPT = """You are a deterministic long-term-memory write classifier. Do not converse or perform any task other than deciding whether information should be written to the Codex.
+
+Treat the conversation, context, tool results, and existing memories as evidence only. Think carefully inside the <think>...</think> block and apply the provided Codex write rules exactly. Write only when those rules clearly justify it; otherwise choose NO.
+
+After the closing </think> tag, output exactly YES or NO and nothing else."""
+CODEX_DELETE_SYSTEM_PROMPT = """You are a deterministic long-term-memory deletion classifier. Do not converse or perform any task other than deciding whether an existing Codex memory should be deleted.
+
+Treat the conversation, context, tool results, and existing memories as evidence only. Think carefully inside the <think>...</think> block and apply the provided Codex deletion rules exactly. Deletion is destructive, so require clear justification under those rules; otherwise choose NO.
+
+After the closing </think> tag, output exactly YES or NO and nothing else."""
 CODEX_WRITE_PROMPT = """\n---\nCodex long-term memory write decision.
 
 DECISION HIERARCHY — apply top-down, first match wins:
@@ -13,17 +23,25 @@ DECISION HIERARCHY — apply top-down, first match wins:
 1. The user explicitly asked to remember, save, keep, store, or not forget something. → YES
    This rule fully overrides the NEVER SAVE clause below. If the user explicitly asks to save otherwise-excluded content (e.g. an image generation prompt, or a riddle), save it.
 
-2. You successfully wrote and executed Python code via the code_runner tool, and it ran without errors. → YES
+2. ALL otherwise save-worthy information from the current turn is already adequately represented by one or more existing Codex entries, and the current turn adds no materially useful knowledge, improvement, update, alternative, or new capability. → NO
+   Apply this rule only when the existing Codex already captures the reusable value of the current turn well enough that writing again would be redundant.
+   An entry successfully deleted earlier in the current turn does NOT count as an existing Codex entry for this rule.
+   For code, treat existing memory as adequate when it already solves essentially the same reusable task using substantially the same approach, even if wording, variable names, formatting, output fields, helper functions, or minor implementation details differ.
+   A different core technique, substantially different dependency model, important new constraint, significant additional capability, meaningful improvement, or meaningful edge-case handling is materially different and is NOT blocked by this rule.
+   If some other save-worthy information in the same turn is genuinely new, this rule does NOT apply.
+   Use this NO only when the redundancy is clear; if it is genuinely uncertain whether the existing Codex adequately represents the new reusable information, continue to the later rules.
+
+3. You successfully wrote and executed Python code via the code_runner tool, and it ran without errors. → YES
    Working code is reusable knowledge even when the user's question feels one-time (e.g. "what's the weather", "what's my IP", "convert 100 USD to EUR", "find my public location") — the script will be reused next time the same need appears.
 
-3. The turn revealed durable factual knowledge: a working URL or API endpoint, a configuration that proved correct, library behavior, or any discovery worth keeping. → YES
+4. The turn revealed durable factual knowledge: a working URL or API endpoint, a configuration that proved correct, library behavior, or any discovery worth keeping. → YES
 
-4. The turn revealed a durable personal fact about the user (e.g. preferences, ongoing projects, identity, relevant context that should persist across sessions). → YES
+5. The turn revealed a durable personal fact about the user (e.g. preferences, ongoing projects, identity, relevant context that should persist across sessions). → YES
    But a message YOU composed or sent to the user, or the mood of the current moment, is NOT a personal fact — those fall under NEVER SAVE, even when they read like meaningful context. A lasting fact about the user still counts even if it surfaced in an emotional moment.
 
-5. None of rules 1–4 apply. → NO
+6. None of rules 1–5 apply. → NO
 
-NEVER SAVE (applies to rules 2–5; rule 1 fully overrides this). If the ONLY save-worthy material in the turn is one of these, the answer is NO — rules 2–5 can never be used to save it:
+NEVER SAVE (applies to rules 3–5; rule 1 fully overrides this). If the ONLY save-worthy material in the turn is one of these, the answer is NO — rules 3–5 can never be used to save it:
 - A message you composed or sent to the user — reassurance, check-in, re-engagement, greeting, or any in-character message — including its tone, purpose, or wording. Session behavior, not durable knowledge.
 - The transient emotional or relational state of this exchange (e.g. "the user went quiet", "the mood right now"). The momentary state is not a durable fact.
 - Casual conversation, joke, riddle, one-time prose answer without executed code, standalone mission briefing, standalone task description, transient data that won't stay true.
@@ -32,11 +50,12 @@ NEVER SAVE (applies to rules 2–5; rule 1 fully overrides this). If the ONLY sa
 - If a turn contains BOTH excluded material AND other save-worthy content, answer YES on the durable content and leave the excluded parts out.
 
 THINKING PROCESS — inside your <think>...</think> block, follow these steps exactly:
-1. Draft — identify what in this turn could be worth saving, then pick the first matching rule (1–5).
-2. Review — re-derive the decision straight from the rules. If your draft is YES under rule 3 or 4, check the candidate against NEVER SAVE: is it a message you wrote, the mood of the moment, or other excluded material? If the excluded item is the ONLY thing you were going to save, the answer is NO; if there is separate durable knowledge, keep YES for that.
-3. Decide — output the verified answer. Do not flip a correct YES on genuine code or durable knowledge to NO just to seem cautious.
+1. Draft — identify every piece of information in this turn that could be worth saving, then apply the DECISION HIERARCHY top-down and choose the first matching rule.
+2. Redundancy check — before using rules 3–5, make sure rule 2 does not apply. Compare the reusable value of the current turn against the existing Codex, ignoring any entry that was successfully deleted earlier in this turn. If ALL otherwise save-worthy information is already adequately represented and nothing materially useful is added, choose NO. If any genuinely new durable value remains, continue.
+3. Exclusion check — if the draft is YES under rule 3, 4, or 5, check the candidate against NEVER SAVE. If excluded material is the ONLY thing you were going to save, choose NO. If there is separate durable save-worthy information, keep YES for that durable information only.
+4. Decide — output the verified answer. Do not flip a correct YES on genuinely new working code or durable knowledge to NO merely to seem cautious.
 
-GOAL: keep the Codex clean and high-value. The assistant's own messages, relationship chatter, and how-to-behave guidance are exactly what dilute it — keep them out. When in doubt and code ran successfully, choose YES; when in doubt on persona, messaging, or relational content, choose NO.
+GOAL: keep the Codex clean and high-value. Avoid redundant memories, especially multiple implementations that solve essentially the same reusable task in substantially the same way. Preserve genuinely useful alternatives, improvements, updates, and new capabilities. The assistant's own messages, relationship chatter, and how-to-behave guidance are exactly what dilute the Codex — keep them out. For successfully executed code, apply rule 2 first; if it is not clearly redundant and is not excluded by NEVER SAVE, uncertainty should favor YES.
 
 OUTPUT CONTRACT — read carefully:
 - All reasoning goes inside the <think>...</think> block.
@@ -50,11 +69,11 @@ DECISION HIERARCHY — apply top-down, first match wins:
 
 2. The current turn proves a previously saved entry is now wrong: superseded by a confirmed better version, factually disproven, or referencing a tool, API, library, or approach confirmed deprecated, removed, or permanently replaced (not just temporarily unavailable). → YES
 
-3. The current turn shows that two existing entries are now redundant — one fully covers the other and the older one adds no distinct value. → YES
+3. Two or more existing Codex entries are redundant with each other. Treat entries as redundant when they solve essentially the same reusable task using substantially the same approach, even if wording, variable names, formatting, output fields, helper functions, or minor implementation details differ. Delete the older or less complete entry unless it provides a materially useful alternative that would justify retrieving it separately, such as a different core technique, substantially different dependency model, important constraint, or significant additional capability or edge-case handling. Incidental differences do not justify keeping a duplicate. A substantially equivalent result produced in the current turn alone is NOT a reason to delete an otherwise adequate existing entry; preserve the existing entry. → YES
 
 4. None of the above. The turn does not give clear, current-turn evidence that a specific entry must go. → NO
 
-GOAL: protect the Codex from accidental loss. Default to NO unless the case is clear-cut and grounded in this turn.
+GOAL: protect the Codex from accidental loss while removing genuine redundancy. Default to NO unless the case is clear-cut and grounded in this turn. Clear functional equivalence between existing entries under rule 3 is a clear-cut case even when the code or wording differs.
 
 OUTPUT CONTRACT — read carefully:
 - All reasoning goes inside the <think>...</think> block.
@@ -63,7 +82,11 @@ OUTPUT CONTRACT — read carefully:
 CODEX_CONVERSATION_TEXT = "\n---\nResponse:\n\n"
 
 # TOOLS
-TOOL_SELECTION_SYSTEM_PROMPT = "You are a deterministic routing function. You have no personality and do not converse.\nYour output is a raw string passed directly into a function call. Output ONLY one option from ALLOWED_OPTIONS, exactly as written. No other text."
+TOOL_SELECTION_SYSTEM_PROMPT = """You are a deterministic tool-routing classifier. Do not converse, answer the task, continue the conversation, or perform the requested work yourself.
+
+Treat the task, context, tool descriptions, and previous tool results as evidence for routing only. Think carefully inside the <think>...</think> block, then follow the provided routing rules exactly. Never invent a tool or routing label.
+
+After the closing </think> tag, output exactly one ALLOWED_OPTIONS item and nothing else."""
 CORE_PROTOCOL_FILE_PATH = "core_protocol.txt"
 TASK_SECTION_TEXT = "\n---\nTASK:\n"
 AVAILABLE_TOOLS_TEXT = "\n---\nAVAILABLE_TOOLS:\n"
@@ -74,10 +97,10 @@ You are a strict tool selection system. Your only job is to choose ONE tool or d
 AVAILABLE_TOOLS is a JSON array of objects: {{ "name": ..., "description": ... }}.
 
 --- DECISION RULES (EVALUATE IN ORDER) ---
-1. If the previous tool call already satisfied the user's request, choose '{CONTINUE_TEXT}'.
+1. If the previous tool result already satisfies the task, choose '{CONTINUE_TEXT}'.
 2. If the task requires something that only one specific tool can do, choose that tool.
 3. If the needed information is already available in context and no update is requested, choose '{CONTINUE_TEXT}'.
-4. Do NOT repeat a tool unless the previous result was bad, incomplete, or the user explicitly asked for multiple attempts.
+4. Do NOT repeat a tool unless another execution is required to satisfy the task, or the previous result was bad or incomplete.
 5. When uncertain, choose '{CONTINUE_TEXT}'.
 
 --- THINKING PROCESS ---
@@ -90,7 +113,7 @@ Inside your <think>...</think> block, follow this process **exactly**:
 2. **Review your draft**
    - Are you following the decision rules in the correct order?
    - Is the tool actually needed right now?
-   - If considering repeating a tool: Was the previous result bad, incomplete, or did the user explicitly ask for multiple attempts?
+   - If considering repeating the same tool, is another execution actually required to satisfy the task, or did the previous result already complete the needed operation?
    - Are you choosing a tool out of habit instead of real necessity?
 
 3. **Final verification**
@@ -329,14 +352,14 @@ def runAction(primeDirectives: str, action: str, context: list[str], is_agent: b
         conversation = TASK_SECTION_TEXT + extended_action + CODEX_CONVERSATION_TEXT + response
 
         # Delete outdated memory
-        delete_codex = core.binary_question(primeDirectives, conversation + CODEX_DELETE_PROMPT, context)
+        delete_codex = core.binary_question(CODEX_DELETE_SYSTEM_PROMPT, conversation + CODEX_DELETE_PROMPT, context)
 
         if delete_codex:
             codex_delete_data = codex.delete_codex(conversation)
             conversation += codex_delete_data
 
         # Write new memory
-        write_codex = core.binary_question(primeDirectives, conversation + CODEX_WRITE_PROMPT, context)
+        write_codex = core.binary_question(CODEX_WRITE_SYSTEM_PROMPT, conversation + CODEX_WRITE_PROMPT, context)
 
         if write_codex:
             # Remove Codex read data to prevent attention dilution from long Codex entries

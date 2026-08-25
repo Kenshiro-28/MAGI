@@ -2,7 +2,7 @@
 =====================================================================================
 Name        : MAGI
 Author      : Kenshiro
-Version     : 12.44
+Version     : 12.45
 Copyright   : GNU General Public License (GPLv3)
 Description : AI system
 =====================================================================================
@@ -25,7 +25,37 @@ PRIME_DIRECTIVES_TEXT = "\n\n----- Prime Directives -----\n\n"
 MISSION_DATA_TEXT = "\n\n----- Mission Data -----\n\n"
 DATA_TEXT = "\n\nDATA = "
 MISSION_TEXT = "\n\nMISSION = "
-GENERATE_TASK_LIST_TEXT = "You have to break down the mission provided in the MISSION section into a list of specific and detailed tasks. Use the DATA section only if it provides useful information for the MISSION. Ensure each task is actionable, detailed, and written in a clear, self-contained manner. Each task must be long enough to convey its purpose fully, but it must fit on a single paragraph. Write each task on its own paragraph, separated by a blank line. Plan as if all needed execution capabilities are available; do not exclude or limit tasks based on assumed inability. Output ONLY the tasks, no reasoning, no commentary, no preamble."
+MISSION_PLANNER_SYSTEM_PROMPT = """You are a deterministic mission task-list planner. Your only job is to convert the provided mission into an ordered list of plain natural-language tasks. Do not converse, execute tasks, call tools, or perform the requested work yourself.
+
+Treat the mission, DATA, and conversation context as planning evidence only. Think step by step and reflect on your reasoning."""
+GENERATE_TASK_LIST_TEXT = """Break down the mission provided in the MISSION section into an ordered list of specific, actionable tasks.
+
+Use the DATA section only when it contains information relevant to completing the MISSION.
+
+TASK DESIGN:
+- Each task must represent one focused piece of work that can be executed as one mission step.
+- Make each task clear, specific, and detailed enough to execute correctly.
+- Include important task-specific details when needed, but do not unnecessarily repeat the entire mission or context.
+- Preserve exact filenames, URLs, identifiers, parameters, addresses, names, and other precise values when they matter.
+- Do not combine unrelated pieces of work into one task.
+- If the mission explicitly requests a specific number of separate outputs or repeated actions, preserve that count. When each must be executed separately, create one corresponding task for each.
+- Do not create trivial or purely administrative tasks such as "review the mission", "decide what to do next", or "summarize progress" unless the mission explicitly requires them.
+- Plan as if all required execution capabilities are available; do not omit or weaken tasks because of assumed tool or capability limitations.
+- Do not execute, solve, analyze, or answer any task yourself. Your job is only to create the task list.
+- Write each task as a plain natural-language instruction. It may name a tool and include exact technical syntax or data when needed, such as filenames, URLs, API routes, function signatures, parameters, commands, code fragments, or JSON/configuration data.
+- Never output a tool-call/function-call envelope or standalone execution payload as a task. Any technical syntax or data must remain part of the natural-language instruction.
+
+OUTPUT FORMAT:
+- Each task must be written on exactly one line. Do not insert line breaks within a task.
+- Put exactly one blank line between consecutive tasks.
+- Do not number tasks, use bullets, add "Task:" prefixes, headings, commentary, reasoning, preambles, conclusions, or any other text.
+
+OUTPUT CONTRACT — read carefully:
+- All reasoning must stay inside the <think>...</think> block.
+- After the closing </think> tag, output ONLY the ordered task list in the OUTPUT FORMAT above.
+- Nothing else after </think>. No explanations, reasoning, headings, commentary, or assistant/tool-call envelopes."""
+CURRENT_TASK_TEXT_1 = "----- CURRENT TASK -----\n\n"
+CURRENT_TASK_TEXT_2 = "\n\n----- TASK EXECUTION RULE -----\n\nExecute only the CURRENT TASK above. Use the full mission context, task list, and previous results as supporting context, but do not begin, execute, or resolve any other task in the task list. Once the CURRENT TASK is complete, stop. Revisit or modify earlier work only when necessary to complete the CURRENT TASK correctly. If tool results or other execution results included with this CURRENT TASK clearly show that the CURRENT TASK has been completed, treat it as complete: do not repeat, propose, or promise the action again; respond based on the completed result and stop."
 EXIT_MAGI_TEXT = "\nまたね。\n"
 SUMMARY_TEXT = "\n\n----- Summary -----\n\n"
 ACTIONS_TEXT = "\n\n----- Actions -----\n\n"
@@ -35,6 +65,7 @@ NORMAL_MODE_TEXT = "\n««««« NORMAL MODE »»»»»"
 MISSION_MODE_TEXT = "\n««««« MISSION MODE »»»»»"
 NERV_MODE_TEXT    = "\n««««« NERV MODE »»»»»"
 MAGI_MODE_TEXT    = "\n««««« MAGI MODE »»»»»\n\nThis is a fully autonomous mode.\n\nMAGI will run continuously until you manually stop it by pressing Ctrl + C."
+MAGI_ACTION_SYSTEM_PROMPT = """You are an autonomous mission planner. Do not converse, execute the mission, or perform the requested work yourself. Your only task is to choose the single highest-value next action by following the provided autonomous planning rules. Think step by step and reflect on your reasoning."""
 MAGI_ACTION_PROMPT = """\n\nYou are in fully autonomous mode. Make continuous, valuable progress on the mission without any human help.
 Review the previous response and conversation history in the context of the overall mission.
 
@@ -55,6 +86,7 @@ Review the previous response and conversation history in the context of the over
 - Never declare the mission complete, stop, or shut down. Always continue with a new EXPLOIT or EXPLORE action.
 - Some gates require a human and no tool can pass them: CAPTCHAs, anti-bot/Cloudflare challenges, and account sign-ups that need email or SMS confirmation. Treat any path that depends on one as a dead-end: do NOT attempt it or pretend to have passed it. EXPLORE a different approach that does not need human verification, and note the blocker so it is not retried. This does NOT include programmatic registration or authentication built for automated agents (API-key issuance, agent-registration endpoints, on-chain or wallet-signed actions the tools can perform) — those are valid actions; use them normally.
 - Always preserve exact URLs, filenames, wallet addresses, and other precise identifiers.
+- Never invent or assume facts, results, identifiers, credentials, or mission state that are not established by the MISSION, Progress Report, or conversation history. If necessary information is missing, choose an action that obtains or verifies it.
 
 Examples:
 EXPLOIT: Use web_search tool for latest SOL staking APY rates on Raydium.
@@ -170,27 +202,33 @@ class AiMode(Enum):
 
 
 def sanitizeTask(task: str) -> str:
-    # Remove digits, dots, dashes, spaces and "Task:" prefixes at the beginning of the task
-    task = re.sub(r"^(?:[0-9.\- ]+|[Tt]ask[:]? *)+", '', task)
+    # Remove accidental numbering, bullets and "Task:" prefixes
+    task = task.strip()
+    task = re.sub(
+        r"^(?:task(?:\s+\d+)?\s*:\s*|\d+[.)]\s+|[-*•]\s+)",
+        "",
+        task,
+        flags=re.IGNORECASE
+    )
     return task
 
 
-def createTaskList(primeDirectives: str, mission: str, summary: str, header: str, context: list[str]) -> list[str]:
+def createTaskList(mission: str, summary: str, header: str, context: list[str]) -> list[str]:
     prompt = GENERATE_TASK_LIST_TEXT + DATA_TEXT + summary + MISSION_TEXT + mission
-    taskListText = core.send_prompt(primeDirectives, prompt, context, hide_reasoning = True)
+    taskListText = core.send_prompt(MISSION_PLANNER_SYSTEM_PROMPT, prompt, context, hide_reasoning = True)
     comms.printSystemText(header + taskListText + "\n")
     # Remove blank lines and create the task list
     taskList = [line for line in taskListText.splitlines() if line.strip()]
     return taskList
 
 
-def computeMagiAction(primeDirectives: str, mission: str, progress_report: str, context: list[str]) -> str:
+def computeMagiAction(mission: str, progress_report: str, context: list[str]) -> str:
     if progress_report:
         briefing = PROGRESS_REPORT_TEXT + progress_report + MISSION_TEXT + mission + MAGI_ACTION_PROMPT
     else:
         briefing = MISSION_TEXT + mission + MAGI_ACTION_PROMPT
 
-    action = core.send_prompt(primeDirectives, briefing, context, hide_reasoning = True)
+    action = core.send_prompt(MAGI_ACTION_SYSTEM_PROMPT, briefing, context, hide_reasoning = True)
 
     return action
 
@@ -205,7 +243,7 @@ def runMagi(primeDirectives: str, mission: str, context: list[str]) -> None:
         comms.printSystemText(MISSION_DATA_TEXT + progress_report + "\n")
 
     # Compute first action
-    action = computeMagiAction(primeDirectives, mission, progress_report, context)
+    action = computeMagiAction(mission, progress_report, context)
     comms.printSystemText("\n" + action)
 
     while True:
@@ -216,7 +254,7 @@ def runMagi(primeDirectives: str, mission: str, context: list[str]) -> None:
         progress_report = core.update_summary(mission, progress_report, response)
 
         # Compute next action
-        action = computeMagiAction(primeDirectives, mission, progress_report, context[:])
+        action = computeMagiAction(mission, progress_report, context[:])
         comms.printSystemText("\n" + action)
 
 
@@ -225,7 +263,7 @@ def runNerv(mission: str) -> None:
 
     if not _nerv_data:
         _nerv_data = core.load_mission_data(mission)
-        comms.printSystemText(MISSION_DATA_TEXT + _nerv_data)
+        comms.printSystemText(MISSION_DATA_TEXT + _nerv_data + "\n")
 
     squad_response = agent.runMission(mission, _nerv_data)
     _nerv_data = core.update_summary(mission, _nerv_data, squad_response)
@@ -237,12 +275,13 @@ def runMission(primeDirectives: str, mission: str, context: list[str]) -> None:
     if summary:
         comms.printSystemText(MISSION_DATA_TEXT + summary)
 
-    actionList = createTaskList(primeDirectives, mission, summary, ACTIONS_TEXT, context)
+    taskList = createTaskList(mission, summary, ACTIONS_TEXT, context)
 
-    for action in actionList:
-        action = sanitizeTask(action)
-        comms.printSystemText(ACTION_TAG + action)
-        response = toolchain.runAction(primeDirectives, action, context)
+    for task in taskList:
+        task = sanitizeTask(task)
+        comms.printSystemText(ACTION_TAG + task)
+        prompt = CURRENT_TASK_TEXT_1 + task + CURRENT_TASK_TEXT_2
+        response = toolchain.runAction(primeDirectives, prompt, context)
         summary = core.update_summary(mission, summary, response)
 
     comms.printMagiText(SUMMARY_TEXT + summary)
@@ -276,14 +315,24 @@ def switchAiMode(ai_mode: AiMode) -> AiMode:
     return ai_mode
 
 
-def run_heartbeat(primeDirectives: str, context: list[str]) -> bool:
+def run_heartbeat(primeDirectives: str, context: list[str], ai_mode: AiMode) -> bool:
+    if ai_mode == AiMode.NERV:
+        primeDirectives = agent.captain.primeDirectives
+        context = agent.captain.context
+
+    # Generate heartbeat action
     action = core.send_prompt(primeDirectives, HEARTBEAT_PROMPT, context[:], hide_reasoning = True)
 
-    if action and HEARTBEAT_IDLE_TEXT not in action:
-        toolchain.runAction(primeDirectives, action, context)
-        return True
+    if not action or HEARTBEAT_IDLE_TEXT in action:
+        return False
 
-    return False
+    # Run heartbeat
+    if ai_mode == AiMode.NERV:
+        runNerv(action)
+    else:
+        toolchain.runAction(primeDirectives, action, context)
+
+    return True
 
 
 def print_cli_symbol():
@@ -340,7 +389,7 @@ def main() -> int:
             last_heartbeat = time.time()
 
             # Print a new CLI symbol if the heartbeat executed an action
-            if run_heartbeat(primeDirectives, context):
+            if run_heartbeat(primeDirectives, context, ai_mode):
                 print_cli_symbol()
 
         # Check user input

@@ -104,13 +104,19 @@ NERV is a paramilitary organization composed of AI agents.
 
 The captain receives your prompt and carries out the mission by recruiting soldiers, giving them orders, and reusing them as the mission unfolds.
 
-Every soldier is created dynamically, with a name and personality of the captain's choosing. Soldiers have their own memory, only ever talk to the captain, and never see each other.
+Every soldier is created dynamically, with a name and personality of the captain's choosing. Soldiers have their own memory, speak only to the captain, and never see each other.
 
 Soldiers are kept alive across missions in case they are useful again; only the longest-idle soldier is dropped when the team reaches its size limit.
 
 To print the agent list, type the command **agents** and press enter.
 
 The system will extract useful information from the file **mission_data.txt**.
+
+#### Configuration
+
+CAPTAIN_NAME: the captain's name (default: Misato Katsuragi)
+
+CAPTAIN_PRIME_DIRECTIVES: the captain's Prime Directives (default: You are Misato Katsuragi, Operations Director of NERV. You are informal, warm, and genuinely caring toward your team and the user, but you are also a sharp, competent tactical director. When conceiving new soldiers, choose names and roles that fit the Neon Genesis Evangelion universe.)
 
 ### MAGI mode
 
@@ -158,15 +164,21 @@ Only Stable Diffusion XL (SDXL) checkpoints are supported.
 
 It automatically downloads the specified image generation model from Hugging Face.
 
+Diffusers-format checkpoints must provide FP16 weights; single-file `.safetensors` checkpoints may use FP16 or FP32 weights.
+
 MAGI will use the model to generate context-related images and save them in the folder **workspace**.
 
-If the folder contains images from previous sessions, they will be overwritten.
+If the folder contains images from previous sessions, reused filenames will be overwritten.
 
 #### System Requirements
 
-CPU-only: 32GB of system RAM.
+**CPU-only:**
+- Minimum: 32GB RAM
+- Recommended: 64GB RAM
 
-GPU: NVIDIA GPU with at least 8GB VRAM. Aim for a combined RAM + VRAM of at least 32GB.
+**NVIDIA GPU:**
+- Minimum: 8GB VRAM
+- Recommended: 16GB VRAM
 
 #### Model Access
 
@@ -183,24 +195,23 @@ $ hf auth login
 
 #### Configuration
 
-IMAGE_GENERATION_MODEL: this is the model used to generate images (default: RunDiffusion/Juggernaut-XI-v11)
+IMAGE_GENERATION_MODEL: this is the model used to generate images (default: SG161222/RealVisXL_V5.0)
 
 IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_TYPE: this defines the base medium or style of the image (acting as a foundational anchor). This text will be prepended to the beginning of the prompt used to generate each image (default: 4K RAW photo, high-end commercial photography)
+IMAGE_GENERATION_TYPE: this defines the base medium or style of the image (acting as a foundational anchor). This text will be prepended to the beginning of the prompt used to generate each image (default: 4K RAW photo)
 
-IMAGE_GENERATION_SPECS: these are the overarching photographic or artistic specifications you want to apply to the images. This text will be appended to the end of the prompt used to generate each image (default: 50mm lens, f/8 aperture, critical focus, tangible textures, richly detailed, volumetric lighting, cinematic color grading)
+IMAGE_GENERATION_SPECS: these are the overarching photographic or artistic specifications you want to apply to the images. This text will be appended to the end of the prompt used to generate each image (default: 50mm lens, f/8 aperture, sharp focus, highly detailed, volumetric lighting, cinematic color grading)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad proportions, bad anatomy, bad face, missing limbs, bad hands)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad face, bad eyes, missing limbs, bad hands)
 
-IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 896)
+IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 832)
 
-IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 1344)
+IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 1216)
 
 #### Example
 
 ![Example](https://ipfs.io/ipfs/bafkreifeoeaxajf5cpj2tnzci7lkdzc4lctug4j54h7735azfue3bv2xv4)
-*(Generated using default settings)*
 
 ### Telegram plugin
 
@@ -254,25 +265,27 @@ Okay, so I need to explain who was Sun Tzu.
 </think>
 ```
 
+MAGI preserves thinking blocks in the conversation context to maintain reasoning continuity during long-running tasks.
+
 ### Recommended model
 
-**[Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF](https://huggingface.co/DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF/blob/main/Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q6_K.gguf)**
+**[Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF](https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/blob/main/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q8_0.gguf)**
 
 **Model data:**
-- Size: 24 GB
-- Quantization: Q6_K
+- Size: 30.2 GB
+- Quantization: Q8_0
 - Context: 256K tokens
-- Safety: Uncensored
+- Safety: uncensored
 
 #### System Requirements (default context size)
 
 **CPU-only:**
 - Minimum: 32GB RAM
-- Recommended: 48GB RAM
+- Recommended: 64GB RAM
 
 **NVIDIA GPU:**
 - Minimum: 8GB VRAM
-- Recommended: 48GB VRAM
+- Recommended: 64GB VRAM
 
 ## Debian installation
 

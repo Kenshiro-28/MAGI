@@ -1,5 +1,4 @@
 from plugins.telegram_bot import telegram_bot
-from PIL import Image
 import time
 import asyncio
 import core
@@ -152,12 +151,12 @@ def initialize_telegram_bot(token: str, user_id: str) -> None:
     telegram_bot_enabled = True
 
 
-def send_image_telegram_bot(image: Image.Image) -> None:
+def send_image_telegram_bot(path: str) -> None:
     time.sleep(TELEGRAM_PLUGIN_SEND_WAIT_TIME)
 
     try:
         bot = telegram_bot.TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_USER_ID)
-        asyncio.run(bot.send_image(image))
+        asyncio.run(bot.send_image(path))
 
     except Exception as e:
         print(COMMS_ERROR + str(e))
