@@ -326,7 +326,7 @@ def summarize(topic: str, text: str) -> str:
 
     text = DATA_ONLY_START_TAG + text + DATA_ONLY_END_TAG
 
-    summary = send_prompt(SUMMARIZE_SYSTEM_PROMPT, text + SUMMARIZE_TEXT + topic, context, thinking = False, hide_reasoning = True)
+    summary = send_prompt(SUMMARIZE_SYSTEM_PROMPT, text + SUMMARIZE_TEXT + topic, context, hide_reasoning = True, thinking = False)
 
     return summary
 
