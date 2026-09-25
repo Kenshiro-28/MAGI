@@ -26,9 +26,9 @@ The main options are:
 
 TEMPERATURE: model temperature (default: 1.0)
 
-CONTEXT_SIZE: number of tokens in the context window (default & minimum: 131072)
+CONTEXT_SIZE: number of tokens in the context window (default & minimum: 196608)
 
-HEARTBEAT_SECONDS: seconds since the last action start before MAGI runs a background thought loop to determine whether further action is required. If an action is in progress, the loop is deferred until the action completes. (default: 1800)
+HEARTBEAT_SECONDS: seconds of inactivity before MAGI runs a background thought loop to determine whether further action is required (default: 1800)
 
 ENABLE_CODE_RUNNER_PLUGIN: enable the Code Runner plugin (default: YES)
 
@@ -124,14 +124,6 @@ This is a fully autonomous mode.
 
 MAGI will treat your prompt as its main mission and work autonomously to accomplish it.
 
-You must have enabled the three plugin tools in `config.cfg`:
-
-```
-ENABLE_WEB_PLUGIN = YES
-ENABLE_CODE_RUNNER_PLUGIN = YES
-ENABLE_IMAGE_GENERATION_PLUGIN = YES
-```
-
 MAGI will run continuously until you manually stop it by pressing Ctrl + C.
 
 The system will extract useful information from the file **mission_data.txt**.
@@ -142,17 +134,13 @@ The system will extract useful information from the file **mission_data.txt**.
 
 This plugin adds a tool to generate and execute Python code to solve specific tasks, such as mathematical operations, accessing resources on the internet, simulations, or complex logic.
 
-MAGI will install the required Python packages in an isolated virtual environment.
+MAGI automatically installs required Python packages in a dedicated virtual environment.
 
-Linting is performed using Ruff to ensure clean code, and the execution times out after 30 minutes for safety.
+Generated programs are checked using Ruff and executed non-interactively, with a 30-minute timeout per program execution.
 
-The generated code will run non-interactively, printing all results to the console.
+MAGI reviews the execution results and can refine and retry the program for up to 10 total attempts to complete the task.
 
-Moreover, the generated code will also print its relevant internal state at the end of each execution for reuse in multi-step tasks.
-
-MAGI will review and refine the generated code and its output up to 10 times to ensure it functions correctly and fully completes the task.
-
-Any local files saved by the code (such as data exports, logs, or plots) will automatically be routed to the **workspace** folder.
+Programs print their results to the console and use the **workspace** folder as their working directory.
 
 While dependencies are isolated, the OS file system is not strictly sandboxed. See the Security section for best practices.
 
@@ -162,9 +150,30 @@ This plugin adds a tool to generate images.
 
 Only Stable Diffusion XL (SDXL) checkpoints are supported.
 
-It automatically downloads the specified image generation model from Hugging Face.
+By default, it automatically downloads the specified image generation model from Hugging Face.
 
-Diffusers-format checkpoints must provide FP16 weights; single-file `.safetensors` checkpoints may use FP16 or FP32 weights.
+It prefers Safetensors weights when available. On NVIDIA GPUs, FP16 Diffusers weights are preferred; on CPU, standard full-precision weights are preferred. Single-file `.safetensors` SDXL checkpoints are also supported, while standard Diffusers weight formats are used as a fallback when necessary.
+
+You can optionally use a local single-file SDXL Safetensors checkpoint by placing a file named `model.safetensors` beside `image_generation.py`. The local checkpoint overrides `IMAGE_GENERATION_MODEL` until the file is removed.
+
+For example, to use Juggernaut XIII Ragnarok:
+
+```
+$ wget "https://civitai.com/api/download/models/1759168" --content-disposition
+$ sha256sum juggernautXL_ragnarok.safetensors
+```
+
+Expected SHA-256:
+
+```
+dd08fa32f98d05a2443ca1419e46df1575a0811f6e3b246d9dd47ff20f5eb66a
+```
+
+Then rename and place it beside `image_generation.py`:
+
+```
+$ mv juggernautXL_ragnarok.safetensors plugins/image_generation/model.safetensors
+```
 
 MAGI will use the model to generate context-related images and save them in the folder **workspace**.
 
@@ -174,17 +183,17 @@ If the folder contains images from previous sessions, reused filenames will be o
 
 **CPU-only:**
 - Minimum: 32GB RAM
-- Recommended: 64GB RAM
+- Recommended: 48GB RAM
 
 **NVIDIA GPU:**
-- Minimum: 8GB VRAM
-- Recommended: 16GB VRAM
+- Minimum: 8GB VRAM + 16GB RAM
+- Recommended: 16GB VRAM + 32GB RAM
 
 #### Model Access
 
 Some models require authentication. To access these gated models:
 
-- Visit the model's page on Hugging Face (e.g., https://huggingface.co/SG161222/RealVisXL_V5.0).
+- Visit the model's page on Hugging Face (e.g., https://huggingface.co/RunDiffusion/Juggernaut-XI-v11).
 - Complete the required access agreement.
 - Generate an access token in your Hugging Face account settings.
 - Authenticate your local environment by running the following command in the project directory (with your Python environment activated):
@@ -195,15 +204,15 @@ $ hf auth login
 
 #### Configuration
 
-IMAGE_GENERATION_MODEL: this is the model used to generate images (default: SG161222/RealVisXL_V5.0)
+IMAGE_GENERATION_MODEL: Hugging Face repository ID of the SDXL model used when no local `model.safetensors` checkpoint is present (default: RunDiffusion/Juggernaut-XI-v11)
 
-IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality, it must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
+IMAGE_GENERATION_LORA: this is the LoRA used to enhance image quality. It must be compatible with the selected model. Leave empty if not using a LoRA (default: None)
 
-IMAGE_GENERATION_TYPE: this defines the base medium or style of the image (acting as a foundational anchor). This text will be prepended to the beginning of the prompt used to generate each image (default: 4K RAW photo)
+IMAGE_GENERATION_TYPE: this defines the base medium or style of the image (acting as a foundational anchor). This text will be prepended to the beginning of the prompt used to generate each image (default: high-end commercial photography, high resolution)
 
-IMAGE_GENERATION_SPECS: these are the overarching photographic or artistic specifications you want to apply to the images. This text will be appended to the end of the prompt used to generate each image (default: 50mm lens, f/8 aperture, sharp focus, highly detailed, volumetric lighting, cinematic color grading)
+IMAGE_GENERATION_SPECS: these are the overarching photographic or artistic specifications you want to apply to the images. This text will be appended to the end of the prompt used to generate each image (default: 50mm lens, sharp focus, highly detailed, volumetric lighting, cinematic color grading)
 
-IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad face, bad eyes, missing limbs, bad hands)
+IMAGE_GENERATION_NEGATIVE_PROMPT: these are the unwanted features or structural flaws you want to instruct the model to avoid (default: cartoon, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad hands)
 
 IMAGE_GENERATION_WIDTH: width of generated images in pixels (default: 832)
 
@@ -247,14 +256,11 @@ You can use any GGUF model supported by llama-cpp-python, as long as it adheres 
 
 ```
 <|im_start|>system
-You are a friendly AI assistant.
-<|im_end|>
+You are a friendly AI assistant.<|im_end|>
 <|im_start|>user
-Who was Sun Tzu?
-<|im_end|>
+Who was Sun Tzu?<|im_end|>
 <|im_start|>assistant
-Sun Tzu was the author of The Art of War.
-<|im_end|>
+Sun Tzu was the author of The Art of War.<|im_end|>
 ```
 
 The model must generate extended reasoning enclosed between `<think>...</think>` tags:
@@ -265,16 +271,16 @@ Okay, so I need to explain who was Sun Tzu.
 </think>
 ```
 
-MAGI preserves thinking blocks in the conversation context to maintain reasoning continuity during long-running tasks.
-
 ### Recommended model
 
-![Model artwork](https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/resolve/main/star-wars-hans-solo.gif)
+![Model artwork](https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/resolve/main/neo-dodge.gif)
 
-**[Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF](https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/blob/main/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q8_0.gguf)**
+**[DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF](https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/blob/main/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q8_0.gguf)**
+
+SHA-256: `dcabfc7ab12fac26f84adb061e99eee793837c1cf1bb432a27b8790f7a91f14e`
 
 **Model data:**
-- Size: 30.2 GB
+- Size: 10.7 GB
 - Quantization: Q8_0
 - Context: 256K tokens
 - Safety: uncensored
@@ -283,11 +289,11 @@ MAGI preserves thinking blocks in the conversation context to maintain reasoning
 
 **CPU-only:**
 - Minimum: 32GB RAM
-- Recommended: 64GB RAM
+- Recommended: 48GB RAM
 
 **NVIDIA GPU:**
-- Minimum: 8GB VRAM
-- Recommended: 64GB VRAM
+- Minimum: 32GB VRAM + 16GB RAM
+- Recommended: 32GB VRAM + 32GB RAM
 
 ## Debian installation
 

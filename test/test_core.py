@@ -14,8 +14,9 @@ class MockLlama:
         self.last_call_kwargs = None
         self.metadata = {}
 
-    def tokenize(self, text):
-        # Simple mock tokenizer that counts characters as tokens
+    def tokenize(self, text, add_bos = True, special = False):
+        if special is not True:
+            raise AssertionError("MockLlama.tokenize requires special=True")
         return [ord(c) for c in text.decode('utf-8')]
 
     def close(self):
@@ -108,8 +109,8 @@ class TestCore(unittest.TestCase):
             core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
         )
 
-        # Check third element has the full response + EOS
-        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
+        # Check third element stores only the final answer + EOS
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
 
     def test_existing_context(self):
         """Test send_prompt with existing context - should overwrite prime directives"""
@@ -141,8 +142,8 @@ class TestCore(unittest.TestCase):
             core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
         )
 
-        # New response should be appended with extended reasoning preserved
-        self.assertEqual(context[4], NORMAL_RESPONSE + core.EOS)
+        # New response should be appended with historical reasoning removed
+        self.assertEqual(context[4], BASIC_RESPONSE + core.EOS)
 
     def test_hide_reasoning_true(self):
         """Test send_prompt with hide_reasoning explicitly set to True"""
@@ -155,8 +156,8 @@ class TestCore(unittest.TestCase):
         # Assert - the response should have thinking tags removed
         self.assertEqual(response, BASIC_RESPONSE)
 
-        # Check context contains the full response + EOS
-        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
+        # Check context contains only the final response + EOS
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
 
     def test_hide_reasoning_positional(self):
         """Test fourth positional argument remains hide_reasoning"""
@@ -189,6 +190,10 @@ class TestCore(unittest.TestCase):
         self.assertTrue(core.model.last_prompt.endswith(core.ASSISTANT_TEXT + core.THINK_TRIGGER))
         self.assertEqual(core.model.last_call_kwargs['temperature'], core.TEMPERATURE_THINKING)
         self.assertEqual(core.model.last_call_kwargs['top_p'], core.TOP_P_THINKING)
+        self.assertEqual(
+            context[-1],
+            core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
+        )
 
     def test_get_completion_non_thinking(self):
         """Test non-thinking mode uses closed think block and instruct sampling"""
@@ -197,20 +202,19 @@ class TestCore(unittest.TestCase):
             core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
         ]
 
-        response = core.get_completion_from_messages(context, thinking=False)
+        with patch(__name__ + '.MOCK_MODEL_OUTPUT', BASIC_RESPONSE):
+            response = core.get_completion_from_messages(context, thinking=False)
 
-        expected_suffix = (
-            core.ASSISTANT_TEXT
-            + core.THINK_TRIGGER
-            + "\n"
-            + core.THINK_END
-            + "\n\n"
-        )
+        expected_suffix = core.ASSISTANT_TEXT + core.THINK_TRIGGER + core.THINK_CLOSER
 
-        self.assertEqual(response, MOCK_MODEL_OUTPUT)
+        self.assertEqual(response, BASIC_RESPONSE)
         self.assertTrue(core.model.last_prompt.endswith(expected_suffix))
         self.assertEqual(core.model.last_call_kwargs['temperature'], core.TEMPERATURE_INSTRUCT)
         self.assertEqual(core.model.last_call_kwargs['top_p'], core.TOP_P_INSTRUCT)
+        self.assertEqual(
+            context[-1],
+            core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
+        )
 
     def test_send_prompt_non_thinking(self):
         """Test send_prompt stores and returns a direct non-thinking response"""
@@ -225,18 +229,11 @@ class TestCore(unittest.TestCase):
                 hide_reasoning=True
             )
 
-        expected_command = (
-            core.USER_TEXT
-            + PROMPT
-            + core.EOS
-            + core.ASSISTANT_TEXT
-            + core.THINK_TRIGGER
-            + "\n"
-            + core.THINK_END
-            + "\n\n"
-        )
+        expected_command = core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT
+        expected_inference_suffix = core.ASSISTANT_TEXT + core.THINK_TRIGGER + core.THINK_CLOSER
 
         self.assertEqual(response, BASIC_RESPONSE)
+        self.assertTrue(core.model.last_prompt.endswith(expected_inference_suffix))
         self.assertEqual(context[1], expected_command)
         self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
 
@@ -270,8 +267,8 @@ class TestCore(unittest.TestCase):
         # Check first element contains just system + EOS
         self.assertEqual(context[0], core.SYSTEM_TEXT + core.EOS)
 
-        # Check context response preserves extended reasoning.
-        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
+        # Check context stores only the final answer.
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
 
 
     def test_empty_prompt(self):
@@ -288,8 +285,8 @@ class TestCore(unittest.TestCase):
         # Check second element has empty user prompt + EOS + assistant tag
         self.assertEqual(context[1], core.USER_TEXT + core.EOS + core.ASSISTANT_TEXT)
 
-        # Check context response preserves extended reasoning.
-        self.assertEqual(context[2], NORMAL_RESPONSE + core.EOS)
+        # Check context stores only the final answer.
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
 
 
     def test_context_trimming(self):
@@ -332,8 +329,132 @@ class TestCore(unittest.TestCase):
         self.assertEqual(context[2], original_context[4])  # Second response
         self.assertEqual(context[3], core.USER_TEXT + third_message + core.EOS + core.ASSISTANT_TEXT)
 
-        # Check the final context element stores the full response
-        self.assertEqual(context[4], NORMAL_RESPONSE + core.EOS)
+        # Check the final context element stores only the final answer
+        self.assertEqual(context[4], BASIC_RESPONSE + core.EOS)
+
+
+    def test_minimum_context_reserves_two_responses(self):
+        """The configured minimum must reserve at least two response-sized windows."""
+        self.assertGreaterEqual(core.MIN_CONTEXT_SIZE, 2 * core.MAX_RESPONSE_SIZE)
+        self.assertGreaterEqual(core.CONTEXT_SIZE, core.MIN_CONTEXT_SIZE)
+        self.assertEqual(core.MAX_INPUT_TOKENS, core.CONTEXT_SIZE - core.MAX_RESPONSE_SIZE - core.CONTEXT_HEADROOM)
+
+    def test_previous_exchange_preserved_when_over_input_budget(self):
+        """Do not discard the only previous exchange even when it exceeds the preferred input budget."""
+        previous_user = core.USER_TEXT + "Previous request" + core.EOS + core.ASSISTANT_TEXT
+        previous_assistant = "P" * core.MAX_INPUT_TOKENS + core.EOS
+        context = [
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS,
+            previous_user,
+            previous_assistant,
+        ]
+
+        response = core.send_prompt(PRIME_DIRECTIVES, "Follow-up request", context)
+
+        self.assertEqual(response, NORMAL_RESPONSE)
+        self.assertEqual(len(context), 5)
+        self.assertEqual(context[1:3], [previous_user, previous_assistant])
+        self.assertGreater(core.get_number_of_tokens(core.model.last_prompt), core.MAX_INPUT_TOKENS)
+        self.assertGreaterEqual(core.model.last_call_kwargs['max_tokens'], core.MIN_RESPONSE_SIZE)
+
+    def test_trim_older_but_protect_last_exchange_over_budget(self):
+        """Trim older turns without continuing into the protected immediately previous turn."""
+        oldest_user = core.USER_TEXT + "Oldest request" + core.EOS + core.ASSISTANT_TEXT
+        previous_user = core.USER_TEXT + "Previous request" + core.EOS + core.ASSISTANT_TEXT
+        previous_assistant = "P" * core.MAX_INPUT_TOKENS + core.EOS
+        context = [
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS,
+            oldest_user,
+            "O" * (core.MAX_INPUT_TOKENS // 3) + core.EOS,
+            previous_user,
+            previous_assistant,
+        ]
+
+        response = core.send_prompt(PRIME_DIRECTIVES, "Follow-up request", context)
+
+        self.assertEqual(response, NORMAL_RESPONSE)
+        self.assertEqual(len(context), 5)
+        self.assertEqual(context[1:3], [previous_user, previous_assistant])
+        self.assertNotIn(oldest_user, context)
+        self.assertGreater(core.get_number_of_tokens(core.model.last_prompt), core.MAX_INPUT_TOKENS)
+
+
+    def test_multiple_turns_do_not_store_reasoning(self):
+        """Previous thinking must not reappear in a subsequent inference prompt."""
+        context = []
+        first = core.send_prompt(PRIME_DIRECTIVES, "First question", context)
+        self.assertEqual(first, NORMAL_RESPONSE)
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
+
+        with patch(__name__ + '.MOCK_MODEL_OUTPUT', "Second thought.\n</think>\nSecond answer"):
+            second = core.send_prompt(PRIME_DIRECTIVES, "Second question", context)
+
+        self.assertIn("Second answer", second)
+        self.assertNotIn("This is a thought.", core.model.last_prompt)
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
+        self.assertEqual(context[4], "Second answer" + core.EOS)
+
+    def test_non_thinking_without_hide_reasoning_stores_plain_answer(self):
+        """Instruct-mode history stays clean even with display enabled."""
+        context = []
+        with patch(__name__ + '.MOCK_MODEL_OUTPUT', BASIC_RESPONSE):
+            result = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context, thinking=False)
+        self.assertEqual(result, BASIC_RESPONSE)
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
+        self.assertFalse(context[1].endswith(core.THINK_CLOSER))
+        self.assertNotIn(core.THINK_TRIGGER, ''.join(context))
+
+    def test_display_flag_does_not_change_stored_history(self):
+        """DISPLAY_EXTENDED_REASONING changes presentation, never saved context."""
+        context = []
+        with patch.object(core, 'DISPLAY_EXTENDED_REASONING', False):
+            result = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context)
+        self.assertEqual(result, BASIC_RESPONSE)
+        self.assertEqual(context[2], BASIC_RESPONSE + core.EOS)
+
+    def test_oversized_prompt_cleans_temporary_tags_thinking(self):
+        """Oversized responses return an error without modifying the command."""
+        context = [
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS,
+            core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT,
+        ]
+        before = context[-1]
+        with patch.object(core, 'MIN_RESPONSE_SIZE', core.CONTEXT_SIZE + 1):
+            result = core.get_completion_from_messages(context, thinking=True)
+        self.assertEqual(result, core.OVERSIZED_PROMPT_ERROR)
+        self.assertEqual(context[-1], before)
+
+    def test_oversized_prompt_cleans_temporary_tags_instruct(self):
+        """Oversized instruct-mode prompts do not leave empty thinking blocks."""
+        context = [
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS,
+            core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT,
+        ]
+        before = context[-1]
+        with patch.object(core, 'MIN_RESPONSE_SIZE', core.CONTEXT_SIZE + 1):
+            result = core.get_completion_from_messages(context, thinking=False)
+        self.assertEqual(result, core.OVERSIZED_PROMPT_ERROR)
+        self.assertEqual(context[-1], before)
+
+    def test_instruct_mode_response_with_literal_inline_think_tag(self):
+        """Strict newline-based parser preserves conversational inline markers."""
+        raw = 'The user wrote <think> as text, not a reasoning block.'
+        context = []
+        with patch(__name__ + '.MOCK_MODEL_OUTPUT', raw):
+            result = core.send_prompt(PRIME_DIRECTIVES, PROMPT, context, thinking=False)
+        self.assertEqual(result, raw)
+        self.assertEqual(context[2], raw + core.EOS)
+
+    def test_inference_error_terminates(self):
+        """A model exception terminates, so context cleanup is unnecessary."""
+        context = [
+            core.SYSTEM_TEXT + PRIME_DIRECTIVES + core.EOS,
+            core.USER_TEXT + PROMPT + core.EOS + core.ASSISTANT_TEXT,
+        ]
+        with patch.object(MockLlama, '__call__', side_effect=RuntimeError('fail')):
+            with self.assertRaises(SystemExit):
+                core.get_completion_from_messages(context, thinking=False)
+
 
 
 class TestSummary(unittest.TestCase):

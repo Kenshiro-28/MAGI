@@ -7,13 +7,13 @@ import select
 from llama_cpp import Llama
 from collections.abc import Iterator
 
-SYSTEM_VERSION_TEXT = "\n[ MAGI 12.45 ]"
+SYSTEM_VERSION_TEXT = "\n[ MAGI 12.46 ]"
 CONFIG_HEADER_TEXT = "\n\n----- Config -----\n"
 
 SYSTEM_TEXT = "<|im_start|>system\n"
 USER_TEXT = "<|im_start|>user\n"
 ASSISTANT_TEXT = "<|im_start|>assistant\n"
-EOS = "\n<|im_end|>\n"
+EOS = "<|im_end|>\n"
 
 DATA_ONLY_START_TAG = "<data_only>\n"
 DATA_ONLY_END_TAG = "\n</data_only>"
@@ -23,6 +23,8 @@ SUMMARIZE_SYSTEM_PROMPT = """You are a summarizer.
 If the final TOPIC is context-dependent, such as "continue", "go on", "yes", or another follow-up instruction, treat it as referring to the objective established by PREVIOUS_SUMMARY rather than as a standalone topic. Treat NEW_TEXT as new information about that objective, not as a replacement for it.
 
 Summarize ONLY information relevant to the resolved TOPIC. Preserve relevant information from PREVIOUS_SUMMARY and integrate relevant information from NEW_TEXT. Do NOT invent facts, numbers, dates, names, or attribution. Preserve names, numbers, and dates exactly. Keep key qualifiers, quantities, and constraints that affect meaning. Include enough context for each point or sentence to be understandable on its own; avoid vague pronouns and do not over-compress.
+
+Understand source content in any language. Accurately integrate multilingual information and write summaries in English by default, unless the final TOPIC explicitly specifies another output language. Preserve the original meaning, proper names, technical identifiers, URLs, exact quotations, and relevant ambiguities when translating.
 
 If the final TOPIC specifies output rules or a required format, follow them exactly unless they conflict with these instructions. Otherwise, prefer clear, self-contained bullet points or clear sentences, whichever fits best. Avoid a preamble; if one is useful, keep it to one short line.
 
@@ -71,11 +73,12 @@ DRY_SEQ_BREAKERS: list[str] = []
 PRESENCE_PENALTY = 0.0
 REPETITION_PENALTY = 1.0
 
+# Context
 CONTEXT_SIZE = 0
 MAX_INPUT_TOKENS = 0
 MIN_RESPONSE_SIZE = 8192
-MAX_RESPONSE_SIZE = 81920
-MIN_CONTEXT_SIZE = 131072
+MAX_RESPONSE_SIZE = 98304
+MIN_CONTEXT_SIZE = MAX_RESPONSE_SIZE * 2
 CONTEXT_HEADROOM = 2048
 CONTEXT_SIZE_KEY = "CONTEXT_SIZE"
 CONTEXT_SIZE_NOT_FOUND_TEXT = "Context size not found.\n"
@@ -110,6 +113,7 @@ THINK_END_LINE_PATTERN = re.compile(
     flags=re.MULTILINE
 )
 THINK_TRIGGER = THINK_START + "\n"
+THINK_CLOSER = "\n" + THINK_END + "\n\n"
 
 LOG_ENABLED = False
 ENABLE_LOG_KEY = "ENABLE_LOG"
@@ -134,7 +138,7 @@ def split_text_in_blocks(text: str) -> list[str]:
 
 
 def get_number_of_tokens(text: str) -> int:
-    tokenized_text = model.tokenize(text.encode('utf-8'))
+    tokenized_text = model.tokenize(text.encode('utf-8'), special = True)
     text_tokens = len(tokenized_text)
 
     return text_tokens
@@ -149,18 +153,19 @@ def get_context_data(context: list[str]) -> tuple[str, int]:
 
 def get_completion_from_messages(context: list[str], thinking: bool = True) -> str:
     try:
-        # Append extended reasoning trigger
-        context[-1] += THINK_TRIGGER
+        if thinking:
+            thinking_tags = THINK_TRIGGER
+        else:
+            thinking_tags = THINK_TRIGGER + THINK_CLOSER
 
-        if not thinking:
-            # Close extended reasoning block
-            context[-1] += "\n" + THINK_END + "\n\n"
+        # Append extended reasoning tags
+        context[-1] += thinking_tags
 
         # Get context data
         text, text_tokens = get_context_data(context)
 
         # Check context size
-        while len(context) > 3 and text_tokens > MAX_INPUT_TOKENS:
+        while len(context) > 5 and text_tokens > MAX_INPUT_TOKENS:
             # Remove oldest conversation turn
             del context[1:3]
             text, text_tokens = get_context_data(context)
@@ -176,9 +181,8 @@ def get_completion_from_messages(context: list[str], thinking: bool = True) -> s
         if available_tokens < MIN_RESPONSE_SIZE:
             print_system_text(OVERSIZED_PROMPT_ERROR)
 
-            if thinking:
-                # Remove extended reasoning trigger from context
-                context[-1] = context[-1].removesuffix(THINK_TRIGGER)
+            # Remove extended reasoning tags
+            context[-1] = context[-1].removesuffix(thinking_tags)
 
             return OVERSIZED_PROMPT_ERROR
 
@@ -217,11 +221,11 @@ def get_completion_from_messages(context: list[str], thinking: bool = True) -> s
         # Compute response
         response = response_data['choices'][0]['text'].strip()
 
-        if thinking:
-            # Remove extended reasoning trigger from context
-            context[-1] = context[-1].removesuffix(THINK_TRIGGER)
+        # Remove extended reasoning tags from context
+        context[-1] = context[-1].removesuffix(thinking_tags)
 
-            # Prepend extended reasoning trigger to response
+        # Prepend extended reasoning trigger to response
+        if thinking:
             response = THINK_TRIGGER + response
 
         return response
@@ -229,7 +233,7 @@ def get_completion_from_messages(context: list[str], thinking: bool = True) -> s
     except Exception as e:
         error = MODEL_RESPONSE_ERROR + str(e)
         print_system_text(error)
-        exit()
+        sys.exit(1)
 
 
 def remove_reasoning(response: str) -> str:
@@ -303,8 +307,8 @@ def send_prompt(primeDirectives: str, prompt: str, context: list[str], hide_reas
     # Remove extended reasoning from response
     response = remove_reasoning(full_response)
 
-    # Add full response to context
-    context.append(full_response + EOS)
+    # Add response to context
+    context.append(response + EOS)
 
     # Return the full response if required
     if DISPLAY_EXTENDED_REASONING and not hide_reasoning:
@@ -484,7 +488,7 @@ def load_model(startup: bool = True) -> None:
 
         if not modelFileArray:
             print_system_text(MODEL_NOT_FOUND_ERROR)
-            exit()
+            sys.exit(1)
 
         # Get the first model file
         modelFile = modelFileArray[0]
@@ -570,7 +574,7 @@ def load_model(startup: bool = True) -> None:
 
     except Exception as e:
         print_system_text(MODEL_LOAD_ERROR + str(e))
-        exit()
+        sys.exit(1)
 
 
 def unload_model() -> None:
@@ -619,36 +623,36 @@ def configure_model() -> None:
 
     if not temperature_thinking:
         print_system_text(CONFIG_ERROR + TEMPERATURE_NOT_FOUND_TEXT)
-        exit()
+        sys.exit(1)
 
     try:
         TEMPERATURE_THINKING = float(temperature_thinking)
 
     except ValueError:
         print_system_text(CONFIG_ERROR + TEMPERATURE_INVALID_TEXT)
-        exit()
+        sys.exit(1)
 
     # Set context size
     context_size = config.get(CONTEXT_SIZE_KEY, '')
 
     if not context_size:
         print_system_text(CONFIG_ERROR + CONTEXT_SIZE_NOT_FOUND_TEXT)
-        exit()
+        sys.exit(1)
 
     try:
         CONTEXT_SIZE = int(context_size)
 
     except ValueError:
         print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT)
-        exit()
+        sys.exit(1)
 
     # Check minimum context size
     if CONTEXT_SIZE < MIN_CONTEXT_SIZE:
         print_system_text(CONFIG_ERROR + CONTEXT_SIZE_INVALID_TEXT)
-        exit()
+        sys.exit(1)
 
     # Set max input tokens
-    MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE
+    MAX_INPUT_TOKENS = CONTEXT_SIZE - MAX_RESPONSE_SIZE - CONTEXT_HEADROOM
 
     # Set Heartbeat
     try:

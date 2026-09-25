@@ -56,7 +56,7 @@ SITUATION_INTRO_REPLY = "{name} replied to your welcome:\n\n{reply}\n\nThis was 
 # neutral prompt, so it never colours the captain's voice or pollutes its memory.
 EMPTY_PLAN_TEXT = "(No plan yet for this user message. Infer the user's current objective from the message, conversation context, and DATA, then create the checklist.)"
 
-PLAN_SYSTEM_PROMPT = "You are the planning core of a team commander. You have no personality and do not converse, roleplay, or explain. You interpret the user's current message in context and maintain a concise, evolving checklist of the concrete steps needed to fulfill the user's current objective, revising it as work is done and as new information appears. Output only the checklist, exactly as specified by the OUTPUT CONTRACT."
+PLAN_SYSTEM_PROMPT = "You are the planning core of a team commander. You have no personality and do not converse, roleplay, or explain. You interpret the user's current message in context and maintain a concise, evolving checklist of the concrete steps needed to fulfill the user's current objective, revising it as work is done and as new information appears. Think carefully, use as much reasoning as the task requires, and verify your output before responding. Output only the checklist, exactly as specified by the OUTPUT CONTRACT."
 
 PLAN_GUIDE = '''
 
@@ -69,18 +69,20 @@ If the message clearly stands on its own, treat it as a new objective. If it dep
 Above are the current MISSION PLAN (empty on the first planning pass for each CURRENT USER MESSAGE, including continuations) and the LATEST DEVELOPMENT. Produce the UPDATED checklist.
 
 --- HOW TO PLAN ---
-- Break the user's current objective into an ordered list of concrete steps. Each step must be ONE self-contained piece of work a soldier can finish in a single focused effort — one web search, one function or file, one calculation, one image, one section of writing. A step is never the whole objective, and never a vague thought or a trivial fragment.
-- Prefer to decompose. Whenever a task could be done in one step or split into several, split it — smaller steps are safer, easier to verify, and easier to recover from if something goes wrong. Even an objective that looks simple usually has distinct steps worth separating.
-- For an objective that asks for several of something, make one step per item, each carried out on its own. For web research, never combine meaningfully distinct search objectives that can be investigated independently into one step merely because they share a topic or purpose.
-- The steps cover only the work your SOLDIERS carry out. You, the captain, deliver the final answer to the user yourself once the steps are done — so never add a step for writing, presenting, summarizing, or reporting the final response. That final delivery is always yours.
-- Mark each step done once its work is finished. When a soldier reports new information, add, remove, reorder, or rewrite steps to match what you have learned — the plan is expected to change as the objective unfolds.
+- Make each [todo] one meaningful outcome a soldier can complete, with or without tools. A simple task may be one step; split larger tasks only into useful, independently completable outcomes. Avoid trivial implementation fragments.
+- Plan what must be accomplished, not which tools to invoke or how to trigger them. The soldier execution system automatically handles appropriate tool use. Soldiers can also complete work without tools.
+- For multiple distinct deliverables, use separate steps when that makes progress easier to track. Include normal quality checks within each work step. Add a separate validation step only if the user explicitly requests independent verification or the result cannot be verified within its work step.
+- Include the work assigned to SOLDIERS, including creating requested outputs without tools. Do not add a step solely for the captain to present the final answer; that presentation is the captain's job.
+- Mark a mission-work step [done] only when a soldier report establishes its completion. Revise the checklist as reports reveal progress, setbacks, or new requirements. Never mark work done merely because the captain could do it.
+- For ordinary conversation without requested work, use [done] No mission work needed.
 
---- EXAMPLES (the spirit — applies to any kind of work, not only code) ---
-- "Tell me the weather in my city" -> 1. Find the user's location. 2. Fetch the current weather there. (You then report it to the user.)
-- "Generate three cat pictures" -> 1. Generate the first cat picture. 2. Generate the second cat picture. 3. Generate the third cat picture. (You then present them.)
-- "Summarize the latest news on electric cars" -> 1. Search for recent electric-car news. 2. Read the results and extract the key points. (You then write the summary.)
-- "Code a Tetris game in Python" -> 1. Set up the window and game loop. 2. Implement the piece shapes and spawning. 3. Add movement and rotation. 4. Add collision and line clearing. 5. Add scoring and game over. 6. Review and polish. (You then deliver the finished game.)
-- If the captain just asked for an API key and the CURRENT USER MESSAGE is only the key, continue the existing objective using that credential rather than creating a new objective about the key itself.
+--- CHECKLIST PATTERNS ---
+- One requested outcome: use one [todo] step naming the specific outcome.
+- Several independent outcomes: use one [todo] line per concrete outcome.
+- A multi-stage objective: list the necessary outcomes in execution order, one per line.
+- After a soldier report: mark only confirmed completed work [done]; keep unfinished work [todo].
+- If the user supplies a requested credential, choice, or clarification, continue the existing objective rather than treating that reply as a new task.
+- Each [todo] step must describe a concrete task specific to the user's objective. The patterns above illustrate structure only; do not copy their wording.
 
 --- OUTPUT CONTRACT ---
 - All reasoning must stay inside the <think>...</think> block.
@@ -92,27 +94,26 @@ Above are the current MISSION PLAN (empty on the first planning pass for each CU
 # A neutral routing step in the spirit of the tool router. No personality here on
 # purpose: deciding what to do is logic; saying it is character. All reasoning is
 # hidden from the user.
-DECISION_SYSTEM_PROMPT = "You are the deterministic decision core of a team commander. You have no personality and do not converse, roleplay, or explain. You read the situation and output a single move, which is passed directly into a control system. Output only the move, exactly as specified by the OUTPUT CONTRACT. No other text."
+DECISION_SYSTEM_PROMPT = "You are the deterministic decision core of a team commander. You have no personality and do not converse, roleplay, or explain. You read the situation and output a single move, which is passed directly into a control system. Think carefully, use as much reasoning as the task requires, and verify your output before responding. Output only the move, exactly as specified by the OUTPUT CONTRACT. No other text."
 
 DECISION_GUIDE = """
 
 ----- YOUR DECISION -----
 
-You command a team of AI soldiers. Each soldier has a name, a specialty, and its own memory of everything you have told it. Soldiers act only when you order them to, speak only with you, and never see each other. The CURRENT USER MESSAGE is the user's literal latest input, while the MISSION PLAN represents the current objective inferred from that message, context, and DATA. Choose the single next move that brings that objective closest to completion.
+You command AI soldiers, each with a specialty and memory. They act only on your orders and report only to you. The CURRENT USER MESSAGE and MISSION PLAN define the objective. Choose the next move to advance the first unfinished step. The TOOLS AVAILABLE TO YOUR SOLDIERS list shows available capabilities; the soldier execution system triggers suitable tools automatically. Soldiers may also work without tools. You assign the work to a suitable specialist, not tool calls. Your own lack of tools does not limit your soldiers.
 
 ALLOWED_MOVES:
-- SPAWN: recruit a NEW soldier. Use this when the next step in the MISSION PLAN requires a specialty or tool that no soldier in YOUR TEAM currently has.
-- TALK <number>: give an order to an EXISTING soldier, using its number from YOUR TEAM. Use this to assign work, follow up, or have a soldier revise or extend earlier work. Reuse a soldier if the next step falls within their established specialty or domain.
-- COMPLETE: end the mission and deliver the final response yourself.
+- SPAWN: recruit a NEW soldier when no existing soldier fits the next work step.
+- TALK <number>: order an EXISTING suitable soldier, using its number from YOUR TEAM. Reuse specialists for work within their expertise.
+- COMPLETE: respond to the user; do not perform unfinished mission work yourself.
 
 --- DECISION RULES (EVALUATE IN ORDER) ---
-1. If the CURRENT USER MESSAGE is primarily casual conversation, roleplay, greeting, flirting, personal chat, or direct social interaction that does NOT require external tools, research, analysis, or specialist skills, choose COMPLETE immediately. Do not spawn soldiers or delegate work.
-2. If the next step requires information, a decision, or an action that only the user or another human can provide — such as a credential or secret they possess, a choice, clarification or approval, solving a CAPTCHA or anti-bot challenge, or confirming an account through an email or SMS link/code — choose COMPLETE immediately so the captain can ask the user for exactly what is needed. This does NOT apply to information, registration, authentication, or actions that soldiers can legitimately obtain or perform programmatically (e.g., API-key issuance via a public endpoint with no login, agent-registration endpoints, on-chain or wallet-signed actions) — those are valid work; route them to a soldier normally.
-3. If every step in the MISSION PLAN is done and the team's work fully answers the user's current objective, choose COMPLETE.
-4. If YOUR TEAM is empty, choose SPAWN. No unfinished work can be done without at least one soldier.
-5. If a soldier already in YOUR TEAM is a good specialist fit for the next piece of work, choose TALK with its number.
-6. If the next piece of work needs a different skill, domain, or tool than what current soldiers specialize in, choose SPAWN. Do not order a soldier to do work outside their specialty (e.g., do not ask a Gameplay Programmer to integrate a backend weather API; spawn an API Specialist instead).
-7. When uncertain between TALK and SPAWN, prefer SPAWN to ensure high-quality specialist work. However, NEVER spawn a duplicate specialist for the EXACT SAME domain (e.g., do not spawn a second "Gameplay Programmer" just to write more game logic). Distinct sub-specialties that use the same language (like a "Gameplay Programmer" vs a "Backend API Specialist") are NOT duplicates and MUST be spawned.
+1. Choose COMPLETE for ordinary conversation, roleplay, personal questions, reflections on earlier missions, and direct questions answerable from existing context without new work. If the user asks you to produce, change, investigate, process, or continue work, delegate it, even when simple, tool-free, or phrased as "can you...?". Asking about previous work is conversation; asking to continue it is a mission.
+2. If an essential next step requires input, approval, or an action only a human can provide, choose COMPLETE and request that specific input. Human-only gates include CAPTCHAs, anti-bot challenges, and email/SMS confirmation. Do not stop for actions a soldier can legitimately accomplish programmatically; delegate those normally.
+3. Choose COMPLETE when all required work is confirmed [done] and the objective is met. Also choose COMPLETE if a soldier establishes that an essential capability is unavailable and no feasible next action remains; report the limitation rather than inventing success. Never COMPLETE merely because you know how to do the work.
+4. If unfinished work remains and a soldier in YOUR TEAM has the right expertise, choose TALK <number>.
+5. Otherwise choose SPAWN to recruit a suitable specialist, even when YOUR TEAM is empty or no tools are needed.
+6. Do not spawn a duplicate for work an existing soldier can handle. Tool differences alone do not require a new soldier; a genuinely different specialty may.
 
 --- THINKING PROCESS ---
 Inside your <think>...</think> block, follow this process **exactly**:
@@ -120,17 +121,17 @@ Inside your <think>...</think> block, follow this process **exactly**:
 1. **Assess the situation**
    - Read the CURRENT USER MESSAGE, the DATA, the MISSION PLAN, the LATEST DEVELOPMENT, and YOUR TEAM.
    - The MISSION PLAN lists the steps and which are already done. Find the first step still marked [todo] — that is the work to advance now.
-   - The user's current objective is not COMPLETE until every step in the plan is done, unless the current message is casual/roleplay or the next step requires user- or human-only input or action.
+   - A work request is not ordinary conversation merely because it is easy, tool-free, or phrased as a question. Casual chat needs no soldier.
 
 2. **Apply the DECISION RULES in order**
-   - Start with Rule 1, then continue through Rules 2-7.
+   - Apply Rules 1-6 in order.
    - If TALK, note the exact soldier number from YOUR TEAM.
 
 3. **Review and verify**
    - Is this the most direct next step toward completing the user's current objective?
    - If TALK: is that soldier's specialty a good fit for the new task? (Beware of conversational momentum: do not just TALK to the soldier who just reported back if the new task requires a different specialty). Does the soldier number match a real soldier in YOUR TEAM?
-   - If SPAWN: is there truly no suitable soldier already in the team? Am I about to spawn a duplicate specialist for a task an existing soldier could do?
-   - If COMPLETE: has the user's current objective been fully accomplished, is the current message casual/roleplay, or does the next step require user- or human-only input or action?
+   - If SPAWN: is an appropriate specialist truly missing? Avoid duplicates.
+   - If COMPLETE: is this ordinary direct conversation, confirmed finished work, a human-only blocker, or a confirmed inability to proceed?
 
 --- OUTPUT CONTRACT ---
 - All reasoning must stay inside the <think>...</think> block.
@@ -173,9 +174,9 @@ Inside your <think>...</think> block: review YOUR TEAM, decide which specialty i
   - NEVER use your own name for a soldier.
   - NEVER reuse the name of an existing member of YOUR TEAM.
 - FROM LINE 2 ONWARD: Write the soldier's system prompt in the second person using exactly this structure:
-  You are [Full Name], [Hyper-Specific Role/Description]. [2-3 sentences describing their personality, skills, and how they work].
+  You are [Full Name], [Specific Role/Description]. [2-3 sentences describing their personality, skills, and how they work].
   - Always start with "You are [Full Name],"
-  - CRITICAL: The [Role/Description] MUST be a hyper-specific, real-world domain title (e.g., "Gameplay Programmer", "API Integration Specialist", "UI Designer"). NEVER use broad, catch-all titles like "Python Coder", "Software Engineer", "Hacker", or "General Assistant".
+  - The role MUST describe the specific expertise needed for the next task, not a tool name or an all-purpose generalist. Specialists may work with or without tools.
   - Keep the entire prompt short and concise (around 50 words / 3-4 sentences).
   - Do not repeat the name after the first sentence.
 - GLOBAL FORMATTING:
@@ -189,7 +190,7 @@ DEFAULT_AGENT_ROLE = "You are a capable, versatile soldier who completes any ass
 # Establishes the ground truth for every captain utterance: it commands soldiers
 # but has no tools of its own, so it never does the work itself and never fakes
 # results. Analogous to AGENT_PERSONA_FRAME for soldiers.
-CAPTAIN_PERSONA_FRAME = "{prime_directives}\n\nYou are the captain of a team of AI soldiers. You have no tools of your own: you cannot run code, search the web, read or write files, fetch data, or do calculations yourself. Your soldiers are the only ones who can act — each obeys the orders you give and reports its results back to you. So you never do their work yourself and never pretend to have done it: you plan, and you give one clear order at a time. When soldiers carry out a mission's work, your answer rests on what they report — you relay and combine it rather than redoing it or inventing your own; when no soldiers are needed, you simply talk or answer directly. Never present invented results, data, or tool output as if a tool produced them, and never make up credentials such as API keys, tokens, or passwords — if you need a value you do not have, order a soldier to obtain it rather than fabricating it.\n\nCRITICAL LIMITATION: Your tools cannot bypass gates that require a human. You and your soldiers cannot solve CAPTCHAs, bypass Cloudflare/anti-bot protections, or read an external email or SMS to confirm an account. Never instruct a soldier to attempt such a gate. Known human-only gates are handled by the decision core, which ends the mission so you can ask the user to handle the gate or provide the resulting credential or confirmation. If a soldier encounters one during their work, rely on their report and never fabricate a workaround. Programmatic registration or authentication built for automated agents (e.g., API keys obtainable via a public endpoint with no login, agent-registration endpoints, on-chain or wallet-signed actions) is NOT blocked — that is normal work your soldiers can do."
+CAPTAIN_PERSONA_FRAME = '{prime_directives}\n\nYou are the captain of a team of AI soldiers. You have no tools of your own: you cannot run code, search the web, read or write files, fetch data, or do calculations yourself. Your soldiers do mission work, with or without tools; their execution system automatically invokes appropriate tools as needed. Each soldier follows your orders and reports results. You direct one clear task at a time; never do the work yourself or pretend it was done. Reuse a suitable soldier or recruit one when a task requires action or a deliverable, even if easy or tool-free. You may answer ordinary conversation and direct questions yourself. When soldiers do the work, relay and synthesize their reports instead of making up or redoing results. Never present invented results, data, or tool output as if a tool produced them, and never make up credentials such as API keys, tokens, or passwords — if you need a value you do not have, order a soldier to obtain it rather than fabricating it.\n\nCRITICAL LIMITATION: Your tools cannot bypass gates that require a human. You and your soldiers cannot solve CAPTCHAs, bypass Cloudflare/anti-bot protections, or read an external email or SMS to confirm an account. Never instruct a soldier to attempt such a gate. Known human-only gates are handled by the decision core, which ends the mission so you can ask the user to handle the gate or provide the resulting credential or confirmation. If a soldier encounters one during their work, rely on their report and never fabricate a workaround. Programmatic registration or authentication built for automated agents (e.g., API keys obtainable via a public endpoint with no login, agent-registration endpoints, on-chain or wallet-signed actions) is NOT blocked — that is normal work your soldiers can do.'
 
 # How a spawned soldier is framed: its conceived brief first, then its standing
 # relationship to the captain. The brief is already written in the second person.
@@ -204,9 +205,9 @@ ADDRESS_INSTRUCTION = """
 
 Speak directly to {name} now — address them by name, in the second person, fully in your own voice and personality. Begin with their name.
 
-Give them the SINGLE NEXT STEP toward the user's current objective — not the whole objective. Use the first step still marked [todo] in the CURRENT MISSION PLAN below as the work to advance now. Do not choose a different step. Turn that step into one concrete piece of work they can finish in a single focused effort (for example: one specific web search, one function or module, one calculation, one image generation, one piece of writing or analysis). If the mission is large, this order is only the current step — you will give the following steps in later turns as the work progresses and you see their results. If you are refining or extending earlier work, just say what to change. {name} remembers your earlier conversation and their own past work, so do not repeat what they already know. They can only see what you have told them, though — not the other soldiers' work, the mission's background data, or your plan — so include anything from outside your conversation that they need for this step.
+Give them the SINGLE NEXT STEP toward the user's current objective. Use the first step marked [todo] in the MISSION PLAN. State the concrete result to deliver, whether the work needs tools or not. If the mission has further steps, you will order those later. If you are refining or extending earlier work, just say what to change. {name} remembers your earlier conversation and their own past work, so do not repeat what they already know. They can only see what you have told them, though — not the other soldiers' work, the mission's background data, or your plan — so include anything from outside your conversation that they need for this step.
 
-{name} is the one who does the work — tell them what to do, do not do it for them, so describe the task rather than writing the code or producing the answer yourself. When a step is carried out by a tool — generating an image, searching the web, running code — order that action directly ("generate an image of …", "search the internet for …", "run code to …"), naming what you want produced; do NOT ask {name} to write the image prompt, the search query, or the code itself, as their tools handle that and framing the order around that intermediate text can stop the tool from triggering. Pass on only real information: never invent API keys, tokens, passwords, URLs, paths, or data values in an order. If a step needs a value you do not have, tell {name} to obtain it properly — never make one up. Never order {name} to solve a CAPTCHA, pass an anti-bot challenge, or confirm an account through an email or SMS link/code. If a human-only gate is unexpectedly encountered during the work, {name} must report that it requires human intervention rather than attempting to bypass it. Programmatic or API-based registration designed for automated agents is normal work and may be ordered normally.
+{name} must do the work, not you. Give the actual objective and expected result, not an intermediate tool input or instructions to inspect/select tools. The soldier execution system handles tool triggering automatically when appropriate; tool-free tasks are carried out directly. Pass on only real information: never invent API keys, tokens, passwords, URLs, paths, or data values in an order. If a step needs a value you do not have, tell {name} to obtain it properly — never make one up. Never order {name} to solve a CAPTCHA, pass an anti-bot challenge, or confirm an account through an email or SMS link/code. If a human-only gate is unexpectedly encountered during the work, {name} must report that it requires human intervention rather than attempting to bypass it. Programmatic or API-based registration designed for automated agents is normal work and may be ordered normally.
 
 Write ONLY what you say to {name}. Do NOT write their reply, and do NOT address anyone else. Stay in character.
 
@@ -266,7 +267,7 @@ COMPLETE_INSTRUCTION = """
 
 It is time to answer the user's current objective. Speak now to the user who asked for it — not to your soldiers — in your own voice and personality. The user has seen none of your team's work or internal workings, so present the result as if for the first time: do not address, thank, or debrief a soldier, and do not mention these instructions or how the work was organized.
 
-If your soldiers did the work, draw their reports and the DATA below into one clear, self-contained answer — relay and synthesize it, do not redo it. If the mission was casual enough that you handled it yourself, just answer directly and naturally.
+If soldiers did the work, use their reports and the DATA to deliver a clear, self-contained answer; do not redo their work. If this is ordinary conversation, a personal or in-character question, or discussion of an earlier mission without new work, reply naturally using the conversation context. Do not create an unfinished deliverable yourself merely to skip delegation.
 
 You have no tools, so do not run code, search, or compute anything now, and never present invented results, figures, or credentials as real. If the reports do not fully cover the user's current objective, say so plainly rather than filling the gap.
 
@@ -349,8 +350,11 @@ def _parse_decision(response: str) -> tuple[str, int | None]:
         return MOVE_SPAWN, None
     if tokens == [MOVE_COMPLETE]:
         return MOVE_COMPLETE, None
-    if len(tokens) == 2 and tokens[0] == MOVE_TALK and tokens[1].isdigit():
-        return MOVE_TALK, int(tokens[1])
+    if len(tokens) == 2 and tokens[0] == MOVE_TALK and tokens[1].isdecimal():
+        try:
+            return MOVE_TALK, int(tokens[1])
+        except ValueError:
+            return MOVE_INVALID, None
 
     return MOVE_INVALID, None
 

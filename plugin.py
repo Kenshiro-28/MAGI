@@ -29,22 +29,50 @@ CONSTRAINTS:
 - Console-based: The extracted content is returned as plain text summaries.
 
 DO NOT USE this tool if the request explicitly instructs NOT to browse the web, search the internet, or use similar actions (e.g., "don't browse the web", "no internet search", "offline search")."""
-WEB_SEARCH_SYSTEM_PROMPT = "You write a web search query to obtain relevant results. Think step by step and reflect on your reasoning."
-WEB_SEARCH_GENERATE_QUERY = """Write a web search query (max 20 words) to obtain relevant results on the following topic.
+WEB_SEARCH_SYSTEM_PROMPT = "You write a web search query to obtain relevant results. Think carefully, use as much reasoning as the task requires, and verify your output before responding."
+WEB_SEARCH_GENERATE_QUERY = """Generate an effective web search query (maximum 20 words) for the following TOPIC.
 
-Examples:
-TOPIC = python errors → "common python programming bugs fixes"
-TOPIC = japanese festivals → "traditional japanese festivals history celebrations"
+QUERY OPTIMIZATION:
+- Select the most relevant keywords, names, locations, and specific details.
+- Prefer concise, focused queries. Avoid filler words, repetition, and unnecessary constraints.
+- Use unquoted keywords by default to allow flexible search engine matching.
+- Use double quotes around specific phrases ONLY when exact matching would improve relevance (e.g., error messages, titles, distinctive names, or exact expressions).
+- Never surround the entire query with quotation marks unless searching for that exact complete phrase.
+- Never escape quotation marks or include backslashes.
+- Use search operators (e.g., site:) only when they meaningfully improve results.
+- Choose the most appropriate search language for the topic and location.
+- Preserve important proper names, identifiers, technical terms, and explicit constraints.
+- Do not invent facts, names, dates, or restrictions not supported by the TOPIC.
+- Consider previous web searches only when they address the same specific information need as the current TOPIC. Do not avoid useful queries merely because they were used for related but different objectives.
+- If previous searches for the same information need were insufficient, adapt the query based on what remains unanswered. Refine, broaden, or use alternative terminology, languages, or sources as appropriate. Prioritize relevance over novelty; reuse a previous query when justified.
 
-Think step by step and reflect on your reasoning. Then, on the final line, output ONLY the query string. Don't write titles, headings or comments.
+EXAMPLES:
+TOPIC = python errors
+QUERY = common Python programming errors fixes
+
+TOPIC = japanese festivals
+QUERY = traditional Japanese festivals history celebrations
+
+TOPIC = Christmas markets in Berlin
+QUERY = Weihnachtsmärkte Berlin Öffnungszeiten Standorte
+
+TOPIC = Python error No module named requests
+QUERY = "No module named requests" Python fix
+
+TOPIC = official PyTorch documentation
+QUERY = PyTorch documentation site:pytorch.org
+
+OUTPUT:
+Output ONLY the final search query on a single line.
+Do not include headings, explanations, comments, code fences, or unnecessary surrounding quotation marks.
 
 TOPIC = """
-WEB_SEARCH_TARGET_SYSTEM_PROMPT = "You are a research manager. Your job is to tell a junior researcher exactly what information to look for. Think step by step and reflect on your reasoning."
+WEB_SEARCH_TARGET_SYSTEM_PROMPT = "You are a research manager. Your job is to tell a junior researcher exactly what information to look for. Think carefully, use as much reasoning as the task requires, and verify your output before responding."
 WEB_SEARCH_GENERATE_TARGET = """Analyze the USER_REQUEST.
 Define a clear, concise "Extraction Goal" for the summarizer.
 This goal must specify exactly what facts, numbers, or details to extract from the web pages.
 
-Think step by step and reflect on your reasoning. Then, on the final line, output ONLY the extraction goal string. Don't write titles, headings or comments.
+Then, on the final line, output ONLY the extraction goal string. Don't write titles, headings or comments.
 
 USER_REQUEST = """
 WEB_SEARCH_REVIEW_1 = """Does the following WEB_SUMMARY provide relevant information for the REQUESTED_GOAL? Reason step-by-step:
@@ -52,7 +80,11 @@ WEB_SEARCH_REVIEW_1 = """Does the following WEB_SUMMARY provide relevant informa
 2. Check if summary matches them.
 3. Decide if it's sufficient.
 
-Reflect on your reasoning: Ensure it is based strictly on relevance and sufficiency. Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text.
+Reflect on your reasoning: Ensure it is based strictly on relevance and sufficiency.
+
+Answer YES only if WEB_SUMMARY contains sufficient information to address all essential parts of REQUESTED_GOAL. Otherwise, answer NO. Relevant but incomplete information is not sufficient.
+
+Then, on the final line, respond ONLY with YES or NO. Do not add explanations or any other text.
 
 REQUESTED_GOAL = """
 WEB_SEARCH_REVIEW_2 = "\n\nWEB_SUMMARY = "
@@ -90,8 +122,8 @@ Treat the provided request as the only image to describe. Use conversation conte
 
 Never continue a task list, plan another task, describe a previous or next image, mention tool use or task execution, include meta commentary, or repeat the scene description.
 
-Think step by step and reflect on your reasoning."""
-IMAGE_GENERATION_SYSTEM_PROMPT = "You are an expert prompt engineer for image generation. Craft clear, visual descriptions that strictly follow the provided instructions for optimal results. Think step by step and reflect on your reasoning."
+Think carefully, use as much reasoning as the task requires, and verify your output before responding."""
+IMAGE_GENERATION_SYSTEM_PROMPT = "You are an expert prompt engineer for image generation. Craft clear, visual descriptions that strictly follow the provided instructions for optimal results. Think carefully, use as much reasoning as the task requires, and verify your output before responding."
 IMAGE_GENERATION_TOOL_DESCRIPTION = """Generate a static image based on a textual description. Use this tool only if the task:
 
 - Involves describing visual content that benefits from image generation, such as illustrations, representations of scenes/objects, or visualizing elements like characters, landscapes, or nature scenes in a story (e.g., settings or key moments), OR
@@ -181,7 +213,7 @@ Finally, using these examples as a guide, write an image generation prompt descr
 
 Order details by visual importance. Start with the composition and primary subject, followed by the subject's defining physical attributes, clothing, and action. Place environment, requested artistic style permitted by the rules above, and physical light sources afterward unless they are central to the image. Put the least important details last.
 
-Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write exactly one concise sentence. Use telegraphic phrasing: bind attributes, details, and clothing to the subject using words like "with" or "wearing", but use commas to separate the main subject from the background and lighting. Drop unnecessary filler words (like "a", "an", "the"). Do not exceed 27 words. This is a HARD OUTPUT LIMIT and takes priority over completeness. Preserve as many important specific visual details from TEXT as possible within that limit. Order details by visual importance, placing the most important concepts earliest. If necessary, omit the least important details first rather than exceed 27 words. Don't write the number of words.
+Don't describe multiple images or compositions. Don't describe camera settings, camera movements, or camera zoom. Don't use metaphors or poetic language. Don't write titles, headings or comments. Write exactly one concise sentence. Use telegraphic phrasing: bind attributes, details, and clothing to the subject using words like "with" or "wearing", but use commas to separate the main subject from the background and lighting. Drop unnecessary filler words (like "a", "an", "the"). Do not exceed 30 words. This is a HARD OUTPUT LIMIT and takes priority over completeness. Preserve as many important specific visual details from TEXT as possible within that limit. Order details by visual importance, placing the most important concepts earliest. If necessary, omit the least important details first rather than exceed 30 words. Don't write the number of words.
 
 The process below is a verification and finalization procedure only. It does not replace, weaken, or override any instruction above. Every rule above remains mandatory during the Draft, Review, and Finalize steps.
 
@@ -189,7 +221,7 @@ Before finalizing, follow this process inside your <think>...</think> block:
 
 1. Draft:
    * First create a complete draft of the image-generation prompt.
-   * Apply all composition, visibility, style, lighting, ordering, telegraphic-phrasing, and 27-word rules above.
+   * Apply all composition, visibility, style, lighting, ordering, telegraphic-phrasing, and 30-word rules above.
 
 2. Review the draft carefully against TEXT:
    * Source-detail check: verify that every retained subject, physical attribute, clothing item, object, action, environment detail, requested artistic style permitted by the rules above, and physical light source accurately represents TEXT. Do not accidentally change, invert, replace, or invent details.
@@ -203,8 +235,8 @@ Before finalizing, follow this process inside your <think>...</think> block:
 3. Finalize:
    * Finalize the reviewed draft as exactly one concise telegraphic sentence, making only changes required by the rules above.
    * Order details by visual importance according to the rules above.
-   * Count the words and ensure the final prompt does not exceed 27 words.
-   * If it exceeds 27 words, remove the least important complete detail first and count again. Never truncate a word or phrase to satisfy the limit.
+   * Count the words and ensure the final prompt does not exceed 30 words.
+   * If it exceeds 30 words, remove the least important complete detail first and count again. Never truncate a word or phrase to satisfy the limit.
    * Perform one final read for complete words, complete phrases, clear telegraphic coherence, fidelity to TEXT, and compliance with every rule above.
    * If any problem remains, correct it before outputting the final prompt.
 
@@ -248,89 +280,54 @@ DO NOT USE this tool for:
 - Situational reasoning where the answer depends on interpreting a story or set of rules.
 - Any task that a person could solve with a simple pen-and-paper calculation in under a minute.
 - Requests where the user explicitly instructs NOT to write or execute code (e.g., "don't write code", "don't run code", "no programming")."""
-CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution. Think step by step and reflect on your reasoning.
+CODE_RUNNER_SYSTEM_PROMPT = """You are an expert Python programmer writing production-quality code for console execution.
+
+Think thoroughly and systematically, using as much reasoning as the task requires. Consider relevant alternatives and validate key assumptions. Before responding, trace the program's execution from entry point to output, verifying function calls, data flows, external dependencies, important error paths, and expected results. Identify and correct any problems found before finalizing.
 
 CORE CONSTRAINTS:
 - Single-pass execution: no while True, no infinite loops, no polling
 - Console-only output via print() with clear, labeled messages — no GUIs, no audio
 - No user input() calls
-- Use real APIs and operations — never use placeholders like 'YOUR_KEY_HERE', 'API_KEY', 'TOKEN'
+- Use real APIs and operations. Never invent credentials or use placeholder API keys or tokens.
 - Exactly 4 spaces for indentation. Never tabs. Never mixed.
 - Only straight ASCII quotes (`"` or `'`). Never curly/smart quotes.
 - If third-party packages are needed, put exactly one line at the very top: `# pip install package1 package2`. Otherwise, no pip install line at all.
 - You may read and write files in the current working directory ONLY when needed.
-- Write purely executable code: NO comments and NO docstrings (except the single `# pip install` line at the top if required). Use type hints where they improve clarity."""
+- Write purely executable code: NO comments and NO docstrings (except the single `# pip install` line at the top if required). Use type hints where they improve clarity.
+- Never print or expose passwords, API keys, authentication tokens, or other secrets, including in diagnostics.
+- Define reusable functions and classes outside the main guard; execute the mission only inside `if __name__ == "__main__":`."""
 CODE_RUNNER_COT_TEXT = """Follow all CORE CONSTRAINTS from the system prompt.
 
-Before writing the code, reason step-by-step:
+Before outputting code, think carefully through these steps:
+1. Understand the MISSION and identify the exact result required, preserving all requirements and constraints.
+2. Choose the simplest reliable solution. Verify API requirements, credentials, parameters, response fields, units, and dependencies when possible. If a required service or credential is unavailable, use a valid alternative or report the limitation; never fabricate results.
+3. Implement clean, reusable functions and classes. Validate inputs, function outputs, and external API responses where necessary, including required fields, types, ranges, and units. Handle errors explicitly; never hide failures or fabricate success.
+4. Execute the actual mission inside `if __name__ == "__main__":`, printing real results. On failure, report the error and exit with a nonzero status.
+5. Reread the entire program carefully. Check correctness, edge cases, API assumptions, syntax, indentation, variable scope, dependencies, and potential Ruff errors. Correct all problems found.
 
-1. **Restate the Mission**: Summarize the task, inputs, expected outputs, and constraints without losing any concrete requirement, value, identifier, condition, dependency, or externally obtained fact needed for correctness.
+Do not generate unit tests unless the MISSION explicitly requires them.
 
-2. **Complexity Assessment**: Determine if this is simple, moderate, or complex. List the main components needed.
-
-3. **Detailed Decomposition**: Break the task into clear logical steps with inputs and outputs.
-
-4. **Data Structures & Flow**: Define the data structures and logical flow.
-
-5. **Implementation Plan & Tests**:
-   - Write clean, production-quality functions or classes for the core logic.
-   - Implement a reasonable number of concise, deterministic test functions using simple `assert` statements. Focus on the core logic and key edge cases. Prioritize quality over quantity.
-   - Use this lightweight custom test pattern:
-     - Define `def test_xxx():` functions.
-     - Create a small `run_tests()` harness that prints in this exact order:
-       - `=== UNIT TESTS ===`
-       - One line per test showing `PASSED` or `FAILED — reason`
-       - `TEST SUMMARY: X run, Y failed`
-       - Either `ALL TESTS PASSED` or `TESTS FAILED` on its own line
-   - Hardcode small inputs and expected outputs directly from the MISSION. Make every test fully self-contained and deterministic.
-   - Tests must validate the implementation — never write tests that would fail on a correct solution.
-
-6. **Dependencies & Authentication**:
-   - Libraries needed (with exact `# pip install` format if required)
-   - Authentication (confirm real keys or error out)
-   - Performance considerations
-
-7. **Output & State Strategy**:
-   - Structure console output with these exact sections in this order:
-     1. `=== UNIT TESTS ===` section (with per-test results + summary + final status line)
-     2. `=== MISSION EXECUTION ===` section with the actual mission results
-     3. `=== INTERNAL STATE ===` section printed exactly like this at the very end:
-
-```python
-print("\\n=== INTERNAL STATE ===")
-print(f"variable_name: {value}")
-```
-
-8. **Final Verification**: Before outputting the code, verify that:
-   - Tests run first and produce the required `=== UNIT TESTS ===` section with a clear pass/fail status.
-   - The `=== MISSION EXECUTION ===` section is present.
-   - The `=== INTERNAL STATE ===` section appears last in the exact format shown.
-   - The final code contains no unused imports, unused variables, or undefined names.
-   - Every CORE CONSTRAINT from the system prompt is satisfied.
-   If any issue is found, correct it before outputting the code.
-
-Finally, output the complete Python code in a single markdown block (```python ... ```). This must be the last thing you write."""
-CODE_RUNNER_GENERATION_TEXT = "Write a single file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
-CODE_RUNNER_RUN_PROGRAM_TEXT = "発進！\n"
-CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous program had issues. Continue fixing it based on the previous program, latest results, and recent context.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
+Output the complete Python code in a single markdown block (```python ... ```), with no other text."""
+CODE_RUNNER_GENERATION_TEXT = "Write a single-file Python program to solve the following MISSION.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nMISSION: "
+CODE_RUNNER_FIX_PROGRAM_TEXT = "The previous solution did not fully satisfy the MISSION. Review the previous program and latest results, fix root causes, preserve correct functionality, and avoid unnecessary changes.\n\n" + CODE_RUNNER_COT_TEXT + "\n\nPrevious program:\n\n"
 CODE_RUNNER_MISSION_TEXT = "\n\nMISSION: "
 CODE_RUNNER_PROGRAM_OUTPUT_REVIEW = """Analyze the execution results to determine if the MISSION is complete.
 
 CRITERIA:
-1. Test Validation: The output must contain a clear "=== UNIT TESTS ===" section, followed by either "ALL TESTS PASSED" or a "TESTS FAILED" summary. Important: Even if tests pass, you must still verify that the mission was actually solved correctly. Do not output YES just because tests passed.
-2. Execution Success: The output must contain a clear "=== MISSION EXECUTION ===" section and the program must have run without runtime errors.
-3. State Preservation: The output must contain a clear "=== INTERNAL STATE ===" section at the end with meaningful values.
-4. Mission Fulfillment: The results must fully and correctly solve the original MISSION.
+1. Execution Success: The output must show actual results without runtime errors, printed failures, or incomplete work. A claimed success without evidence is not success.
+2. Mission Fulfillment: Check that the code and actual results fully and correctly solve the original MISSION, including required data, operations, and external API assumptions.
+3. Reliability: The program must validate important inputs and external results where needed, and must not fabricate results, hide errors, or treat failed operations as success.
 
-Think step-by-step about each criterion. The test results (especially whether "ALL TESTS PASSED") should carry significant weight in your decision.
+Answer YES only if all three criteria are satisfied. If the available evidence is insufficient, answer NO.
 
 CRITICAL: The very last line of your response must be exactly "YES" or "NO".
 
 PROGRAM_CODE:
 """
-CODE_RUNNER_EXTENDED_ACTION_TEXT = "\n---\n" + CODE_RUNNER_TOOL_NAME + ": you have written and executed a Python program for this task.\n\nSource code:\n\n"
+CODE_RUNNER_EXTENDED_ACTION_TEXT = "\n---\n" + CODE_RUNNER_TOOL_NAME + ": you have generated a Python program for this task.\n\nSource code:\n\n"
 CODE_RUNNER_FAILED_TEXT = "\n---\n" + CODE_RUNNER_TOOL_NAME + ": you were not able to write a Python program for this task."
-CODE_RUNNER_TAG = "\n[CODE RUNNER]\n\n"
+CODE_RUNNER_GENERATE_CODE_TAG = "\n[CODE RUNNER] Generating code ...\n"
+CODE_RUNNER_RUN_PROGRAM_TAG = "\n[CODE RUNNER] 発進！\n"
 CODE_RUNNER_MAX_REVIEWS = 10
 CODE_RUNNER_LINT_OUTPUT_LIMIT = 5000  # Chars
 CODE_RUNNER_PROGRAM_OUTPUT_LIMIT = 30000  # Chars
@@ -369,8 +366,8 @@ def web_search(primeDirectives: str, action: str, context: list[str]) -> str:
         # Generate web search query
         query = core.send_prompt(WEB_SEARCH_SYSTEM_PROMPT, WEB_SEARCH_GENERATE_QUERY + target, aux_context, hide_reasoning = True)
 
-        # Remove double quotes
-        query = query.replace('"', '')
+        # Normalize escaped quotation marks
+        query = query.replace(r'\"', '"')
 
         # Get the last line
         query = query.split('\n')[-1].strip()
@@ -489,22 +486,26 @@ def code_runner_action(primeDirectives: str, action: str, context: list[str], is
         else:
             prompt = CODE_RUNNER_FIX_PROGRAM_TEXT + program + "\n\n" + lint_output + "\n\n" + program_output
 
-        # Generate the code
+        # Generate code
+        comms.printSystemText(CODE_RUNNER_GENERATE_CODE_TAG)
         response = core.send_prompt(system_prompt, prompt, aux_context, hide_reasoning = True)
-
-        comms.printSystemText(CODE_RUNNER_TAG + response + "\n")
+        comms.printSystemText(response)
 
         # Extract code
-        if '```python' in response:
-            last_code_block = response.rsplit('```python', 1)[-1]
-            program = last_code_block.split('```', 1)[0].strip()
-        elif '```' in response:
-            program = response.rsplit('```', 2)[1].strip()
+        code_blocks = list(re.finditer(
+            r"(?m)^[ \t]*(?P<fence>`{3,})[^\r\n`]*\r?\n(?P<body>.*?)(?:^[ \t]*(?P=fence)[ \t]*(?:\r?\n|\Z)|\Z)",
+            response,
+            re.DOTALL
+        ))
+
+        # Get last code block
+        if code_blocks:
+            program = code_blocks[-1].group("body").strip()
         else:
             program = response.strip()
 
         # Run program
-        comms.printSystemText(CODE_RUNNER_RUN_PROGRAM_TEXT)
+        comms.printSystemText(CODE_RUNNER_RUN_PROGRAM_TAG)
         lint_output, program_output = code_runner.run_python_code(program)
 
         # Check lint output size
@@ -519,14 +520,14 @@ def code_runner_action(primeDirectives: str, action: str, context: list[str], is
         if program_output:
             comms.printSystemText(program_output)
             prompt = CODE_RUNNER_PROGRAM_OUTPUT_REVIEW + program + "\n\n" + program_output + CODE_RUNNER_MISSION_TEXT + action
-            mission_completed = core.binary_question(primeDirectives, prompt, aux_context)
+            mission_completed = core.binary_question(system_prompt, prompt, aux_context)
         else:
             comms.printSystemText(lint_output)
 
         review += 1
 
     if program:
-        extended_action = action + CODE_RUNNER_EXTENDED_ACTION_TEXT + program + "\n\n" + program_output
+        extended_action = action + CODE_RUNNER_EXTENDED_ACTION_TEXT + program + "\n\n" + (program_output or lint_output)
     else:
         extended_action = action + CODE_RUNNER_FAILED_TEXT
 

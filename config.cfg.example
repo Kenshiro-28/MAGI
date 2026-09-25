@@ -3,7 +3,7 @@
 ################################################################################
 
 TEMPERATURE = 1.0
-CONTEXT_SIZE = 131072
+CONTEXT_SIZE = 196608
 HEARTBEAT_SECONDS = 1800
 
 ENABLE_CODEX_PLUGIN = YES
@@ -49,17 +49,18 @@ TELEGRAM_USER_ID = 1234567890
 ### IMAGE GENERATION PLUGIN
 ################################################################################
 
-# Image generation models and LoRAs are automatically downloaded from Hugging Face.
+# By default, image generation models and LoRAs are automatically downloaded from Hugging Face.
 # Only SDXL checkpoints are supported.
 # You must use the model identifier, for example:
 # Model URL: https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
 # Model identifier: stabilityai/stable-diffusion-xl-base-1.0
+# Optional: if a file named "model.safetensors" exists beside image_generation.py, it overrides IMAGE_GENERATION_MODEL.
 
-IMAGE_GENERATION_MODEL = SG161222/RealVisXL_V5.0
+IMAGE_GENERATION_MODEL = RunDiffusion/Juggernaut-XI-v11
 IMAGE_GENERATION_LORA = 
-IMAGE_GENERATION_TYPE = 4K RAW photo
-IMAGE_GENERATION_SPECS = 50mm lens, f/8 aperture, sharp focus, highly detailed, volumetric lighting, cinematic color grading
-IMAGE_GENERATION_NEGATIVE_PROMPT = lowres, blurry, out of focus, soft focus, jpeg artifacts, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad face, bad eyes, missing limbs, bad hands
+IMAGE_GENERATION_TYPE = high-end commercial photography, high resolution
+IMAGE_GENERATION_SPECS = 50mm lens, sharp focus, highly detailed, volumetric lighting, cinematic color grading
+IMAGE_GENERATION_NEGATIVE_PROMPT = cartoon, muddy textures, deformed, disfigured, bad anatomy, bad proportions, bad hands
 IMAGE_GENERATION_WIDTH = 832
 IMAGE_GENERATION_HEIGHT = 1216
 

@@ -5,13 +5,13 @@ from plugins.codex import codex_operations
 from plugins.codex.codex_operations import CODEX_LIST_ALL
 from plugins.codex.codex_operations import CODEX_NO_RESULT
 
-CODEX_SYSTEM_PROMPT = "You are a precise data extraction assistant that manages the Codex, a long-term memory tool. Extract structured information exactly as instructed, with no additions or commentary. Think step by step and reflect on your reasoning."
+CODEX_SYSTEM_PROMPT = "You are a precise data extraction assistant that manages the Codex, a long-term memory tool. Extract structured information exactly as instructed, with no additions or commentary. Think carefully, use as much reasoning as the task requires, and verify your output before responding."
 USER_PROFILE_TEXT = "User profile"
 CODEX_EXTRACT_QUERY_PROMPT = f"""Extract the search intent from ACTION.
 
 For queries about the user's personal information, identity, or background — including requests to list facts about the user (e.g. "tell me about myself", "list everything you remember about me") — use the phrase "{USER_PROFILE_TEXT}".
 If ACTION asks to list or show ALL stored entries with no user-scope restriction (e.g. "list all your memories", "what's in the Codex", "list all Codex entries"), output exactly: "{CODEX_LIST_ALL}".
-If ACTION is a natural conversation starter like a greeting (e.g. "hi", "hello", "hey"), use the phrase "{USER_PROFILE_TEXT}".
+If ACTION is a natural conversation starter like a greeting, affectionate/social opener, or casual check-in (e.g. "hi", "hello", "hey", "how are you?"), and contains no substantive request or topic, use the phrase "{USER_PROFILE_TEXT}".
 
 OUTPUT CONTRACT — read carefully:
 - All reasoning goes inside the <think>...</think> block.
@@ -243,12 +243,13 @@ def _parse_json_response(response: str) -> dict:
     return {"title": title, "content": content, "tags": tags}
 
 
-def _parse_drop_decision(response: str, num_lines: int) -> set:
-    """Return the set of valid 1-based line indices the model asked to drop.
+def _parse_drop_decision(response: str, valid_indices: set[int]) -> set:
+    """Return the set of valid line indices the model asked to drop.
 
-    Any parse problem, wrong type, or out-of-range index is ignored; a total
-    failure returns an empty set. A malformed or surprising model response can
-    therefore never remove or alter stored data — worst case, nothing is dropped.
+    Any parse problem, wrong type, or index not presented to the model invalidates
+    the whole decision and returns an empty set. A malformed or surprising model
+    response can therefore never remove or alter stored data — worst case, nothing
+    is dropped.
     """
     cleaned = response.strip()
 
@@ -276,24 +277,13 @@ def _parse_drop_decision(response: str, num_lines: int) -> set:
         if not isinstance(raw, list):
             return set()
 
-        result = set()
+        if any(type(item) is not int or item not in valid_indices for item in raw):
+            return set()
 
-        for item in raw:
-            try:
-                index = int(item)
-            except (ValueError, TypeError):
-                continue
-
-            if 1 <= index <= num_lines:
-                result.add(index)
-
-        return result
+        return set(raw)
 
     except (json.JSONDecodeError, AttributeError, ValueError, TypeError):
         return set()
-
-
-
 
 
 def _assemble(survivor_lines: list, new_content: str) -> str:
@@ -387,8 +377,16 @@ def _merge_content(new_content: str, old_content: str) -> str:
 
     # Present only non-blank lines to the model, but keep their true 1-based
     # index so the rebuild maps straight back onto the original line list.
+    valid_indices = {
+        index
+        for index, line in enumerate(lines, 1)
+        if line.strip()
+    }
+
     numbered = "\n".join(
-        f"[{index}] {line}" for index, line in enumerate(lines, 1) if line.strip()
+        f"[{index}] {line}"
+        for index, line in enumerate(lines, 1)
+        if index in valid_indices
     )
 
     # Nothing meaningful stored yet: keep the new content (still cap-bounded, and the
@@ -406,7 +404,7 @@ def _merge_content(new_content: str, old_content: str) -> str:
 
     response = core.send_prompt(CODEX_SYSTEM_PROMPT, prompt, [], hide_reasoning = True)
 
-    drop = _parse_drop_decision(response, len(lines))
+    drop = _parse_drop_decision(response, valid_indices)
 
     # Survivors copied verbatim from the canonical original.
     survivor_lines = [line for index, line in enumerate(lines, 1) if index not in drop]

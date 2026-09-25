@@ -107,6 +107,8 @@ def run_python_code(program: str):
         if program_output_data.returncode != 0:
             program_output += PROGRAM_ERROR_TEXT + program_output_data.stderr
             program_output += PROGRAM_RETURN_CODE_TEXT + str(program_output_data.returncode)
+        elif program_output_data.stderr:
+            program_output += "\n\n" + program_output_data.stderr.strip()
 
         # Prepend pip install output
         program_output = pip_output + program_output
@@ -114,8 +116,9 @@ def run_python_code(program: str):
         return lint_output.strip(), program_output.strip()
 
     except Exception as e:
-        print(CODE_RUNNER_ERROR + str(e))
-        return "", ""
+        error = CODE_RUNNER_ERROR + str(e)
+        print(error)
+        return error, ""
 
 
 # INITIALIZE

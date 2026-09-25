@@ -1,5 +1,5 @@
 # Core
-llama-cpp-python @ git+https://github.com/Kenshiro-28/llama-cpp-python.git
+llama-cpp-python @ git+https://github.com/Kenshiro-28/llama-cpp-python.git@MAGI
 
 # Codex plugin
 sentence-transformers
