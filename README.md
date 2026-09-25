@@ -1,6 +1,6 @@
 # MAGI
 
-[![MAGI intro video](https://ipfs.io/ipfs/bafybeicplzuyad3stsfd5nz4l6s4df7czyocfmqgxujruugyxby7pmmkpm)](https://ipfs.io/ipfs/bafybeihhurksv4whiocfumnqxl4we7y4baonkj4ryami4nx2jhvvvpg2oa)
+[![MAGI intro video](https://gateway.pinata.cloud/ipfs/bafybeicplzuyad3stsfd5nz4l6s4df7czyocfmqgxujruugyxby7pmmkpm)](https://gateway.pinata.cloud/ipfs/bafybeihhurksv4whiocfumnqxl4we7y4baonkj4ryami4nx2jhvvvpg2oa)
 
 <p align="center">
   <a href="https://github.com/Kenshiro-28/MAGI/actions"><img src="https://img.shields.io/github/actions/workflow/status/Kenshiro-28/MAGI/lint.yml?branch=main&style=for-the-badge&label=Lint" alt="Lint Status"></a>
@@ -211,7 +211,7 @@ IMAGE_GENERATION_HEIGHT: height of generated images in pixels (default: 1216)
 
 #### Example
 
-![Example](https://ipfs.io/ipfs/bafkreifeoeaxajf5cpj2tnzci7lkdzc4lctug4j54h7735azfue3bv2xv4)
+![Example](https://gateway.pinata.cloud/ipfs/bafkreifeoeaxajf5cpj2tnzci7lkdzc4lctug4j54h7735azfue3bv2xv4)
 
 ### Telegram plugin
 
@@ -268,6 +268,8 @@ Okay, so I need to explain who was Sun Tzu.
 MAGI preserves thinking blocks in the conversation context to maintain reasoning continuity during long-running tasks.
 
 ### Recommended model
+
+![Model artwork](https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/resolve/main/star-wars-hans-solo.gif)
 
 **[Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF](https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/blob/main/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q8_0.gguf)**
 
